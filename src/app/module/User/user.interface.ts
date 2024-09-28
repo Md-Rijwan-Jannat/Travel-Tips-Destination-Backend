@@ -1,29 +1,35 @@
 /* eslint-disable no-unused-vars */
-import { Model } from 'mongoose';
-import { USER_ROLE } from './user.constant';
+import { Model } from "mongoose";
+import { USER_ROLE } from "./user.constants";
 
 export interface TUser {
-  id: string;
+  name: string;
+  email: string;
+  password?: string;
+  image?: string;
+  role: "admin" | "user";
+  status: "in-progress" | "blocked";
+  flower: number;
+  flowing: number;
+  verified: boolean;
+  country?: string;
+  address?: string;
+  isDeleted: boolean;
+}
+export interface TLoginUser {
   email: string;
   password: string;
-  needsPasswordChange: boolean;
-  passwordChangedAt?: Date;
-  role: 'superAdmin' | 'admin' | 'student' | 'faculty';
-  status: 'in-progress' | 'blocked';
-  isDeleted: boolean;
 }
 
 export interface UserModel extends Model<TUser> {
-  //instance methods for checking if the user exist
-  isUserExistsByCustomId(id: string): Promise<TUser>;
-  //instance methods for checking if passwords are matched
+  isUserExistsByEmail(email: string): Promise<TUser>;
   isPasswordMatched(
     plainTextPassword: string,
-    hashedPassword: string,
+    hashedPassword: string
   ): Promise<boolean>;
   isJWTIssuedBeforePasswordChanged(
     passwordChangedTimestamp: Date,
-    jwtIssuedTimestamp: number,
+    jwtIssuedTimestamp: number
   ): boolean;
 }
 
