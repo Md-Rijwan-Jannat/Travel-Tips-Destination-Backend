@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { User } from "../User/user.model";
 import { TUpdateUser } from "./profile.interface";
+import { USER_STATUS } from "../User/user.constants";
 
 // Get my profile by email
 const getMyProfileFormDB = async (email: string) => {
@@ -11,7 +12,7 @@ const getMyProfileFormDB = async (email: string) => {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  if (user.status === "blocked") {
+  if (user.status === USER_STATUS.BLOCKED) {
     throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
   }
 
@@ -30,7 +31,7 @@ const updateMyProfileIntoDB = async (
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  if (user.status === "blocked") {
+  if (user.status === USER_STATUS.BLOCKED) {
     throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
   }
 
@@ -47,7 +48,7 @@ const deleteMyProfileFromDB = async (id: string, email: string) => {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  if (user.status === "blocked") {
+  if (user.status === USER_STATUS.BLOCKED) {
     throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
   }
 

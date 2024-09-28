@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { USER_STATUS } from "../User/user.constants";
 
 export const registerUserValidationSchema = z.object({
   body: z.object({
@@ -14,7 +15,9 @@ export const registerUserValidationSchema = z.object({
       .optional(),
     image: z.string().optional(),
     role: z.enum(["admin", "user"]).default("user"),
-    status: z.enum(["in-progress", "blocked"]).default("in-progress"),
+    status: z
+      .enum([USER_STATUS.IN_PROGRESS, USER_STATUS.BLOCKED])
+      .default(USER_STATUS.IN_PROGRESS),
     flower: z.number().default(0),
     flowing: z.number().default(0),
     verified: z.boolean().default(false),
@@ -34,7 +37,7 @@ export const updateUserValidationSchema = z.object({
       .optional(),
     image: z.string().optional(),
     role: z.enum(["admin", "user"]).optional(),
-    status: z.enum(["in-progress", "blocked"]).optional(),
+    status: z.enum([USER_STATUS.IN_PROGRESS, USER_STATUS.BLOCKED]).optional(),
     flower: z.number().default(0).optional(),
     flowing: z.number().default(0).optional(),
     verified: z.boolean().optional(),

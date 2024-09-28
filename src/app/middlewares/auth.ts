@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
 import { JwtPayload } from "jsonwebtoken";
 import AppError from "../errors/AppError";
-import { USER_ROLE } from "../module/User/user.constants";
+import { USER_ROLE, USER_STATUS } from "../module/User/user.constants";
 import catchAsync from "../utils/catchAsync";
 import { verifyToken } from "../utils/tokenGenerateFunction";
 import { User } from "../module/User/user.model";
@@ -36,7 +36,7 @@ const Auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
 
     const status = user?.status;
 
-    if (status === "blocked") {
+    if (status === USER_STATUS.BLOCKED) {
       throw new AppError(httpStatus.FORBIDDEN, "This user is blocked !");
     }
 

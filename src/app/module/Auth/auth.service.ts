@@ -45,7 +45,7 @@ const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
 
   const userStatus = user?.status;
 
-  if (userStatus === "blocked") {
+  if (userStatus === "BLOCKED") {
     throw new AppError(httpStatus.FORBIDDEN, "This user is blocked!");
   }
 

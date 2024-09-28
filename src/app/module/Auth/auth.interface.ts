@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { Model } from "mongoose";
-import { USER_ROLE } from "../User/user.constants";
+import { USER_ROLE, USER_STATUS } from "../User/user.constants";
 
 export interface TRegister {
   name: string;
@@ -8,7 +8,7 @@ export interface TRegister {
   password?: string;
   image?: string;
   role: TUserRole;
-  status: "in-progress" | "blocked";
+  status: TUserStatus;
   flower: number;
   flowing: number;
   verified: boolean;
@@ -22,3 +22,4 @@ export interface TLoginUser {
 }
 
 export type TUserRole = keyof typeof USER_ROLE;
+export type TUserStatus = keyof typeof USER_STATUS;
