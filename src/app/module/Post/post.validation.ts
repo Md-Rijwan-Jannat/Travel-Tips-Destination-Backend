@@ -19,12 +19,6 @@ const updatePostValidationSchema = z.object({
     description: z.string().optional(),
     status: z.enum([POST_STATUS.FREE, POST_STATUS.PREMIUM]).optional(),
     reportCount: z.number().optional(),
-    reacts: z
-      .object({
-        likes: z.number().optional(),
-        dislikes: z.number().optional(),
-      })
-      .optional(),
   }),
 });
 

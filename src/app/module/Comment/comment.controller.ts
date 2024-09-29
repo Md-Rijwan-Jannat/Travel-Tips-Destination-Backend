@@ -6,8 +6,8 @@ import httpStatus from "http-status";
 
 // Add a new comment
 const addComment = catchAsync(async (req: Request, res: Response) => {
-  const { email } = req.user;
-  const comment = await CommentService.addCommentIntoDB(req.body, email);
+  const { id } = req.user;
+  const comment = await CommentService.addCommentIntoDB(req.body, id);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -54,28 +54,6 @@ const deleteComment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Like a comment
-const likeComment = catchAsync(async (req: Request, res: Response) => {
-  const comment = await CommentService.likeCommentFromDB(req.params.id);
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Comment liked successfully",
-    data: comment,
-  });
-});
-
-// Dislike a comment
-const dislikeComment = catchAsync(async (req: Request, res: Response) => {
-  const comment = await CommentService.dislikeCommentFromDB(req.params.id);
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Comment disliked successfully",
-    data: comment,
-  });
-});
-
 // Reply to a comment
 const replyToComment = catchAsync(async (req: Request, res: Response) => {
   const reply = await CommentService.replyToCommentFromDB(
@@ -95,7 +73,5 @@ export const CommentControllers = {
   getCommentForPost,
   updateComment,
   deleteComment,
-  likeComment,
-  dislikeComment,
   replyToComment,
 };

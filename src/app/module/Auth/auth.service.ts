@@ -10,7 +10,10 @@ import { User } from "../User/user.model";
 const registerUserIntoDB = async (payload: TRegister) => {
   console.log(payload);
 
+  const result = await User.create(payload);
+
   const jwtPayload = {
+    id: result._id,
     email: payload.email,
     role: payload.role,
   };
@@ -26,8 +29,6 @@ const registerUserIntoDB = async (payload: TRegister) => {
     config.jwt_access_secret as string,
     config.jwt_refresh_expires_in as string
   );
-
-  const result = await User.create(payload);
 
   return {
     result,
@@ -55,6 +56,7 @@ const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
     throw new AppError(httpStatus.FORBIDDEN, "Password do not matched");
 
   const jwtPayload = {
+    id: user._id,
     email: user.email,
     role: user.role,
   };

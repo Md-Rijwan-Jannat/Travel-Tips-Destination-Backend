@@ -6,8 +6,11 @@ import QueryBuilder from "../../builder/QueryBuilder";
 import { postSearchFelids } from "./post.constants";
 
 // Create a new post
-const createPostIntoDB = async (payload: TPost): Promise<TPost> => {
-  const post = await Post.create(payload);
+const createPostIntoDB = async (
+  payload: TPost,
+  userId: string
+): Promise<TPost> => {
+  const post = await Post.create({ ...payload, user: userId });
   return post;
 };
 

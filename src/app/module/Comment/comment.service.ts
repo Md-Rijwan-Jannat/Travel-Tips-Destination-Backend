@@ -3,14 +3,15 @@ import { Comment } from "./comment.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { User } from "../User/user.model";
+import { Post } from "../Post/post.model";
 
 // Add a comment to the DB
 const addCommentIntoDB = async (
   payload: Partial<IComment>,
-  email: string
+  id: string
 ): Promise<IComment> => {
-  const user = await User.findOne({ email });
-  const post = await User.findById(payload.post);
+  const user = await User.findById(id);
+  const post = await Post.findById(payload.post);
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
@@ -19,7 +20,7 @@ const addCommentIntoDB = async (
     throw new AppError(httpStatus.NOT_FOUND, "Post not found");
   }
 
-  const comment = await Comment.create(payload);
+  const comment = await Comment.create({ ...payload, user: id });
   return comment;
 };
 
@@ -60,37 +61,6 @@ const deleteCommentFromDB = async (
   }
   return null;
 };
-
-// Like a comment
-const likeCommentFromDB = async (
-  commentId: string
-): Promise<IComment | null> => {
-  const comment = await Comment.findByIdAndUpdate(
-    commentId,
-    { $inc: { likes: 1 } },
-    { new: true }
-  );
-  if (!comment || comment.isDeleted) {
-    throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
-  }
-  return comment;
-};
-
-// Dislike a comment
-const dislikeCommentFromDB = async (
-  commentId: string
-): Promise<IComment | null> => {
-  const comment = await Comment.findByIdAndUpdate(
-    commentId,
-    { $inc: { dislikes: 1 } },
-    { new: true }
-  );
-  if (!comment || comment.isDeleted) {
-    throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
-  }
-  return comment;
-};
-
 // Reply to a comment
 const replyToCommentFromDB = async (
   commentId: string,
@@ -106,7 +76,5 @@ export const CommentService = {
   getCommentForPostFromDB,
   updateCommentIntoDB,
   deleteCommentFromDB,
-  likeCommentFromDB,
-  dislikeCommentFromDB,
   replyToCommentFromDB,
 };

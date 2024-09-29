@@ -5,8 +5,8 @@ export interface IComment extends Document {
   post: Types.ObjectId;
   text: string;
   images?: string[];
-  likes: number;
-  dislikes: number;
+  likes: Types.ObjectId[];
+  dislikes: Types.ObjectId[];
   replies: Types.ObjectId[];
   parentComment?: Types.ObjectId;
   isDeleted: boolean;

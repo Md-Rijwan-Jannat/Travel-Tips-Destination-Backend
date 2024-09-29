@@ -37,20 +37,6 @@ router.delete(
   CommentControllers.deleteComment
 );
 
-// Like a comment
-router.post(
-  "/:id/like",
-  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  CommentControllers.likeComment
-);
-
-// Dislike a comment
-router.post(
-  "/:id/dislike",
-  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  CommentControllers.dislikeComment
-);
-
 // Reply to a comment
 router.post(
   "/:id/reply",

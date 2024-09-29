@@ -4,6 +4,7 @@ import { ProfileRoutes } from "../module/Profile/profile.routes";
 import { AuthRoutes } from "../module/Auth/auth.routes";
 import { PostRoutes } from "../module/Post/post.routes";
 import { CommentRoutes } from "../module/Comment/comment.routes";
+import { ReactRoutes } from "../module/Reacts/react.routes";
 
 const router = Router();
 
@@ -27,6 +28,10 @@ const moduleRoutes = [
   {
     path: "/comments",
     route: CommentRoutes,
+  },
+  {
+    path: "/react",
+    route: ReactRoutes,
   },
 ];
 

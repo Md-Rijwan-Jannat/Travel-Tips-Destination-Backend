@@ -10,10 +10,8 @@ export interface TPost extends Document {
   status: TPostStatus;
   report?: Types.ObjectId[];
   reportCount: number;
-  reacts: {
-    likes: number;
-    dislikes: number;
-  };
+  likes: Types.ObjectId;
+  dislikes: Types.ObjectId;
   isDeleted: boolean;
   createdAt?: Date;
   updatedAt?: Date;

@@ -20,14 +20,18 @@ const commentSchema = new Schema<IComment>(
     images: {
       type: [String],
     },
-    likes: {
-      type: Number,
-      default: 0,
-    },
-    dislikes: {
-      type: Number,
-      default: 0,
-    },
+    likes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    dislikes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     replies: [
       {
         type: Schema.Types.ObjectId,
@@ -44,7 +48,7 @@ const commentSchema = new Schema<IComment>(
     },
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt fields
+    timestamps: true,
   }
 );
 

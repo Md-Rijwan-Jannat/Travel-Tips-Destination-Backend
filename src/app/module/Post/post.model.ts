@@ -25,7 +25,7 @@ const postSchema = new Schema<TPost>(
     comments: [
       {
         type: Schema.Types.ObjectId,
-        // ref: "Comment",
+        ref: "Comment",
       },
     ],
     status: {
@@ -42,16 +42,18 @@ const postSchema = new Schema<TPost>(
       type: Number,
       default: 0,
     },
-    reacts: {
-      likes: {
-        type: Number,
-        default: 0,
+    likes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
       },
-      dislikes: {
-        type: Number,
-        default: 0,
+    ],
+    dislikes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
       },
-    },
+    ],
     isDeleted: {
       type: Boolean,
       default: false,

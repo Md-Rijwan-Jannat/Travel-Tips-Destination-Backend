@@ -5,7 +5,7 @@ import httpStatus from "http-status";
 
 // Create a new post
 const createPost = catchAsync(async (req, res) => {
-  const post = await PostService.createPostIntoDB(req.body);
+  const post = await PostService.createPostIntoDB(req.body, req.user.id);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
