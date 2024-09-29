@@ -18,10 +18,16 @@ router.delete(
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
   PostControllers.deletePost
 );
-router.put(
-  "/:id",
-  Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  PostControllers.recoverPost
-);
 
+// router.put(
+//   "/:id",
+//   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
+//   PostControllers.recoverPost
+// );
+
+router.put(
+  "/report/:id/",
+  Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
+  PostControllers.reportPost
+);
 export const PostRoutes = router;

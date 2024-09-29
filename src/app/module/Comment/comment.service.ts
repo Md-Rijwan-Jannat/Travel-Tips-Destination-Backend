@@ -64,9 +64,16 @@ const deleteCommentFromDB = async (
 // Reply to a comment
 const replyToCommentFromDB = async (
   commentId: string,
-  replyData: Partial<IComment>
+  replyData: Partial<IComment>,
+  id: string
 ): Promise<IComment> => {
-  const reply = await Comment.create(replyData);
+  const comment = await Comment.findById(commentId);
+
+  if (!comment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
+  }
+
+  const reply = await Comment.create({ ...replyData, user: id });
   await Comment.findByIdAndUpdate(commentId, { $push: { replies: reply._id } });
   return reply;
 };

@@ -40,7 +40,36 @@ const loginUser = catchAsync(async (req, res) => {
   });
 });
 
+const forgetPassword = catchAsync(async (req, res) => {
+  const userId = req.body._id;
+  const result = await UserServices.forgetPasswordIntoDB(userId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "The link create successfully!",
+    data: result,
+  });
+});
+
+const resetPassword = catchAsync(async (req, res) => {
+  const token = req.headers.authorization;
+  console.log("Token =>>", token);
+  const result = await UserServices.resetPasswordIntoDB(
+    req.body,
+    token as string
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password reset successful!",
+    data: result,
+  });
+});
+
 export const UserControllers = {
   registerUser,
   loginUser,
+  forgetPassword,
+  resetPassword,
 };

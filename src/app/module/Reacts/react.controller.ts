@@ -8,8 +8,6 @@ const like = catchAsync(async (req: Request, res: Response) => {
   const { targetId, type } = req.params;
   const userId = req.user.id;
 
-  console.log(req.user);
-
   const react = await ReactService.likeFromDB(
     userId,
     targetId,
@@ -28,7 +26,6 @@ const like = catchAsync(async (req: Request, res: Response) => {
 const unlike = catchAsync(async (req: Request, res: Response) => {
   const { targetId, type } = req.params;
   const userId = req.user.id;
-  console.log(userId);
 
   await ReactService.unlikeFromDB(userId, targetId, type as "post" | "comment");
 

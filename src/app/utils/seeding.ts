@@ -13,8 +13,6 @@ export const seed = async () => {
       status: USER_STATUS.IN_PROGRESS,
     });
     if (!admin) {
-      console.log("Seeding started...");
-
       await User.create({
         name: "Md Rijwan",
         role: USER_ROLE.ADMIN,

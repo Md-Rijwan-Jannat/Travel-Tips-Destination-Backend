@@ -58,13 +58,29 @@ const deletePost = catchAsync(async (req, res) => {
   });
 });
 
-// Delete a post by ID
+// Recover Delete a post by ID
 const recoverPost = catchAsync(async (req, res) => {
   const post = await PostService.recoverPostFromDB(req.params.id);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Post recover successfully",
+    data: post,
+  });
+});
+
+// Report a post by ID
+const reportPost = catchAsync(async (req, res) => {
+  console.log(req.params.id);
+  const post = await PostService.reportPostFromDB(
+    req.params.id,
+    req.body,
+    req.user.id
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Report successful",
     data: post,
   });
 });
@@ -76,4 +92,5 @@ export const PostControllers = {
   updatePost,
   deletePost,
   recoverPost,
+  reportPost,
 };

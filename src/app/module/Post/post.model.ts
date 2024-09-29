@@ -2,6 +2,28 @@ import mongoose, { Schema } from "mongoose";
 import { TPost } from "./post.interface";
 import { POST_STATUS } from "./post.constants";
 
+const reportSchema = new Schema(
+  {
+    report: {
+      type: String,
+      required: true,
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    post: {
+      type: Schema.Types.ObjectId,
+      ref: "Post",
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const postSchema = new Schema<TPost>(
   {
     user: {
@@ -32,12 +54,7 @@ const postSchema = new Schema<TPost>(
       type: String,
       enum: [POST_STATUS.FREE, POST_STATUS.PREMIUM],
     },
-    report: [
-      {
-        type: Schema.Types.ObjectId,
-        // ref: "Report",
-      },
-    ],
+    report: [reportSchema],
     reportCount: {
       type: Number,
       default: 0,

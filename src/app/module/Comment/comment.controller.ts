@@ -58,7 +58,8 @@ const deleteComment = catchAsync(async (req: Request, res: Response) => {
 const replyToComment = catchAsync(async (req: Request, res: Response) => {
   const reply = await CommentService.replyToCommentFromDB(
     req.params.id,
-    req.body
+    req.body,
+    req.user.id
   );
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

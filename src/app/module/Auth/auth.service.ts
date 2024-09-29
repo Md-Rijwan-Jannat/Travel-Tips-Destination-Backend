@@ -6,10 +6,11 @@ import AppError from "../../errors/AppError";
 import { createToken } from "../../utils/tokenGenerateFunction";
 import { TLoginUser, TRegister } from "./auth.interface";
 import { User } from "../User/user.model";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import { sendEmail } from "../../utils/sendEmail";
 
 const registerUserIntoDB = async (payload: TRegister) => {
-  console.log(payload);
-
   const result = await User.create(payload);
 
   const jwtPayload = {
@@ -79,15 +80,89 @@ const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
   };
 };
 
-const changeStatus = async (id: string, payload: { status: string }) => {
-  const result = await User.findByIdAndUpdate(id, payload, {
-    new: true,
-  });
+const forgetPasswordIntoDB = async (id: string) => {
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
+  }
+
+  if (user.isDeleted === true) {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is deleted!");
+  }
+
+  if (user.status == "BLOCKED") {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked!");
+  }
+
+  const jwtPayload = {
+    id: user._id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const resetToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    "10m"
+  );
+
+  const resetLink = `${config.reset_link_url}?id=${user._id}&token=${resetToken}`;
+
+  // Send email to the user with the reset link
+  await sendEmail(user.email, resetLink);
+};
+
+const resetPasswordIntoDB = async (
+  payload: { _id: string; newPassword: string },
+  token: string
+) => {
+  console.log(payload);
+  const user = await User.findById(payload._id);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
+  }
+
+  if (user.isDeleted === true) {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is deleted!");
+  }
+
+  if (user.status == "BLOCKED") {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked!");
+  }
+
+  // Check if token is valid
+  const decoded = jwt.verify(token, config.jwt_access_secret as string) as {
+    id: string;
+    email: string;
+    role: string;
+  };
+
+  console.log(decoded);
+  if (payload._id !== decoded.id) {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is forbidden!");
+  }
+
+  const newHashPassword = await bcrypt.hash(
+    payload.newPassword,
+    Number(config.bcrypt_salt_rounds)
+  );
+
+  const result = await User.findOneAndUpdate(
+    { _id: decoded.id, role: decoded.role },
+    {
+      password: newHashPassword,
+    },
+    { new: true }
+  );
+
   return result;
 };
 
 export const UserServices = {
   registerUserIntoDB,
   loginUserFromDB,
-  changeStatus,
+  forgetPasswordIntoDB,
+  resetPasswordIntoDB,
 };

@@ -17,4 +17,10 @@ export interface TPost extends Document {
   updatedAt?: Date;
 }
 
+export interface TReport {
+  user: Types.ObjectId;
+  post: Types.ObjectId;
+  report: string;
+}
+
 export type TPostStatus = keyof typeof POST_STATUS;

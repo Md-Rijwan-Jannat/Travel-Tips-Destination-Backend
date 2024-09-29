@@ -1,9 +1,10 @@
-import { TPost } from "./post.interface";
+import { TPost, TReport } from "./post.interface";
 import { Post } from "./post.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import QueryBuilder from "../../builder/QueryBuilder";
 import { postSearchFelids } from "./post.constants";
+import mongoose from "mongoose";
 
 // Create a new post
 const createPostIntoDB = async (
@@ -68,7 +69,6 @@ const deletePostFromDB = async (postId: string): Promise<TPost | null> => {
 
 // Delete a post by ID (soft delete)
 const recoverPostFromDB = async (postId: string): Promise<TPost | null> => {
-  console.log("posId", postId);
   const post = await Post.findByIdAndUpdate(
     postId,
     { isDeleted: false },
@@ -80,6 +80,52 @@ const recoverPostFromDB = async (postId: string): Promise<TPost | null> => {
   return post;
 };
 
+const reportPostFromDB = async (
+  postId: string,
+  payload: TReport,
+  userId: string
+): Promise<TPost | null> => {
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid Post ID");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid User ID");
+  }
+
+  // Find the post first to check the reportCount
+  const post = await Post.findById(postId);
+
+  if (!post) {
+    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+  }
+
+  // Increment the report count
+  const updatedReportCount = post.reportCount + 1;
+
+  // If reportCount reaches 5, soft delete the post
+  const isSoftDeleted = updatedReportCount >= 5;
+
+  // Update the post with new report and report count
+  const updatedPost = await Post.findByIdAndUpdate(
+    postId,
+    {
+      $push: {
+        report: {
+          report: payload.report,
+          user: userId, // Assuming userId is already a valid ObjectId
+          post: postId,
+        },
+      },
+      reportCount: updatedReportCount,
+      isDeleted: isSoftDeleted, // Mark as soft deleted if reportCount >= 5
+    },
+    { new: true }
+  );
+
+  return updatedPost;
+};
+
 export const PostService = {
   createPostIntoDB,
   getPostByIdFromDB,
@@ -87,4 +133,5 @@ export const PostService = {
   updatePostIntoDB,
   deletePostFromDB,
   recoverPostFromDB,
+  reportPostFromDB,
 };
