@@ -4,24 +4,50 @@ import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { User } from "../User/user.model";
 import { Post } from "../Post/post.model";
+import mongoose from "mongoose";
 
 // Add a comment to the DB
 const addCommentIntoDB = async (
   payload: Partial<IComment>,
-  id: string
+  userId: string
 ): Promise<IComment> => {
-  const user = await User.findById(id);
-  const post = await Post.findById(payload.post);
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, "User not found");
-  }
-  if (!post) {
-    throw new AppError(httpStatus.NOT_FOUND, "Post not found");
-  }
+  try {
+    const user = await User.findById(userId).session(session);
+    const post = await Post.findById(payload.post).session(session);
 
-  const comment = await Comment.create({ ...payload, user: id });
-  return comment;
+    if (!user) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+    if (!post) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+
+    // Create the comment
+    const comment = await Comment.create([{ ...payload, user: userId }], {
+      session,
+    });
+
+    await Post.findByIdAndUpdate(
+      payload.post,
+      {
+        $push: { comments: comment[0]._id },
+      },
+      { session }
+    );
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return comment[0];
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 };
 
 // Get all comments for a post

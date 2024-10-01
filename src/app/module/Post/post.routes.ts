@@ -5,11 +5,32 @@ import { USER_ROLE } from "../User/user.constants";
 
 const router = express.Router();
 
-router.post("/", Auth(USER_ROLE.USER), PostControllers.createPost);
+// More specific route for premium posts
+router.get(
+  "/premium",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  PostControllers.getAllPremiumPosts
+);
 
-router.get("/:id", PostControllers.getPostById);
+// Dynamic route for post by ID
+router.get(
+  "/:id",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  PostControllers.getPostById
+);
 
-router.get("/", PostControllers.getAllPosts);
+// General routes
+router.post(
+  "/",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  PostControllers.createPost
+);
+
+router.get(
+  "/",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  PostControllers.getAllPosts
+);
 
 router.patch("/:id", Auth(USER_ROLE.USER), PostControllers.updatePost);
 
@@ -19,15 +40,10 @@ router.delete(
   PostControllers.deletePost
 );
 
-// router.put(
-//   "/:id",
-//   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-//   PostControllers.recoverPost
-// );
-
 router.put(
   "/report/:id/",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
   PostControllers.reportPost
 );
+
 export const PostRoutes = router;

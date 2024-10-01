@@ -36,6 +36,17 @@ const getAllPosts = catchAsync(async (req, res) => {
   });
 });
 
+// Get all  premium posts
+const getAllPremiumPosts = catchAsync(async (req, res) => {
+  const posts = await PostService.getAllPremiumPostsFromDB(req.query);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Premium posts retrieved successfully",
+    data: posts,
+  });
+});
+
 // Update a post by ID
 const updatePost = catchAsync(async (req, res) => {
   const post = await PostService.updatePostIntoDB(req.params.id, req.body);
@@ -89,6 +100,7 @@ export const PostControllers = {
   createPost,
   getPostById,
   getAllPosts,
+  getAllPremiumPosts,
   updatePost,
   deletePost,
   recoverPost,

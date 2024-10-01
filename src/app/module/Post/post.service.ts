@@ -29,7 +29,45 @@ const getAllPostsFromDB = async (
   query: Record<string, any>
 ): Promise<TPost[]> => {
   const postQueryBuilder = new QueryBuilder(
-    Post.find({ isDeleted: false }).populate("user comments"),
+    Post.find({ isDeleted: false, status: "FREE" })
+      .populate({
+        path: "user",
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "user",
+          model: "User",
+        },
+      }),
+    query
+  )
+    .search(postSearchFelids)
+    .sort()
+    .fields()
+    .filter();
+
+  const posts = await postQueryBuilder.modelQuery;
+
+  return posts;
+};
+
+// Get all premium posts (with optional filters)
+const getAllPremiumPostsFromDB = async (
+  query: Record<string, any>
+): Promise<TPost[]> => {
+  const postQueryBuilder = new QueryBuilder(
+    Post.find({ isDeleted: false, status: "PREMIUM" })
+      .populate({
+        path: "user",
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "user",
+          model: "User",
+        },
+      }),
     query
   )
     .search(postSearchFelids)
@@ -130,6 +168,7 @@ export const PostService = {
   createPostIntoDB,
   getPostByIdFromDB,
   getAllPostsFromDB,
+  getAllPremiumPostsFromDB,
   updatePostIntoDB,
   deletePostFromDB,
   recoverPostFromDB,
