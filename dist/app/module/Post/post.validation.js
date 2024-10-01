@@ -20,12 +20,6 @@ const updatePostValidationSchema = zod_1.z.object({
         description: zod_1.z.string().optional(),
         status: zod_1.z.enum([post_constants_1.POST_STATUS.FREE, post_constants_1.POST_STATUS.PREMIUM]).optional(),
         reportCount: zod_1.z.number().optional(),
-        reacts: zod_1.z
-            .object({
-            likes: zod_1.z.number().optional(),
-            dislikes: zod_1.z.number().optional(),
-        })
-            .optional(),
     }),
 });
 exports.PostValidation = {

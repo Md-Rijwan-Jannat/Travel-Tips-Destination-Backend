@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { UserServices } from "./user.service";
+import { Types } from "mongoose";
 
 const getAllUser = catchAsync(async (req, res) => {
   const result = await UserServices.getAllUserFromDB(req.query);
@@ -26,7 +27,45 @@ const getUser = catchAsync(async (req, res) => {
   });
 });
 
+export const followUser = catchAsync(async (req, res) => {
+  const { id: userId } = req.user;
+  const { followedUserId } = req.params;
+
+  console.log("user Id follow===>", userId, followedUserId);
+  const result = await UserServices.followUser(
+    userId,
+    followedUserId as unknown as Types.ObjectId
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.message,
+    data: null,
+  });
+});
+
+// Un follow a user
+export const unFollowUser = catchAsync(async (req, res) => {
+  const { id: userId } = req.user;
+  const { unFollowedUserId } = req.params;
+  console.log("user Id follow===>", userId, unFollowedUserId);
+  const result = await UserServices.unFollowUser(
+    userId,
+    unFollowedUserId as unknown as Types.ObjectId
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.message,
+    data: null,
+  });
+});
+
 export const UserControllers = {
   getAllUser,
   getUser,
+  followUser,
+  unFollowUser,
 };

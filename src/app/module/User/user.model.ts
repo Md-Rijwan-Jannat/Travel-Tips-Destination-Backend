@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 import bcrypt from "bcrypt";
-import { Schema, model } from "mongoose";
+import { Schema, Types, model } from "mongoose";
 import config from "../../../config";
 import { TUser, TUserModel } from "./user.interface";
 
@@ -36,14 +36,16 @@ const userSchema = new Schema<TUser, TUserModel>(
       default: "IN_PROGRESS",
       trim: true,
     },
-    flower: {
-      type: Number,
-      default: 0,
-    },
-    flowing: {
-      type: Number,
-      default: 0,
-    },
+    follower: [
+      {
+        type: Types.ObjectId,
+      },
+    ],
+    following: [
+      {
+        type: Types.ObjectId,
+      },
+    ],
     verified: {
       type: Boolean,
       default: false,

@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { USER_ROLE, USER_STATUS } from "../User/user.constants";
 
 export interface TUser {
@@ -9,8 +9,8 @@ export interface TUser {
   image?: string;
   role: TUserRole;
   status: TUserStatus;
-  flower: number;
-  flowing: number;
+  follower: Types.ObjectId[];
+  following: Types.ObjectId[];
   verified: boolean;
   country?: string;
   address?: string;

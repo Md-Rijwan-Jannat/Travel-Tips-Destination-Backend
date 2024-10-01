@@ -26,7 +26,6 @@ const seed = () => __awaiter(void 0, void 0, void 0, function* () {
             status: user_constants_1.USER_STATUS.IN_PROGRESS,
         });
         if (!admin) {
-            console.log("Seeding started...");
             yield user_model_1.User.create({
                 name: "Md Rijwan",
                 role: user_constants_1.USER_ROLE.ADMIN,

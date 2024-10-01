@@ -11,6 +11,7 @@ import config from "../../config";
 const Auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.authorization;
+    console.log(token);
 
     // checking if the token is missing
     if (!token) {

@@ -20,15 +20,18 @@ const config_1 = __importDefault(require("../../../config"));
 const AppError_1 = __importDefault(require("../../errors/AppError"));
 const tokenGenerateFunction_1 = require("../../utils/tokenGenerateFunction");
 const user_model_1 = require("../User/user.model");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const sendEmail_1 = require("../../utils/sendEmail");
 const registerUserIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(payload);
+    const result = yield user_model_1.User.create(payload);
     const jwtPayload = {
+        id: result._id,
         email: payload.email,
         role: payload.role,
     };
     const accessToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_access_expires_in);
     const refreshToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_refresh_expires_in);
-    const result = yield user_model_1.User.create(payload);
     return {
         result,
         accessToken: accessToken,
@@ -48,6 +51,7 @@ const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function*
     if (!(yield user_model_1.User.isPasswordMatched(payload.password, user === null || user === void 0 ? void 0 : user.password)))
         throw new AppError_1.default(http_status_1.default.FORBIDDEN, "Password do not matched");
     const jwtPayload = {
+        id: user._id,
         email: user.email,
         role: user.role,
     };
@@ -58,14 +62,54 @@ const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function*
         refreshToken: refreshToken,
     };
 });
-const changeStatus = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield user_model_1.User.findByIdAndUpdate(id, payload, {
-        new: true,
-    });
+const forgetPasswordIntoDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.findById(id);
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user is not found!");
+    }
+    if (user.isDeleted === true) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is deleted!");
+    }
+    if (user.status == "BLOCKED") {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is blocked!");
+    }
+    const jwtPayload = {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+    };
+    const resetToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, "10m");
+    const resetLink = `${config_1.default.reset_link_url}?id=${user._id}&token=${resetToken}`;
+    // Send email to the user with the reset link
+    yield (0, sendEmail_1.sendEmail)(user.email, resetLink);
+});
+const resetPasswordIntoDB = (payload, token) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(payload);
+    const user = yield user_model_1.User.findById(payload._id);
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user is not found!");
+    }
+    if (user.isDeleted === true) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is deleted!");
+    }
+    if (user.status == "BLOCKED") {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is blocked!");
+    }
+    // Check if token is valid
+    const decoded = jsonwebtoken_1.default.verify(token, config_1.default.jwt_access_secret);
+    console.log(decoded);
+    if (payload._id !== decoded.id) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is forbidden!");
+    }
+    const newHashPassword = yield bcrypt_1.default.hash(payload.newPassword, Number(config_1.default.bcrypt_salt_rounds));
+    const result = yield user_model_1.User.findOneAndUpdate({ _id: decoded.id, role: decoded.role }, {
+        password: newHashPassword,
+    }, { new: true });
     return result;
 });
 exports.UserServices = {
     registerUserIntoDB,
     loginUserFromDB,
-    changeStatus,
+    forgetPasswordIntoDB,
+    resetPasswordIntoDB,
 };

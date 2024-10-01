@@ -46,7 +46,30 @@ const loginUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
         data: result,
     });
 }));
+const forgetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.body._id;
+    const result = yield auth_service_1.UserServices.forgetPasswordIntoDB(userId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "The link create successfully!",
+        data: result,
+    });
+}));
+const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = req.headers.authorization;
+    console.log("Token =>>", token);
+    const result = yield auth_service_1.UserServices.resetPasswordIntoDB(req.body, token);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Password reset successful!",
+        data: result,
+    });
+}));
 exports.UserControllers = {
     registerUser,
     loginUser,
+    forgetPassword,
+    resetPassword,
 };

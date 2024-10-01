@@ -14,5 +14,10 @@ router.get("/:id", post_controller_1.PostControllers.getPostById);
 router.get("/", post_controller_1.PostControllers.getAllPosts);
 router.patch("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.USER), post_controller_1.PostControllers.updatePost);
 router.delete("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), post_controller_1.PostControllers.deletePost);
-router.put("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), post_controller_1.PostControllers.recoverPost);
+// router.put(
+//   "/:id",
+//   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
+//   PostControllers.recoverPost
+// );
+router.put("/report/:id/", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), post_controller_1.PostControllers.reportPost);
 exports.PostRoutes = router;

@@ -18,9 +18,10 @@ const AppError_1 = __importDefault(require("../../errors/AppError"));
 const http_status_1 = __importDefault(require("http-status"));
 const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const post_constants_1 = require("./post.constants");
+const mongoose_1 = __importDefault(require("mongoose"));
 // Create a new post
-const createPostIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const post = yield post_model_1.Post.create(payload);
+const createPostIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const post = yield post_model_1.Post.create(Object.assign(Object.assign({}, payload), { user: userId }));
     return post;
 });
 // Get a post by ID
@@ -59,12 +60,41 @@ const deletePostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function*
 });
 // Delete a post by ID (soft delete)
 const recoverPostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("posId", postId);
     const post = yield post_model_1.Post.findByIdAndUpdate(postId, { isDeleted: false }, { new: true });
     if (!post) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
     }
     return post;
+});
+const reportPostFromDB = (postId, payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!mongoose_1.default.Types.ObjectId.isValid(postId)) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid Post ID");
+    }
+    if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid User ID");
+    }
+    // Find the post first to check the reportCount
+    const post = yield post_model_1.Post.findById(postId);
+    if (!post) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
+    }
+    // Increment the report count
+    const updatedReportCount = post.reportCount + 1;
+    // If reportCount reaches 5, soft delete the post
+    const isSoftDeleted = updatedReportCount >= 5;
+    // Update the post with new report and report count
+    const updatedPost = yield post_model_1.Post.findByIdAndUpdate(postId, {
+        $push: {
+            report: {
+                report: payload.report,
+                user: userId, // Assuming userId is already a valid ObjectId
+                post: postId,
+            },
+        },
+        reportCount: updatedReportCount,
+        isDeleted: isSoftDeleted, // Mark as soft deleted if reportCount >= 5
+    }, { new: true });
+    return updatedPost;
 });
 exports.PostService = {
     createPostIntoDB,
@@ -73,4 +103,5 @@ exports.PostService = {
     updatePostIntoDB,
     deletePostFromDB,
     recoverPostFromDB,
+    reportPostFromDB,
 };

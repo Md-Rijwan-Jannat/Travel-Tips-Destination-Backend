@@ -18,8 +18,6 @@ export const registerUserValidationSchema = z.object({
     status: z
       .enum([USER_STATUS.IN_PROGRESS, USER_STATUS.BLOCKED])
       .default(USER_STATUS.IN_PROGRESS),
-    flower: z.number().default(0),
-    flowing: z.number().default(0),
     verified: z.boolean().default(false),
     country: z.string().optional().optional(),
     address: z.string().optional().optional(),
@@ -38,8 +36,6 @@ export const updateUserValidationSchema = z.object({
     image: z.string().optional(),
     role: z.enum(["admin", "user"]).optional(),
     status: z.enum([USER_STATUS.IN_PROGRESS, USER_STATUS.BLOCKED]).optional(),
-    flower: z.number().default(0).optional(),
-    flowing: z.number().default(0).optional(),
     verified: z.boolean().optional(),
     country: z.string().optional(),
     address: z.string().optional(),

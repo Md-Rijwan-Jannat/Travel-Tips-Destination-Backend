@@ -20,8 +20,8 @@ export const seed = async () => {
         email: config.admin_email,
         password: config.admin_password,
         status: USER_STATUS.IN_PROGRESS,
-        flower: 0,
-        flowing: 0,
+        follower: [],
+        following: [],
         verified: true,
       });
       console.log("Admin created successfully...");

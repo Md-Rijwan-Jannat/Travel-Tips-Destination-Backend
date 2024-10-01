@@ -23,14 +23,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Post = void 0;
+exports.Comment = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const post_constants_1 = require("./post.constants");
-const reportSchema = new mongoose_1.Schema({
-    report: {
-        type: String,
-        required: true,
-    },
+const commentSchema = new mongoose_1.Schema({
     user: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "User",
@@ -41,42 +36,12 @@ const reportSchema = new mongoose_1.Schema({
         ref: "Post",
         required: true,
     },
-}, {
-    timestamps: true,
-});
-const postSchema = new mongoose_1.Schema({
-    user: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: "User",
+    text: {
+        type: String,
         required: true,
     },
     images: {
         type: [String],
-        required: true,
-    },
-    title: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    description: {
-        type: String,
-        required: true,
-    },
-    comments: [
-        {
-            type: mongoose_1.Schema.Types.ObjectId,
-            ref: "Comment",
-        },
-    ],
-    status: {
-        type: String,
-        enum: [post_constants_1.POST_STATUS.FREE, post_constants_1.POST_STATUS.PREMIUM],
-    },
-    report: [reportSchema],
-    reportCount: {
-        type: Number,
-        default: 0,
     },
     likes: [
         {
@@ -90,6 +55,16 @@ const postSchema = new mongoose_1.Schema({
             ref: "User",
         },
     ],
+    replies: [
+        {
+            type: mongoose_1.Schema.Types.ObjectId,
+            ref: "Comment",
+        },
+    ],
+    parentComment: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "Comment",
+    },
     isDeleted: {
         type: Boolean,
         default: false,
@@ -97,4 +72,4 @@ const postSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-exports.Post = mongoose_1.default.model("Post", postSchema);
+exports.Comment = mongoose_1.default.model("Comment", commentSchema);

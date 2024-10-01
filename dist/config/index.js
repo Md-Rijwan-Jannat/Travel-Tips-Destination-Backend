@@ -20,4 +20,5 @@ exports.default = {
     admin_password: process.env.admin_password,
     admin_mobile_number: process.env.admin_mobile_number,
     admin_image: process.env.admin_image,
+    reset_link_url: process.env.reset_link_url,
 };

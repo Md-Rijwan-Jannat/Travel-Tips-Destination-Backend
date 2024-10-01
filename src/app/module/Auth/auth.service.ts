@@ -11,31 +11,35 @@ import bcrypt from "bcrypt";
 import { sendEmail } from "../../utils/sendEmail";
 
 const registerUserIntoDB = async (payload: TRegister) => {
-  const result = await User.create(payload);
+  const user = await User.findOne({ email: payload.email });
 
-  const jwtPayload = {
-    id: result._id,
-    email: payload.email,
-    role: payload.role,
-  };
+  if (!user) {
+    const result = await User.create(payload);
 
-  const accessToken = createToken(
-    jwtPayload,
-    config.jwt_access_secret as string,
-    config.jwt_access_expires_in as string
-  );
+    const jwtPayload = {
+      id: result._id,
+      email: payload.email,
+      role: "USER",
+    };
 
-  const refreshToken = createToken(
-    jwtPayload,
-    config.jwt_access_secret as string,
-    config.jwt_refresh_expires_in as string
-  );
+    const accessToken = createToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      config.jwt_access_expires_in as string
+    );
 
-  return {
-    result,
-    accessToken: accessToken,
-    refreshToken: refreshToken,
-  };
+    const refreshToken = createToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      config.jwt_refresh_expires_in as string
+    );
+
+    return {
+      result,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    };
+  }
 };
 
 const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
