@@ -20,8 +20,6 @@ exports.registerUserValidationSchema = zod_1.z.object({
         status: zod_1.z
             .enum([user_constants_1.USER_STATUS.IN_PROGRESS, user_constants_1.USER_STATUS.BLOCKED])
             .default(user_constants_1.USER_STATUS.IN_PROGRESS),
-        flower: zod_1.z.number().default(0),
-        flowing: zod_1.z.number().default(0),
         verified: zod_1.z.boolean().default(false),
         country: zod_1.z.string().optional().optional(),
         address: zod_1.z.string().optional().optional(),
@@ -39,8 +37,6 @@ exports.updateUserValidationSchema = zod_1.z.object({
         image: zod_1.z.string().optional(),
         role: zod_1.z.enum(["admin", "user"]).optional(),
         status: zod_1.z.enum([user_constants_1.USER_STATUS.IN_PROGRESS, user_constants_1.USER_STATUS.BLOCKED]).optional(),
-        flower: zod_1.z.number().default(0).optional(),
-        flowing: zod_1.z.number().default(0).optional(),
         verified: zod_1.z.boolean().optional(),
         country: zod_1.z.string().optional(),
         address: zod_1.z.string().optional(),

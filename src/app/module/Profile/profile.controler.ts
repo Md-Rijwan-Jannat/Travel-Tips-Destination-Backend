@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { ProfileServices } from "./profile.service";
+import { JwtPayload } from "jsonwebtoken";
 
 // Get my profile by email
 const getMyProfile = catchAsync(async (req, res) => {
@@ -48,8 +49,40 @@ const deleteMyProfile = catchAsync(async (req, res) => {
   });
 });
 
+// Get my posts
+const getMyPosts = catchAsync(async (req, res) => {
+  const user = req.user as JwtPayload;
+
+  console.log(user);
+  const result = await ProfileServices.getMyPosts(user?.id, req.query);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "My posts retrieved successfully",
+    data: result,
+  });
+});
+
+// Get my posts
+const getMyPremiumPosts = catchAsync(async (req, res) => {
+  const user = req.user as JwtPayload;
+
+  console.log(user);
+  const result = await ProfileServices.getMyPremiumPosts(user?.id, req.query);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "My premium posts retrieved successfully",
+    data: result,
+  });
+});
+
 export const ProfileControllers = {
   getMyProfile,
   updateMyProfile,
   deleteMyProfile,
+  getMyPosts,
+  getMyPremiumPosts,
 };

@@ -18,18 +18,37 @@ const AppError_1 = __importDefault(require("../../errors/AppError"));
 const http_status_1 = __importDefault(require("http-status"));
 const user_model_1 = require("../User/user.model");
 const post_model_1 = require("../Post/post.model");
+const mongoose_1 = __importDefault(require("mongoose"));
 // Add a comment to the DB
-const addCommentIntoDB = (payload, id) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield user_model_1.User.findById(id);
-    const post = yield post_model_1.Post.findById(payload.post);
-    if (!user) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+const addCommentIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const session = yield mongoose_1.default.startSession();
+    session.startTransaction();
+    try {
+        const user = yield user_model_1.User.findById(userId).session(session);
+        const post = yield post_model_1.Post.findById(payload.post).session(session);
+        if (!user) {
+            throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+        }
+        if (!post) {
+            throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
+        }
+        // Create the comment
+        const comment = yield comment_model_1.Comment.create([Object.assign(Object.assign({}, payload), { user: userId })], {
+            session,
+        });
+        yield post_model_1.Post.findByIdAndUpdate(payload.post, {
+            $push: { comments: comment[0]._id },
+        }, { session });
+        // Commit the transaction
+        yield session.commitTransaction();
+        session.endSession();
+        return comment[0];
     }
-    if (!post) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
+    catch (error) {
+        yield session.abortTransaction();
+        session.endSession();
+        throw error;
     }
-    const comment = yield comment_model_1.Comment.create(Object.assign(Object.assign({}, payload), { user: id }));
-    return comment;
 });
 // Get all comments for a post
 const getCommentForPostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function* () {

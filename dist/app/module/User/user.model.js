@@ -48,14 +48,16 @@ const userSchema = new mongoose_1.Schema({
         default: "IN_PROGRESS",
         trim: true,
     },
-    flower: {
-        type: Number,
-        default: 0,
-    },
-    flowing: {
-        type: Number,
-        default: 0,
-    },
+    follower: [
+        {
+            type: mongoose_1.Types.ObjectId,
+        },
+    ],
+    following: [
+        {
+            type: mongoose_1.Types.ObjectId,
+        },
+    ],
     verified: {
         type: Boolean,
         default: false,

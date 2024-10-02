@@ -3,6 +3,9 @@ import AppError from "../../errors/AppError";
 import { User } from "../User/user.model";
 import { TUpdateUser } from "./profile.interface";
 import { USER_STATUS } from "../User/user.constants";
+import { Post } from "../Post/post.model";
+import QueryBuilder from "../../builder/QueryBuilder";
+import { postSearchFelids } from "../Post/post.constants";
 
 // Get my profile by email
 const getMyProfileFormDB = async (email: string) => {
@@ -56,8 +59,80 @@ const deleteMyProfileFromDB = async (id: string, email: string) => {
   return result;
 };
 
+// Get my posts
+const getMyPosts = async (id: string, query: Record<string, any>) => {
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (user.status === USER_STATUS.BLOCKED) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
+  }
+
+  const postQueryBuilder = new QueryBuilder(
+    Post.find({ user: user._id, isDeleted: false, status: "FREE" })
+      .populate({
+        path: "user",
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "user",
+          model: "User",
+        },
+      }),
+    query
+  )
+    .search(postSearchFelids)
+    .sort()
+    .fields()
+    .filter();
+
+  const result = await postQueryBuilder.modelQuery;
+  return result;
+};
+
+// Get my premium posts
+const getMyPremiumPosts = async (id: string, query: Record<string, any>) => {
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (user.status === USER_STATUS.BLOCKED) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
+  }
+
+  const postQueryBuilder = new QueryBuilder(
+    Post.find({ user: user._id, isDeleted: false, status: "PREMIUM" })
+      .populate({
+        path: "user",
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "user",
+          model: "User",
+        },
+      }),
+    query
+  )
+    .search(postSearchFelids)
+    .sort()
+    .fields()
+    .filter();
+
+  const result = await postQueryBuilder.modelQuery;
+  return result;
+};
+
 export const ProfileServices = {
   updateMyProfileIntoDB,
   getMyProfileFormDB,
   deleteMyProfileFromDB,
+  getMyPosts,
+  getMyPremiumPosts,
 };

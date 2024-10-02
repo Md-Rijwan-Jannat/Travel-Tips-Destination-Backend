@@ -11,6 +11,7 @@ const createPostIntoDB = async (
   payload: TPost,
   userId: string
 ): Promise<TPost> => {
+  console.log(userId, "id is here");
   const post = await Post.create({ ...payload, user: userId });
   return post;
 };

@@ -3,6 +3,7 @@ import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { UserServices } from "./user.service";
 import { Types } from "mongoose";
+import { ProfileServices } from "../Profile/profile.service";
 
 const getAllUser = catchAsync(async (req, res) => {
   const result = await UserServices.getAllUserFromDB(req.query);
@@ -63,9 +64,26 @@ export const unFollowUser = catchAsync(async (req, res) => {
   });
 });
 
+// Get single user all posts
+const getSingleUserPosts = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const result = await UserServices.getSingleUserAllPostsFromDB(
+    userId,
+    req.query
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "My posts retrieved successfully",
+    data: result,
+  });
+});
+
 export const UserControllers = {
   getAllUser,
   getUser,
   followUser,
   unFollowUser,
+  getSingleUserPosts,
 };

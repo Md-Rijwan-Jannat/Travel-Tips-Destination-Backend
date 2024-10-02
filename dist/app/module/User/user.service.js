@@ -20,6 +20,7 @@ const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const AppError_1 = __importDefault(require("../../errors/AppError"));
 const user_model_1 = require("./user.model");
 const user_utils_1 = require("./user.utils");
+const mongoose_1 = __importDefault(require("mongoose"));
 const getAllUserFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const usersQueryBuilder = new QueryBuilder_1.default(user_model_1.User.find(), query)
         .fields()
@@ -41,7 +42,85 @@ const getUserFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
     }
     return result;
 });
+// Follow a user with transaction
+const followUser = (userId, followedUserId) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
+    const session = yield mongoose_1.default.startSession();
+    session.startTransaction();
+    try {
+        if (userId === followedUserId) {
+            throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "You cannot follow yourself.");
+        }
+        const followerObjectId = new mongoose_1.default.Types.ObjectId(userId);
+        const followedObjectId = new mongoose_1.default.Types.ObjectId(followedUserId);
+        const user = yield user_model_1.User.findById(followerObjectId).session(session);
+        const followedUser = yield user_model_1.User.findById(followedObjectId).session(session);
+        if (!user || !followedUser) {
+            throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+        }
+        if (!((_a = user === null || user === void 0 ? void 0 : user.following) === null || _a === void 0 ? void 0 : _a.includes(followedObjectId))) {
+            (_b = user === null || user === void 0 ? void 0 : user.following) === null || _b === void 0 ? void 0 : _b.push(followedObjectId);
+        }
+        else {
+            throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "You're already following");
+        }
+        if (!((_c = followedUser === null || followedUser === void 0 ? void 0 : followedUser.follower) === null || _c === void 0 ? void 0 : _c.includes(followerObjectId))) {
+            (_d = followedUser === null || followedUser === void 0 ? void 0 : followedUser.follower) === null || _d === void 0 ? void 0 : _d.push(followerObjectId);
+        }
+        else {
+            throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "You're already following");
+        }
+        yield user.save({ session });
+        yield followedUser.save({ session });
+        // Commit the transaction
+        yield session.commitTransaction();
+        session.endSession();
+        return {
+            message: `You are now following ${followedUser.name}`,
+        };
+    }
+    catch (error) {
+        // If any error occurs, abort the transaction
+        yield session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
+});
+// Unfollow a user with transaction
+const unFollowUser = (userId, unFollowedUserId) => __awaiter(void 0, void 0, void 0, function* () {
+    const session = yield mongoose_1.default.startSession();
+    session.startTransaction();
+    try {
+        const userObjectId = new mongoose_1.default.Types.ObjectId(userId);
+        const unFollowedUserObjectId = new mongoose_1.default.Types.ObjectId(unFollowedUserId);
+        const user = yield user_model_1.User.findById(userObjectId).session(session);
+        const unFollowedUser = yield user_model_1.User.findById(unFollowedUserObjectId).session(session);
+        if (!user || !unFollowedUser) {
+            throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+        }
+        const updateFollowingResult = yield user_model_1.User.updateOne({ _id: userObjectId }, { $pull: { following: unFollowedUserObjectId } }, { session });
+        const updateFollowerResult = yield user_model_1.User.updateOne({ _id: unFollowedUserObjectId }, { $pull: { follower: userObjectId } }, { session });
+        if (updateFollowingResult.modifiedCount === 0 ||
+            updateFollowerResult.modifiedCount === 0) {
+            throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Unfollow action failed");
+        }
+        // Commit the transaction
+        yield session.commitTransaction();
+        session.endSession();
+        return {
+            message: `You have unfollowed ${unFollowedUser.name}`,
+        };
+    }
+    catch (error) {
+        // If any error occurs, abort the transaction
+        yield session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
+});
 exports.UserServices = {
     getAllUserFromDB,
     getUserFromDB,
+    followUser,
+    unFollowUser,
 };

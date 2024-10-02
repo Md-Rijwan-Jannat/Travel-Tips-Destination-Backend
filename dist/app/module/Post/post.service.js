@@ -34,7 +34,37 @@ const getPostByIdFromDB = (postId) => __awaiter(void 0, void 0, void 0, function
 });
 // Get all posts (with optional filters)
 const getAllPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false }).populate("user comments"), query)
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "FREE" })
+        .populate({
+        path: "user",
+    })
+        .populate({
+        path: "comments",
+        populate: {
+            path: "user",
+            model: "User",
+        },
+    }), query)
+        .search(post_constants_1.postSearchFelids)
+        .sort()
+        .fields()
+        .filter();
+    const posts = yield postQueryBuilder.modelQuery;
+    return posts;
+});
+// Get all premium posts (with optional filters)
+const getAllPremiumPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "PREMIUM" })
+        .populate({
+        path: "user",
+    })
+        .populate({
+        path: "comments",
+        populate: {
+            path: "user",
+            model: "User",
+        },
+    }), query)
         .search(post_constants_1.postSearchFelids)
         .sort()
         .fields()
@@ -100,6 +130,7 @@ exports.PostService = {
     createPostIntoDB,
     getPostByIdFromDB,
     getAllPostsFromDB,
+    getAllPremiumPostsFromDB,
     updatePostIntoDB,
     deletePostFromDB,
     recoverPostFromDB,

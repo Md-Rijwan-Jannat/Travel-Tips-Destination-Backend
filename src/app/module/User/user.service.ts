@@ -7,6 +7,9 @@ import AppError from "../../errors/AppError";
 import { User } from "./user.model";
 import { UserSearchableFields } from "./user.utils";
 import mongoose, { Types } from "mongoose";
+import { USER_STATUS } from "./user.constants";
+import { Post } from "../Post/post.model";
+import { postSearchFelids } from "../Post/post.constants";
 
 const getAllUserFromDB = async (query: Record<string, any>) => {
   const usersQueryBuilder = new QueryBuilder(User.find(), query)
@@ -145,9 +148,48 @@ const unFollowUser = async (
   }
 };
 
+// Get my posts
+const getSingleUserAllPostsFromDB = async (
+  id: string,
+  query: Record<string, any>
+) => {
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (user.status === USER_STATUS.BLOCKED) {
+    throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
+  }
+
+  const postQueryBuilder = new QueryBuilder(
+    Post.find({ user: user._id, isDeleted: false, status: "FREE" })
+      .populate({
+        path: "user",
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "user",
+          model: "User",
+        },
+      }),
+    query
+  )
+    .search(postSearchFelids)
+    .sort()
+    .fields()
+    .filter();
+
+  const result = await postQueryBuilder.modelQuery;
+  return result;
+};
+
 export const UserServices = {
   getAllUserFromDB,
   getUserFromDB,
   followUser,
   unFollowUser,
+  getSingleUserAllPostsFromDB,
 };

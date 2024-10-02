@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.get("/", UserControllers.getAllUser);
 router.get("/:id", UserControllers.getUser);
+router.get("/posts/:userId", UserControllers.getSingleUserPosts);
 router.post(
   "/follow/:followedUserId",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),

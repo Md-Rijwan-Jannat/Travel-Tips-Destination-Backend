@@ -24,19 +24,22 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const sendEmail_1 = require("../../utils/sendEmail");
 const registerUserIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield user_model_1.User.create(payload);
-    const jwtPayload = {
-        id: result._id,
-        email: payload.email,
-        role: payload.role,
-    };
-    const accessToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_access_expires_in);
-    const refreshToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_refresh_expires_in);
-    return {
-        result,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-    };
+    const user = yield user_model_1.User.findOne({ email: payload.email });
+    if (!user) {
+        const result = yield user_model_1.User.create(payload);
+        const jwtPayload = {
+            id: result._id,
+            email: payload.email,
+            role: "USER",
+        };
+        const accessToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_access_expires_in);
+        const refreshToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_refresh_expires_in);
+        return {
+            result,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+        };
+    }
 });
 const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findOne({ email: payload.email });

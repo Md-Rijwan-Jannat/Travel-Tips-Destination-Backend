@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserControllers = void 0;
+exports.UserControllers = exports.unFollowUser = exports.followUser = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
@@ -37,7 +37,34 @@ const getUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0
         data: result,
     });
 }));
+exports.followUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id: userId } = req.user;
+    const { followedUserId } = req.params;
+    console.log("user Id follow===>", userId, followedUserId);
+    const result = yield user_service_1.UserServices.followUser(userId, followedUserId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: result.message,
+        data: null,
+    });
+}));
+// Un follow a user
+exports.unFollowUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id: userId } = req.user;
+    const { unFollowedUserId } = req.params;
+    console.log("user Id follow===>", userId, unFollowedUserId);
+    const result = yield user_service_1.UserServices.unFollowUser(userId, unFollowedUserId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: result.message,
+        data: null,
+    });
+}));
 exports.UserControllers = {
     getAllUser,
     getUser,
+    followUser: exports.followUser,
+    unFollowUser: exports.unFollowUser,
 };
