@@ -1,10 +1,21 @@
-import { Request, Response } from "express";
 import { ReactService } from "./react.service";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 
 // Like a post or comment
-const like = catchAsync(async (req: Request, res: Response) => {
+const getAllReacts = catchAsync(async (req, res) => {
+  const react = await ReactService.getAllReacts();
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `You liked the reacts successfully.`,
+    data: react,
+  });
+});
+
+// Like a post or comment
+const like = catchAsync(async (req, res) => {
   const { targetId, type } = req.params;
   const userId = req.user.id;
 
@@ -23,7 +34,7 @@ const like = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Unlike a post or comment
-const unlike = catchAsync(async (req: Request, res: Response) => {
+const unlike = catchAsync(async (req, res) => {
   const { targetId, type } = req.params;
   const userId = req.user.id;
 
@@ -38,7 +49,7 @@ const unlike = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Dislike a post or comment
-const dislike = catchAsync(async (req: Request, res: Response) => {
+const dislike = catchAsync(async (req, res) => {
   const { targetId, type } = req.params;
   const userId = req.user.id;
 
@@ -57,7 +68,7 @@ const dislike = catchAsync(async (req: Request, res: Response) => {
 });
 
 // Undislike a post or comment
-const undislike = catchAsync(async (req: Request, res: Response) => {
+const undislike = catchAsync(async (req, res) => {
   const { targetId, type } = req.params;
   const userId = req.user.id;
 
@@ -76,6 +87,7 @@ const undislike = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const ReactController = {
+  getAllReacts,
   like,
   unlike,
   dislike,

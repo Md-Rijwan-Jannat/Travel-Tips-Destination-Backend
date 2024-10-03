@@ -6,6 +6,11 @@ import { USER_ROLE } from "../User/user.constants";
 const router = express.Router();
 
 // Routes for reacting to :post
+router.get(
+  "/",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  ReactController.getAllReacts
+);
 router.post(
   "/:type/:targetId/like",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),

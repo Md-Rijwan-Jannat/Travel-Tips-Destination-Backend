@@ -5,6 +5,12 @@ import { React } from "./react.model";
 import { Post } from "../Post/post.model";
 import { Comment } from "../Comment/comment.model";
 
+const getAllReacts = async () => {
+  const result = await React.find();
+
+  return result;
+};
+
 // Like a post or comment
 const likeFromDB = async (
   userId: string,
@@ -189,6 +195,7 @@ const undislikeFromDB = async (
 };
 
 export const ReactService = {
+  getAllReacts,
   likeFromDB,
   unlikeFromDB,
   dislikeFromDB,

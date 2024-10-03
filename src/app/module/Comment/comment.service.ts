@@ -50,7 +50,6 @@ const addCommentIntoDB = async (
   }
 };
 
-// Get all comments for a post
 const getCommentForPostFromDB = async (postId: string): Promise<IComment[]> => {
   const comments = await Comment.find({ post: postId, isDeleted: false })
     .populate("user")
