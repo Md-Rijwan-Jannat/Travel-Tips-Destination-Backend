@@ -5,6 +5,7 @@ import { TPaymentData } from "./payment.interface";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { v4 as uuidv4 } from "uuid";
+import { Post } from "../Post/post.model";
 
 const subscriptionsIntoBD = async (
   payload: Omit<TPaymentData, "transitionId">,
@@ -15,6 +16,9 @@ const subscriptionsIntoBD = async (
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User is not found");
   }
+
+  const post = await Post.find({ user: user._id });
+
   // Generate a transition ID
   const transitionId = uuidv4();
 

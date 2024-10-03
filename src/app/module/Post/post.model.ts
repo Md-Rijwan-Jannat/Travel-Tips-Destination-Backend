@@ -1,7 +1,8 @@
 import mongoose, { Schema } from "mongoose";
 import { TPost } from "./post.interface";
-import { POST_STATUS } from "./post.constants";
+import { CategoryEnum, POST_STATUS } from "./post.constants";
 
+// Report Schema
 const reportSchema = new Schema(
   {
     report: {
@@ -24,6 +25,7 @@ const reportSchema = new Schema(
   }
 );
 
+// Post Schema
 const postSchema = new Schema<TPost>(
   {
     user: {
@@ -50,6 +52,11 @@ const postSchema = new Schema<TPost>(
         ref: "Comment",
       },
     ],
+    category: {
+      type: String,
+      enum: CategoryEnum,
+      required: true,
+    },
     status: {
       type: String,
       enum: [POST_STATUS.FREE, POST_STATUS.PREMIUM],

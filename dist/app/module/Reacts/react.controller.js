@@ -17,6 +17,16 @@ const react_service_1 = require("./react.service");
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 // Like a post or comment
+const getAllReacts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const react = yield react_service_1.ReactService.getAllReacts();
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: `You liked the reacts successfully.`,
+        data: react,
+    });
+}));
+// Like a post or comment
 const like = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { targetId, type } = req.params;
     const userId = req.user.id;
@@ -65,6 +75,7 @@ const undislike = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
     });
 }));
 exports.ReactController = {
+    getAllReacts,
     like,
     unlike,
     dislike,

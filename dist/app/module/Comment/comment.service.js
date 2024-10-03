@@ -50,7 +50,6 @@ const addCommentIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, 
         throw error;
     }
 });
-// Get all comments for a post
 const getCommentForPostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function* () {
     const comments = yield comment_model_1.Comment.find({ post: postId, isDeleted: false })
         .populate("user")

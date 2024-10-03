@@ -18,6 +18,10 @@ const http_status_1 = __importDefault(require("http-status"));
 const react_model_1 = require("./react.model");
 const post_model_1 = require("../Post/post.model");
 const comment_model_1 = require("../Comment/comment.model");
+const getAllReacts = () => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield react_model_1.React.find();
+    return result;
+});
 // Like a post or comment
 const likeFromDB = (userId, targetId, type) => __awaiter(void 0, void 0, void 0, function* () {
     // Check if the user has already liked this post/comment
@@ -163,6 +167,7 @@ const undislikeFromDB = (userId, targetId, type) => __awaiter(void 0, void 0, vo
     }
 });
 exports.ReactService = {
+    getAllReacts,
     likeFromDB,
     unlikeFromDB,
     dislikeFromDB,

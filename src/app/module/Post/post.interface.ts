@@ -1,12 +1,27 @@
 import { Document, Types } from "mongoose";
 import { POST_STATUS } from "./post.constants";
 
+export type TCategoryType =
+  | "Adventure"
+  | "Exploration"
+  | "Business Travel"
+  | "Other"
+  | "Culture"
+  | "Wildlife"
+  | "Beaches"
+  | "Mountaineering"
+  | "Sports"
+  | "Road Trip"
+  | "City Tours"
+  | "Photography";
+
 export interface TPost extends Document {
   user: Types.ObjectId;
   images: string[];
   title: string;
   description: string;
   comments?: Types.ObjectId[];
+  category: TCategoryType;
   status: TPostStatus;
   report?: Types.ObjectId[];
   reportCount: number;
