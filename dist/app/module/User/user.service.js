@@ -21,6 +21,9 @@ const AppError_1 = __importDefault(require("../../errors/AppError"));
 const user_model_1 = require("./user.model");
 const user_utils_1 = require("./user.utils");
 const mongoose_1 = __importDefault(require("mongoose"));
+const user_constants_1 = require("./user.constants");
+const post_model_1 = require("../Post/post.model");
+const post_constants_1 = require("../Post/post.constants");
 const getAllUserFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const usersQueryBuilder = new QueryBuilder_1.default(user_model_1.User.find(), query)
         .fields()
@@ -118,9 +121,37 @@ const unFollowUser = (userId, unFollowedUserId) => __awaiter(void 0, void 0, voi
         throw error;
     }
 });
+// Get my posts
+const getSingleUserAllPostsFromDB = (id, query) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.findById(id);
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    if (user.status === user_constants_1.USER_STATUS.BLOCKED) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "User is blocked");
+    }
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ user: user._id, isDeleted: false, status: "FREE" })
+        .populate({
+        path: "user",
+    })
+        .populate({
+        path: "comments",
+        populate: {
+            path: "user",
+            model: "User",
+        },
+    }), query)
+        .search(post_constants_1.postSearchFelids)
+        .sort()
+        .fields()
+        .filter();
+    const result = yield postQueryBuilder.modelQuery;
+    return result;
+});
 exports.UserServices = {
     getAllUserFromDB,
     getUserFromDB,
     followUser,
     unFollowUser,
+    getSingleUserAllPostsFromDB,
 };

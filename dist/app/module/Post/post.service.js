@@ -21,6 +21,7 @@ const post_constants_1 = require("./post.constants");
 const mongoose_1 = __importDefault(require("mongoose"));
 // Create a new post
 const createPostIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(userId, "id is here");
     const post = yield post_model_1.Post.create(Object.assign(Object.assign({}, payload), { user: userId }));
     return post;
 });

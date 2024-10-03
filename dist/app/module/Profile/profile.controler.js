@@ -52,8 +52,34 @@ const deleteMyProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
         data: result,
     });
 }));
+// Get my posts
+const getMyPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    console.log(user);
+    const result = yield profile_service_1.ProfileServices.getMyPosts(user === null || user === void 0 ? void 0 : user.id, req.query);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "My posts retrieved successfully",
+        data: result,
+    });
+}));
+// Get my posts
+const getMyPremiumPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    console.log(user);
+    const result = yield profile_service_1.ProfileServices.getMyPremiumPosts(user === null || user === void 0 ? void 0 : user.id, req.query);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "My premium posts retrieved successfully",
+        data: result,
+    });
+}));
 exports.ProfileControllers = {
     getMyProfile,
     updateMyProfile,
     deleteMyProfile,
+    getMyPosts,
+    getMyPremiumPosts,
 };

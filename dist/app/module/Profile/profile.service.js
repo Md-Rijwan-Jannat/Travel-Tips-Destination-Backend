@@ -17,6 +17,9 @@ const http_status_1 = __importDefault(require("http-status"));
 const AppError_1 = __importDefault(require("../../errors/AppError"));
 const user_model_1 = require("../User/user.model");
 const user_constants_1 = require("../User/user.constants");
+const post_model_1 = require("../Post/post.model");
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
+const post_constants_1 = require("../Post/post.constants");
 // Get my profile by email
 const getMyProfileFormDB = (email) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findOne({ email });
@@ -53,8 +56,64 @@ const deleteMyProfileFromDB = (id, email) => __awaiter(void 0, void 0, void 0, f
     const result = yield user_model_1.User.findByIdAndDelete(id);
     return result;
 });
+// Get my posts
+const getMyPosts = (id, query) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.findById(id);
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    if (user.status === user_constants_1.USER_STATUS.BLOCKED) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "User is blocked");
+    }
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ user: user._id, isDeleted: false, status: "FREE" })
+        .populate({
+        path: "user",
+    })
+        .populate({
+        path: "comments",
+        populate: {
+            path: "user",
+            model: "User",
+        },
+    }), query)
+        .search(post_constants_1.postSearchFelids)
+        .sort()
+        .fields()
+        .filter();
+    const result = yield postQueryBuilder.modelQuery;
+    return result;
+});
+// Get my premium posts
+const getMyPremiumPosts = (id, query) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.findById(id);
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    if (user.status === user_constants_1.USER_STATUS.BLOCKED) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "User is blocked");
+    }
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ user: user._id, isDeleted: false, status: "PREMIUM" })
+        .populate({
+        path: "user",
+    })
+        .populate({
+        path: "comments",
+        populate: {
+            path: "user",
+            model: "User",
+        },
+    }), query)
+        .search(post_constants_1.postSearchFelids)
+        .sort()
+        .fields()
+        .filter();
+    const result = yield postQueryBuilder.modelQuery;
+    return result;
+});
 exports.ProfileServices = {
     updateMyProfileIntoDB,
     getMyProfileFormDB,
     deleteMyProfileFromDB,
+    getMyPosts,
+    getMyPremiumPosts,
 };

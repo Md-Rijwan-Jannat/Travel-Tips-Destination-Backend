@@ -7,12 +7,12 @@ import config from "../../../config";
 const registerUser = catchAsync(async (req, res) => {
   const result = await UserServices.registerUserIntoDB(req.body);
 
-  const { refreshToken, accessToken } = result;
+  // const { refreshToken, accessToken } = result;
 
-  res.cookie("refreshToken", refreshToken, {
-    secure: config.NODE_ENV === "production",
-    httpOnly: true,
-  });
+  // res.cookie("refreshToken", refreshToken, {
+  //   secure: config.NODE_ENV === "production",
+  //   httpOnly: true,
+  // });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

@@ -12,6 +12,7 @@ const user_constants_1 = require("./user.constants");
 const router = express_1.default.Router();
 router.get("/", user_controller_1.UserControllers.getAllUser);
 router.get("/:id", user_controller_1.UserControllers.getUser);
+router.get("/posts/:userId", user_controller_1.UserControllers.getSingleUserPosts);
 router.post("/follow/:followedUserId", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.followUser);
 router.post("/un-follow/:unFollowedUserId", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.unFollowUser);
 exports.UserRoutes = router;

@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "cloudinary": "^2.2.0",
     "cookie-parser": "^1.4.6",
@@ -27,6 +28,7 @@
     "mongoose": "^8.4.4",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.15",
+    "uuid": "^10.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -39,6 +41,7 @@
     "@types/multer": "^1.4.11",
     "@types/node": "^20.14.9",
     "@types/nodemailer": "^6.4.16",
+    "@types/uuid": "^10.0.0",
     "eslint": "^8.57.0",
     "nodemon": "^3.1.4",
     "prettier": "^3.3.2",

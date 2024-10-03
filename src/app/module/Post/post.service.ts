@@ -152,12 +152,12 @@ const reportPostFromDB = async (
       $push: {
         report: {
           report: payload.report,
-          user: userId, // Assuming userId is already a valid ObjectId
+          user: userId,
           post: postId,
         },
       },
       reportCount: updatedReportCount,
-      isDeleted: isSoftDeleted, // Mark as soft deleted if reportCount >= 5
+      isDeleted: isSoftDeleted,
     },
     { new: true }
   );

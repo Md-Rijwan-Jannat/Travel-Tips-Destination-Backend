@@ -12,6 +12,8 @@ const profile_validation_1 = require("./profile.validation");
 const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
 const router = express_1.default.Router();
 router.get("/", (0, auth_1.default)(user_constants_1.USER_ROLE.USER), profile_controler_1.ProfileControllers.getMyProfile);
+router.get("/my-posts", (0, auth_1.default)(user_constants_1.USER_ROLE.USER), profile_controler_1.ProfileControllers.getMyPosts);
+router.get("/my-premium-posts", (0, auth_1.default)(user_constants_1.USER_ROLE.USER), profile_controler_1.ProfileControllers.getMyPremiumPosts);
 router.patch("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.USER), (0, validateRequest_1.default)(profile_validation_1.ProfileValidation.updateMyProfileValidationSchema), profile_controler_1.ProfileControllers.updateMyProfile);
 router.delete("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.USER), profile_controler_1.ProfileControllers.deleteMyProfile);
 exports.ProfileRoutes = router;

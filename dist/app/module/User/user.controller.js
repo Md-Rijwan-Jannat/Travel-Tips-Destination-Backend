@@ -62,9 +62,21 @@ exports.unFollowUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
         data: null,
     });
 }));
+// Get single user all posts
+const getSingleUserPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userId } = req.params;
+    const result = yield user_service_1.UserServices.getSingleUserAllPostsFromDB(userId, req.query);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "My posts retrieved successfully",
+        data: result,
+    });
+}));
 exports.UserControllers = {
     getAllUser,
     getUser,
     followUser: exports.followUser,
     unFollowUser: exports.unFollowUser,
+    getSingleUserPosts,
 };
