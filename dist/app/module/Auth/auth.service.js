@@ -65,8 +65,9 @@ const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function*
         refreshToken: refreshToken,
     };
 });
-const forgetPasswordIntoDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield user_model_1.User.findById(id);
+const forgetPasswordIntoDB = (email) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.findOne({ email: email });
+    console.log("email===>", email, user);
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user is not found!");
     }
@@ -82,13 +83,13 @@ const forgetPasswordIntoDB = (id) => __awaiter(void 0, void 0, void 0, function*
         role: user.role,
     };
     const resetToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, "10m");
-    const resetLink = `${config_1.default.reset_link_url}?id=${user._id}&token=${resetToken}`;
+    const resetLink = `${config_1.default.reset_link_url}?email=${user.email}&token=${resetToken}`;
     // Send email to the user with the reset link
     yield (0, sendEmail_1.sendEmail)(user.email, resetLink);
 });
 const resetPasswordIntoDB = (payload, token) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(payload);
-    const user = yield user_model_1.User.findById(payload._id);
+    const user = yield user_model_1.User.findOne({ email: payload === null || payload === void 0 ? void 0 : payload.email });
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user is not found!");
     }
@@ -101,7 +102,7 @@ const resetPasswordIntoDB = (payload, token) => __awaiter(void 0, void 0, void 0
     // Check if token is valid
     const decoded = jsonwebtoken_1.default.verify(token, config_1.default.jwt_access_secret);
     console.log(decoded);
-    if (payload._id !== decoded.id) {
+    if (payload.email !== decoded.email) {
         throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is forbidden!");
     }
     const newHashPassword = yield bcrypt_1.default.hash(payload.newPassword, Number(config_1.default.bcrypt_salt_rounds));

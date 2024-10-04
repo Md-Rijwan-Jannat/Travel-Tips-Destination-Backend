@@ -84,8 +84,9 @@ const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
   };
 };
 
-const forgetPasswordIntoDB = async (id: string) => {
-  const user = await User.findById(id);
+const forgetPasswordIntoDB = async (email: string) => {
+  const user = await User.findOne({ email: email });
+  console.log("email===>", email, user);
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
@@ -111,18 +112,18 @@ const forgetPasswordIntoDB = async (id: string) => {
     "10m"
   );
 
-  const resetLink = `${config.reset_link_url}?id=${user._id}&token=${resetToken}`;
+  const resetLink = `${config.reset_link_url}?email=${user.email}&token=${resetToken}`;
 
   // Send email to the user with the reset link
   await sendEmail(user.email, resetLink);
 };
 
 const resetPasswordIntoDB = async (
-  payload: { _id: string; newPassword: string },
+  payload: { email: string; newPassword: string },
   token: string
 ) => {
   console.log(payload);
-  const user = await User.findById(payload._id);
+  const user = await User.findOne({ email: payload?.email });
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
@@ -144,7 +145,7 @@ const resetPasswordIntoDB = async (
   };
 
   console.log(decoded);
-  if (payload._id !== decoded.id) {
+  if (payload.email !== decoded.email) {
     throw new AppError(httpStatus.FORBIDDEN, "This user is forbidden!");
   }
 

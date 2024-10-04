@@ -41,8 +41,8 @@ const loginUser = catchAsync(async (req, res) => {
 });
 
 const forgetPassword = catchAsync(async (req, res) => {
-  const userId = req.body._id;
-  const result = await UserServices.forgetPasswordIntoDB(userId);
+  const email = req.body.email;
+  const result = await UserServices.forgetPasswordIntoDB(email);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

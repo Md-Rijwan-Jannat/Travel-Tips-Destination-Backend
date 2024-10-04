@@ -19,11 +19,13 @@ const payment_utils_1 = require("./payment.utils");
 const AppError_1 = __importDefault(require("../../errors/AppError"));
 const http_status_1 = __importDefault(require("http-status"));
 const uuid_1 = require("uuid");
+const post_model_1 = require("../Post/post.model");
 const subscriptionsIntoBD = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findById(userId);
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User is not found");
     }
+    const post = yield post_model_1.Post.find({ user: user._id });
     // Generate a transition ID
     const transitionId = (0, uuid_1.v4)();
     const paymentData = Object.assign(Object.assign({}, payload), { transitionId });

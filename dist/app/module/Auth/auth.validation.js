@@ -12,7 +12,7 @@ exports.registerUserValidationSchema = zod_1.z.object({
             .nonempty("Email is required"),
         password: zod_1.z
             .string()
-            .min(8, "Password must be at least 8 characters long")
+            .min(6, "Password must be at least 6 characters long")
             .nonempty("Password is required")
             .optional(),
         image: zod_1.z.string().optional(),
@@ -34,7 +34,7 @@ exports.updateUserValidationSchema = zod_1.z.object({
         email: zod_1.z.string().email("Invalid email address").optional(),
         password: zod_1.z
             .string()
-            .min(8, "Password must be at least 8 characters long")
+            .min(6, "Password must be at least 6 characters long")
             .optional(),
         image: zod_1.z.string().optional(),
         role: zod_1.z.enum(["admin", "user"]).optional(),
@@ -53,7 +53,7 @@ const loginUserValidationSchema = zod_1.z.object({
             .string()
             .email("Invalid email address")
             .nonempty("Email is required"),
-        password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),
+        password: zod_1.z.string().min(6, "Password must be at least 6 characters long"),
     }),
 });
 exports.UserValidation = {

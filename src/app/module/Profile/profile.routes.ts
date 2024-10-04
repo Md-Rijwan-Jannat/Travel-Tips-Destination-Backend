@@ -7,7 +7,11 @@ import validateRequest from "../../middlewares/validateRequest";
 
 const router = express.Router();
 
-router.get("/", Auth(USER_ROLE.USER), ProfileControllers.getMyProfile);
+router.get(
+  "/",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  ProfileControllers.getMyProfile
+);
 router.get("/my-posts", Auth(USER_ROLE.USER), ProfileControllers.getMyPosts);
 router.get(
   "/my-premium-posts",

@@ -10,7 +10,7 @@ export const registerUserValidationSchema = z.object({
       .nonempty("Email is required"),
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters long")
+      .min(6, "Password must be at least 6 characters long")
       .nonempty("Password is required")
       .optional(),
     image: z.string().optional(),
@@ -33,7 +33,7 @@ export const updateUserValidationSchema = z.object({
     email: z.string().email("Invalid email address").optional(),
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters long")
+      .min(6, "Password must be at least 6 characters long")
       .optional(),
     image: z.string().optional(),
     role: z.enum(["admin", "user"]).optional(),
@@ -53,7 +53,7 @@ const loginUserValidationSchema = z.object({
       .string()
       .email("Invalid email address")
       .nonempty("Email is required"),
-    password: z.string().min(8, "Password must be at least 8 characters long"),
+    password: z.string().min(6, "Password must be at least 6 characters long"),
   }),
 });
 

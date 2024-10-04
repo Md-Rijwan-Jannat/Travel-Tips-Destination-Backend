@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Post = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const post_constants_1 = require("./post.constants");
+// Report Schema
 const reportSchema = new mongoose_1.Schema({
     report: {
         type: String,
@@ -44,6 +45,7 @@ const reportSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
+// Post Schema
 const postSchema = new mongoose_1.Schema({
     user: {
         type: mongoose_1.Schema.Types.ObjectId,
@@ -69,6 +71,11 @@ const postSchema = new mongoose_1.Schema({
             ref: "Comment",
         },
     ],
+    category: {
+        type: String,
+        enum: post_constants_1.CategoryEnum,
+        required: true,
+    },
     status: {
         type: String,
         enum: [post_constants_1.POST_STATUS.FREE, post_constants_1.POST_STATUS.PREMIUM],
