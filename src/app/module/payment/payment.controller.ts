@@ -31,7 +31,20 @@ const paymentConformation = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const getPaymentsData = catchAsync(async (req, res) => {
+  const { result, meta } = await PaymentService.getPaymentsData(req.query);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Payment data retrieved successfully",
+    meta: meta,
+    data: result,
+  });
+});
+
 export const PaymentController = {
   subscriptions,
   paymentConformation,
+  getPaymentsData,
 };

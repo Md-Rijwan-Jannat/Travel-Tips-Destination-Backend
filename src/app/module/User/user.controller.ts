@@ -11,11 +11,52 @@ const getAllUser = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Users retrieved successfully",
+    message: "Normal users retrieved successfully",
     meta: result.meta,
     data: result.result,
   });
 });
+
+const getAlPremiumUser = catchAsync(async (req, res) => {
+  const result = await UserServices.getAllPremiumUserFromDB(req.query);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Premium users retrieved successfully",
+    meta: result.meta,
+    data: result.result,
+  });
+});
+
+const updateUserStatus = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const updatedUser = await UserServices.updateUserStatus(id, { status });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User status updated successfully",
+    data: updatedUser,
+  });
+});
+
+const updateUserRole = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { role } = req.body;
+
+  const updatedUser = await UserServices.updateUserRole(id, { role });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User role updated successfully",
+    data: updatedUser,
+  });
+});
+
 const getUser = catchAsync(async (req, res) => {
   const { id } = req.params;
   const result = await UserServices.getUserFromDB(id);
@@ -82,7 +123,10 @@ const getSingleUserPosts = catchAsync(async (req, res) => {
 
 export const UserControllers = {
   getAllUser,
+  getAlPremiumUser,
   getUser,
+  updateUserStatus,
+  updateUserRole,
   followUser,
   unFollowUser,
   getSingleUserPosts,

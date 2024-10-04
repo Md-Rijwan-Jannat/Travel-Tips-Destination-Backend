@@ -6,6 +6,7 @@ import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { v4 as uuidv4 } from "uuid";
 import { Post } from "../Post/post.model";
+import QueryBuilder from "../../builder/QueryBuilder";
 
 const subscriptionsIntoBD = async (
   payload: Omit<TPaymentData, "transitionId">,
@@ -137,7 +138,26 @@ const paymentConformationIntoDB = async (
   `;
 };
 
+const getPaymentsData = async (query: Record<string, any>) => {
+  const paymentQueryBuilder = new QueryBuilder(
+    Payment.find().populate("user"),
+    query
+  )
+    .filter()
+    .sort()
+    .paginate();
+
+  const result = await paymentQueryBuilder.modelQuery;
+  const meta = await paymentQueryBuilder.countTotal();
+
+  return {
+    meta,
+    result,
+  };
+};
+
 export const PaymentService = {
   subscriptionsIntoBD,
   paymentConformationIntoDB,
+  getPaymentsData,
 };

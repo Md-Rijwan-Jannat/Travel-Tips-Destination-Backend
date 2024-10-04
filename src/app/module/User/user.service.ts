@@ -12,7 +12,10 @@ import { Post } from "../Post/post.model";
 import { postSearchFelids } from "../Post/post.constants";
 
 const getAllUserFromDB = async (query: Record<string, any>) => {
-  const usersQueryBuilder = new QueryBuilder(User.find(), query)
+  const usersQueryBuilder = new QueryBuilder(
+    User.find({ verified: false }),
+    query
+  )
     .fields()
     .paginate()
     .sort()
@@ -26,6 +29,54 @@ const getAllUserFromDB = async (query: Record<string, any>) => {
     meta: meta,
     result: result,
   };
+};
+
+const getAllPremiumUserFromDB = async (query: Record<string, any>) => {
+  const usersQueryBuilder = new QueryBuilder(
+    User.find({ verified: true }),
+    query
+  )
+    .fields()
+    .paginate()
+    .sort()
+    .filter()
+    .search(UserSearchableFields);
+
+  const result = await usersQueryBuilder.modelQuery;
+  const meta = await usersQueryBuilder.countTotal();
+
+  return {
+    meta: meta,
+    result: result,
+  };
+};
+
+const updateUserStatus = async (id: string, payload: { status: string }) => {
+  const result = await User.findByIdAndUpdate(
+    id,
+    { status: payload.status },
+    { new: true }
+  );
+
+  if (!result) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  return result;
+};
+
+const updateUserRole = async (id: string, payload: { role: string }) => {
+  const result = await User.findByIdAndUpdate(
+    id,
+    { role: payload.role },
+    { new: true }
+  );
+
+  if (!result) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  return result;
 };
 
 const getUserFromDB = async (id: string) => {
@@ -188,6 +239,9 @@ const getSingleUserAllPostsFromDB = async (
 
 export const UserServices = {
   getAllUserFromDB,
+  getAllPremiumUserFromDB,
+  updateUserStatus,
+  updateUserRole,
   getUserFromDB,
   followUser,
   unFollowUser,

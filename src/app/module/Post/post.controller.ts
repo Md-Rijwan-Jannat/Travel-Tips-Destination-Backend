@@ -27,23 +27,30 @@ const getPostById = catchAsync(async (req, res) => {
 
 // Get all posts
 const getAllPosts = catchAsync(async (req, res) => {
-  const posts = await PostService.getAllPostsFromDB(req.query);
+  const { role } = req.user;
+  const { result, meta } = await PostService.getAllPostsFromDB(req.query, role);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Posts retrieved successfully",
-    data: posts,
+    meta: meta,
+    data: result,
   });
 });
 
 // Get all  premium posts
 const getAllPremiumPosts = catchAsync(async (req, res) => {
-  const posts = await PostService.getAllPremiumPostsFromDB(req.query);
+  const { role } = req.user;
+  const { result, meta } = await PostService.getAllPremiumPostsFromDB(
+    req.query,
+    role
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Premium posts retrieved successfully",
-    data: posts,
+    meta: meta,
+    data: result,
   });
 });
 

@@ -28,6 +28,7 @@ const Auth = (...requiredRoles) => {
         }
         const decoded = (0, tokenGenerateFunction_1.verifyToken)(token, config_1.default.jwt_access_secret);
         const { role, email, iat } = decoded;
+        console.log(decoded);
         // checking if the user is exist
         const user = yield user_model_1.User.isUserExistsByEmail(email);
         if (!user) {
@@ -41,6 +42,7 @@ const Auth = (...requiredRoles) => {
         if (requiredRoles && !requiredRoles.includes(role)) {
             throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "You are not authorized");
         }
+        console.log(requiredRoles && !requiredRoles.includes(role));
         req.user = decoded;
         next();
     }));

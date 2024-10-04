@@ -27,8 +27,9 @@ const getPostByIdFromDB = async (postId: string): Promise<TPost | null> => {
 
 // Get all posts (with optional filters)
 const getAllPostsFromDB = async (
-  query: Record<string, any>
-): Promise<TPost[]> => {
+  query: Record<string, any>,
+  role: "ADMIN" | "USER"
+): Promise<{ meta?: any; result: TPost[] }> => {
   const postQueryBuilder = new QueryBuilder(
     Post.find({ isDeleted: false, status: "FREE" })
       .populate({
@@ -48,15 +49,25 @@ const getAllPostsFromDB = async (
     .fields()
     .filter();
 
-  const posts = await postQueryBuilder.modelQuery;
+  let result;
+  let meta;
 
-  return posts;
+  if (role === "ADMIN") {
+    result = await postQueryBuilder.paginate().modelQuery;
+    meta = await postQueryBuilder.countTotal();
+  } else {
+    result = await postQueryBuilder.modelQuery;
+  }
+
+  // Return meta only if the role is ADMIN
+  return role === "ADMIN" ? { meta, result } : { result };
 };
 
 // Get all premium posts (with optional filters)
 const getAllPremiumPostsFromDB = async (
-  query: Record<string, any>
-): Promise<TPost[]> => {
+  query: Record<string, any>,
+  role: "ADMIN" | "USER"
+): Promise<{ meta?: any; result: TPost[] }> => {
   const postQueryBuilder = new QueryBuilder(
     Post.find({ isDeleted: false, status: "PREMIUM" })
       .populate({
@@ -76,9 +87,18 @@ const getAllPremiumPostsFromDB = async (
     .fields()
     .filter();
 
-  const posts = await postQueryBuilder.modelQuery;
+  let result;
+  let meta;
 
-  return posts;
+  if (role === "ADMIN") {
+    result = await postQueryBuilder.paginate().modelQuery;
+    meta = await postQueryBuilder.countTotal();
+  } else {
+    result = await postQueryBuilder.modelQuery;
+  }
+
+  // Return meta only if the role is ADMIN
+  return role === "ADMIN" ? { meta, result } : { result };
 };
 
 // Update a post by ID

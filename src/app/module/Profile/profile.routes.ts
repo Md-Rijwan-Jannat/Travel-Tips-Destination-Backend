@@ -12,20 +12,28 @@ router.get(
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   ProfileControllers.getMyProfile
 );
-router.get("/my-posts", Auth(USER_ROLE.USER), ProfileControllers.getMyPosts);
+router.get(
+  "/my-posts",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  ProfileControllers.getMyPosts
+);
 router.get(
   "/my-premium-posts",
-  Auth(USER_ROLE.USER),
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   ProfileControllers.getMyPremiumPosts
 );
 
 router.patch(
   "/:id",
-  Auth(USER_ROLE.USER),
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   validateRequest(ProfileValidation.updateMyProfileValidationSchema),
   ProfileControllers.updateMyProfile
 );
 
-router.delete("/:id", Auth(USER_ROLE.USER), ProfileControllers.deleteMyProfile);
+router.delete(
+  "/:id",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  ProfileControllers.deleteMyProfile
+);
 
 export const ProfileRoutes = router;
