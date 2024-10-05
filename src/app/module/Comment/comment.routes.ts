@@ -12,21 +12,21 @@ router.post(
   "/",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   validateRequest(CommentValidation.createCommentValidationSchema),
-  CommentControllers.addComment
+  CommentControllers.addComment,
 );
 
 // Get comments for a post
 router.get(
   "/all-comments",
   Auth(USER_ROLE.ADMIN),
-  CommentControllers.getAllComment
+  CommentControllers.getAllComment,
 );
 
 // Get comments for a post
 router.get(
   "/:postId",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  CommentControllers.getCommentForPost
+  CommentControllers.getCommentForPost,
 );
 
 // Update a comment
@@ -34,14 +34,14 @@ router.patch(
   "/:id",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   validateRequest(CommentValidation.updateCommentValidationSchema),
-  CommentControllers.updateComment
+  CommentControllers.updateComment,
 );
 
 // Delete a comment
 router.delete(
   "/:id",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  CommentControllers.deleteComment
+  CommentControllers.deleteComment,
 );
 
 // Reply to a comment
@@ -49,7 +49,7 @@ router.post(
   "/:id/reply",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   validateRequest(CommentValidation.replyValidationSchema),
-  CommentControllers.replyToComment
+  CommentControllers.replyToComment,
 );
 
 export const CommentRoutes = router;

@@ -11,7 +11,7 @@ cloudinary.config({
 
 export const sendImageToCloudinary = (
   imageName: string,
-  path: string
+  path: string,
 ): Promise<Record<string, unknown>> => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload(
@@ -30,7 +30,7 @@ export const sendImageToCloudinary = (
             console.log("File is deleted.");
           }
         });
-      }
+      },
     );
   });
 };

@@ -49,7 +49,7 @@ const commentSchema = new Schema<IComment>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export const Comment = mongoose.model<IComment>("Comment", commentSchema);

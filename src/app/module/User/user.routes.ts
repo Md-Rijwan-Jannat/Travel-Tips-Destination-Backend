@@ -55,14 +55,14 @@ router.patch(
 router.get("/posts/:userId", UserControllers.getSingleUserPosts);
 
 // Follow a user (User and Admin roles allowed)
-router.post(
+router.patch(
   "/follow/:followedUserId",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   UserControllers.followUser
 );
 
 // Unfollow a user (User and Admin roles allowed)
-router.post(
+router.patch(
   "/un-follow/:unFollowedUserId",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   UserControllers.unFollowUser

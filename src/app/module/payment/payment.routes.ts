@@ -10,7 +10,7 @@ router.get("/", Auth(USER_ROLE.ADMIN), PaymentController.getPaymentsData);
 router.get(
   "/analytics",
   Auth(USER_ROLE.ADMIN),
-  PaymentController.getPaymentsData
+  PaymentController.getPaymentsData,
 );
 
 export const PaymentRoutes = router;

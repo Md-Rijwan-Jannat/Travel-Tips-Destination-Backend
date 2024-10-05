@@ -79,10 +79,40 @@ const getMyPremiumPosts = catchAsync(async (req, res) => {
   });
 });
 
+// Get my posts
+const getMyFollowers = catchAsync(async (req, res) => {
+  const user = req.user as JwtPayload;
+
+  const result = await ProfileServices.myFollowersFromDB(user?.id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Followers retrieved successfully",
+    data: result,
+  });
+});
+
+// Get my posts
+const getMyFollowing = catchAsync(async (req, res) => {
+  const user = req.user as JwtPayload;
+
+  const result = await ProfileServices.myFollowingFromDB(user?.id);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Following retrieved successfully",
+    data: result,
+  });
+});
+
 export const ProfileControllers = {
   getMyProfile,
   updateMyProfile,
   deleteMyProfile,
   getMyPosts,
   getMyPremiumPosts,
+  getMyFollowers,
+  getMyFollowing,
 };

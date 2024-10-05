@@ -14,35 +14,35 @@ router.get("/:type/likes", Auth(USER_ROLE.ADMIN), ReactController.getAllLikes);
 router.get(
   "/:type/dislikes",
   Auth(USER_ROLE.ADMIN),
-  ReactController.getAllDislikes
+  ReactController.getAllDislikes,
 );
 
 // Like
 router.post(
   "/:type/:targetId/like",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ReactController.like
+  ReactController.like,
 );
 
 // Unlike
 router.post(
   "/:type/:targetId/unlike",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ReactController.unlike
+  ReactController.unlike,
 );
 
 // dislike
 router.post(
   "/:type/:targetId/dislike",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ReactController.dislike
+  ReactController.dislike,
 );
 
 // undislike
 router.post(
   "/:type/:targetId/undislike",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ReactController.undislike
+  ReactController.undislike,
 );
 
 export const ReactRoutes = router;

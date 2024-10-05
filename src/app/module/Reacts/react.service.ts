@@ -23,7 +23,7 @@ const getAllDisLikes = async () => {
 const likeFromDB = async (
   userId: string,
   targetId: string,
-  type: "post" | "comment"
+  type: "post" | "comment",
 ): Promise<TReact> => {
   const existingLikeReact = await React.findOne({
     user: userId,
@@ -34,7 +34,7 @@ const likeFromDB = async (
   if (existingLikeReact) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "You have already liked this item."
+      "You have already liked this item.",
     );
   }
 
@@ -80,7 +80,7 @@ const likeFromDB = async (
 const unlikeFromDB = async (
   userId: string,
   targetId: string,
-  type: "post" | "comment"
+  type: "post" | "comment",
 ): Promise<void> => {
   const existingReact = await React.findOneAndDelete({
     user: userId,
@@ -108,7 +108,7 @@ const unlikeFromDB = async (
 const dislikeFromDB = async (
   userId: string,
   targetId: string,
-  type: "post" | "comment"
+  type: "post" | "comment",
 ): Promise<TReact> => {
   const existingDislikeReact = await React.findOne({
     user: userId,
@@ -119,7 +119,7 @@ const dislikeFromDB = async (
   if (existingDislikeReact) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "You have already disliked this item."
+      "You have already disliked this item.",
     );
   }
 
@@ -165,7 +165,7 @@ const dislikeFromDB = async (
 const undislikeFromDB = async (
   userId: string,
   targetId: string,
-  type: "post" | "comment"
+  type: "post" | "comment",
 ): Promise<void> => {
   const existingReact = await React.findOneAndDelete({
     user: userId,
@@ -176,7 +176,7 @@ const undislikeFromDB = async (
   if (!existingReact) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
-      "You haven't disliked this item."
+      "You haven't disliked this item.",
     );
   }
 

@@ -98,7 +98,7 @@ export const followUser = catchAsync(async (req, res) => {
   console.log("user Id follow===>", userId, followedUserId);
   const result = await UserServices.followUser(
     userId,
-    followedUserId as unknown as Types.ObjectId
+    followedUserId as unknown as Types.ObjectId,
   );
 
   sendResponse(res, {
@@ -116,7 +116,7 @@ export const unFollowUser = catchAsync(async (req, res) => {
   console.log("user Id follow===>", userId, unFollowedUserId);
   const result = await UserServices.unFollowUser(
     userId,
-    unFollowedUserId as unknown as Types.ObjectId
+    unFollowedUserId as unknown as Types.ObjectId,
   );
 
   sendResponse(res, {
@@ -132,7 +132,7 @@ const getSingleUserPosts = catchAsync(async (req, res) => {
   const { userId } = req.params;
   const result = await UserServices.getSingleUserAllPostsFromDB(
     userId,
-    req.query
+    req.query,
   );
 
   sendResponse(res, {

@@ -36,4 +36,15 @@ router.delete(
   ProfileControllers.deleteMyProfile
 );
 
+router.get(
+  "/followers",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  ProfileControllers.getMyFollowers
+);
+router.get(
+  "/following",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  ProfileControllers.getMyFollowing
+);
+
 export const ProfileRoutes = router;

@@ -129,10 +129,40 @@ const getMyPremiumPosts = async (id: string, query: Record<string, any>) => {
   return result;
 };
 
+const myFollowersFromDB = async (userId: string) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const followerIds = user.follower;
+
+  const followers = await User.find({ _id: { $in: followerIds } });
+
+  return followers;
+};
+
+const myFollowingFromDB = async (userId: string) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const followingIds = user.following;
+
+  const following = await User.find({ _id: { $in: followingIds } });
+
+  return following;
+};
+
 export const ProfileServices = {
   updateMyProfileIntoDB,
   getMyProfileFormDB,
   deleteMyProfileFromDB,
   getMyPosts,
   getMyPremiumPosts,
+  myFollowersFromDB,
+  myFollowingFromDB,
 };

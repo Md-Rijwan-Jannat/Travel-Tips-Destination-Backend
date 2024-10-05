@@ -30,7 +30,7 @@ const getAllComment = catchAsync(async (req: Request, res: Response) => {
 // Get all comments for a post
 const getCommentForPost = catchAsync(async (req: Request, res: Response) => {
   const comments = await CommentService.getCommentForPostFromDB(
-    req.params.postId
+    req.params.postId,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -44,7 +44,7 @@ const getCommentForPost = catchAsync(async (req: Request, res: Response) => {
 const updateComment = catchAsync(async (req: Request, res: Response) => {
   const comment = await CommentService.updateCommentIntoDB(
     req.params.id,
-    req.body
+    req.body,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -70,7 +70,7 @@ const replyToComment = catchAsync(async (req: Request, res: Response) => {
   const reply = await CommentService.replyToCommentFromDB(
     req.params.id,
     req.body,
-    req.user.id
+    req.user.id,
   );
   sendResponse(res, {
     statusCode: httpStatus.CREATED,

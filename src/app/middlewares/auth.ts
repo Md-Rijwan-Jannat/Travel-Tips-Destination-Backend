@@ -19,7 +19,7 @@ const Auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
 
     const decoded = verifyToken(
       token,
-      config.jwt_access_secret as string
+      config.jwt_access_secret as string,
     ) as JwtPayload;
 
     const { role, email, iat } = decoded;

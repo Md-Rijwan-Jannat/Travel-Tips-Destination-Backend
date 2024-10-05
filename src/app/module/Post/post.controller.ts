@@ -27,51 +27,50 @@ const getPostById = catchAsync(async (req, res) => {
 
 // Get all posts
 const getAllPosts = catchAsync(async (req, res) => {
-  const { role } = req.user;
-  const { result, meta } = await PostService.getAllPostsFromDB(req.query, role);
+  const result = await PostService.getAllPostsFromDB(req.query);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Posts retrieved successfully",
-    meta: meta,
     data: result,
   });
 });
 
 // Get all normal posts
 const getAllPostsNormalForAnalytics = catchAsync(async (req, res) => {
-  const result = await PostService.getAllPostsNormalForAnalytics();
+  const { result, meta } = await PostService.getAllPostsNormalForAnalytics(
+    req.query
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Normal posts retrieved successfully",
+    meta: meta,
     data: result,
   });
 });
 
 // Get all premium posts
 const getAllPostsPremiumForAnalytics = catchAsync(async (req, res) => {
-  const result = await PostService.getAllPostsPremiumForAnalytics();
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Premium posts retrieved successfully",
-    data: result,
-  });
-});
-
-// Get all  premium posts
-const getAllPremiumPosts = catchAsync(async (req, res) => {
-  const { role } = req.user;
-  const { result, meta } = await PostService.getAllPremiumPostsFromDB(
-    req.query,
-    role
+  const { result, meta } = await PostService.getAllPostsPremiumForAnalytics(
+    req.query
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Premium posts retrieved successfully",
     meta: meta,
+    data: result,
+  });
+});
+
+// Get all  premium posts
+const getAllPremiumPosts = catchAsync(async (req, res) => {
+  const result = await PostService.getAllPremiumPostsFromDB(req.query);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Premium posts retrieved successfully",
     data: result,
   });
 });

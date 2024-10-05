@@ -56,7 +56,7 @@ const resetPassword = catchAsync(async (req, res) => {
   console.log("Token =>>", token);
   const result = await UserServices.resetPasswordIntoDB(
     req.body,
-    token as string
+    token as string,
   );
 
   sendResponse(res, {

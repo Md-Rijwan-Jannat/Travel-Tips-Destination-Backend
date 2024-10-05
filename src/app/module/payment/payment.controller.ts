@@ -8,7 +8,7 @@ const subscriptions = catchAsync(async (req, res) => {
 
   const result = await PaymentService.subscriptionsIntoBD(
     req.body,
-    userId as string
+    userId as string,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -25,7 +25,7 @@ const paymentConformation = catchAsync(async (req, res) => {
   const result = await PaymentService.paymentConformationIntoDB(
     transitionId as string,
     status as string,
-    userId as string
+    userId as string,
   );
 
   res.send(result);

@@ -9,40 +9,40 @@ const router = express.Router();
 router.get(
   "/premium",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  PostControllers.getAllPremiumPosts
+  PostControllers.getAllPremiumPosts,
 );
 
 // get All normal posts
 router.get(
   "/",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  PostControllers.getAllPosts
+  PostControllers.getAllPosts,
 );
 // get All normal posts
 router.get(
   "/normal-posts-analytics",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  PostControllers.getAllPostsNormalForAnalytics
+  PostControllers.getAllPostsNormalForAnalytics,
 );
 // get All premium posts
 router.get(
   "/premium-posts-analytics",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  PostControllers.getAllPostsPremiumForAnalytics
+  PostControllers.getAllPostsPremiumForAnalytics,
 );
 
 // Dynamic route for post by ID
 router.get(
   "/:id",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  PostControllers.getPostById
+  PostControllers.getPostById,
 );
 
 // General routes
 router.post(
   "/",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  PostControllers.createPost
+  PostControllers.createPost,
 );
 
 // update posts
@@ -52,14 +52,14 @@ router.patch("/:id", Auth(USER_ROLE.USER), PostControllers.updatePost);
 router.delete(
   "/:id",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  PostControllers.deletePost
+  PostControllers.deletePost,
 );
 
 // report a post
 router.put(
   "/report/:id/",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  PostControllers.reportPost
+  PostControllers.reportPost,
 );
 
 export const PostRoutes = router;

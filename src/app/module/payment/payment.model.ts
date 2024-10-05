@@ -41,7 +41,7 @@ const PaymentSchema: Schema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Create the Payment model

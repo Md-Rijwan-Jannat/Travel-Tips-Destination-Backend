@@ -33,7 +33,7 @@ const like = catchAsync(async (req, res) => {
   const react = await ReactService.likeFromDB(
     userId,
     targetId,
-    type as "post" | "comment"
+    type as "post" | "comment",
   );
 
   sendResponse(res, {
@@ -67,7 +67,7 @@ const dislike = catchAsync(async (req, res) => {
   const react = await ReactService.dislikeFromDB(
     userId,
     targetId,
-    type as "post" | "comment"
+    type as "post" | "comment",
   );
 
   sendResponse(res, {
@@ -86,7 +86,7 @@ const undislike = catchAsync(async (req, res) => {
   await ReactService.undislikeFromDB(
     userId,
     targetId,
-    type as "post" | "comment"
+    type as "post" | "comment",
   );
 
   sendResponse(res, {

@@ -8,7 +8,7 @@ const reactSchema = new Schema<TReact>(
     comment: { type: mongoose.Schema.Types.ObjectId, ref: "Comment" },
     type: { type: String, enum: ["like", "dislike"], required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const React = mongoose.model<TReact>("React", reactSchema);
