@@ -17,6 +17,13 @@ router.post(
 
 // Get comments for a post
 router.get(
+  "/all-comments",
+  Auth(USER_ROLE.ADMIN),
+  CommentControllers.getAllComment
+);
+
+// Get comments for a post
+router.get(
   "/:postId",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
   CommentControllers.getCommentForPost

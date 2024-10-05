@@ -25,6 +25,18 @@ const getPostByIdFromDB = async (postId: string): Promise<TPost | null> => {
   return post;
 };
 
+// Get all posts for normal posts
+const getAllPostsNormalForAnalytics = async () => {
+  const result = await Post.find({ status: "FREE", isDeleted: false });
+  return result;
+};
+
+// Get all posts for premium posts
+const getAllPostsPremiumForAnalytics = async () => {
+  const result = await Post.find({ status: "PREMIUM", isDeleted: false });
+  return result;
+};
+
 // Get all posts (with optional filters)
 const getAllPostsFromDB = async (
   query: Record<string, any>,
@@ -188,6 +200,8 @@ const reportPostFromDB = async (
 export const PostService = {
   createPostIntoDB,
   getPostByIdFromDB,
+  getAllPostsPremiumForAnalytics,
+  getAllPostsNormalForAnalytics,
   getAllPostsFromDB,
   getAllPremiumPostsFromDB,
   updatePostIntoDB,

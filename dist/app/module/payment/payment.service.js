@@ -20,6 +20,7 @@ const AppError_1 = __importDefault(require("../../errors/AppError"));
 const http_status_1 = __importDefault(require("http-status"));
 const uuid_1 = require("uuid");
 const post_model_1 = require("../Post/post.model");
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const subscriptionsIntoBD = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findById(userId);
     if (!user) {
@@ -123,7 +124,20 @@ const paymentConformationIntoDB = (transitionId, status, userId) => __awaiter(vo
   </html>
   `;
 });
+const getPaymentsData = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const paymentQueryBuilder = new QueryBuilder_1.default(payment_model_1.default.find().populate("user"), query)
+        .filter()
+        .sort()
+        .paginate();
+    const result = yield paymentQueryBuilder.modelQuery;
+    const meta = yield paymentQueryBuilder.countTotal();
+    return {
+        meta,
+        result,
+    };
+});
 exports.PaymentService = {
     subscriptionsIntoBD,
     paymentConformationIntoDB,
+    getPaymentsData,
 };

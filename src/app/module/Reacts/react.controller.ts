@@ -3,13 +3,24 @@ import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 
 // Like a post or comment
-const getAllReacts = catchAsync(async (req, res) => {
-  const react = await ReactService.getAllReacts();
+const getAllLikes = catchAsync(async (req, res) => {
+  const react = await ReactService.getAllLikes();
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: `You liked the reacts successfully.`,
+    message: `Likes are retrieved successfully.`,
+    data: react,
+  });
+});
+// Like a post or comment
+const getAllDislikes = catchAsync(async (req, res) => {
+  const react = await ReactService.getAllDisLikes();
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: `Dislikes are retrieved successfully.`,
     data: react,
   });
 });
@@ -87,7 +98,8 @@ const undislike = catchAsync(async (req, res) => {
 });
 
 export const ReactController = {
-  getAllReacts,
+  getAllLikes,
+  getAllDislikes,
   like,
   unlike,
   dislike,

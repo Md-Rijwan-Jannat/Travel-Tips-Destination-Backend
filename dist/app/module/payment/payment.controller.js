@@ -33,7 +33,18 @@ const paymentConformation = (0, catchAsync_1.default)((req, res) => __awaiter(vo
     const result = yield payment_service_1.PaymentService.paymentConformationIntoDB(transitionId, status, userId);
     res.send(result);
 }));
+const getPaymentsData = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { result, meta } = yield payment_service_1.PaymentService.getPaymentsData(req.query);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Payment data retrieved successfully",
+        meta: meta,
+        data: result,
+    });
+}));
 exports.PaymentController = {
     subscriptions,
     paymentConformation,
+    getPaymentsData,
 };

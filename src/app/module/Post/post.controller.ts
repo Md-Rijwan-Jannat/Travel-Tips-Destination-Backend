@@ -38,6 +38,28 @@ const getAllPosts = catchAsync(async (req, res) => {
   });
 });
 
+// Get all normal posts
+const getAllPostsNormalForAnalytics = catchAsync(async (req, res) => {
+  const result = await PostService.getAllPostsNormalForAnalytics();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Normal posts retrieved successfully",
+    data: result,
+  });
+});
+
+// Get all premium posts
+const getAllPostsPremiumForAnalytics = catchAsync(async (req, res) => {
+  const result = await PostService.getAllPostsPremiumForAnalytics();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Premium posts retrieved successfully",
+    data: result,
+  });
+});
+
 // Get all  premium posts
 const getAllPremiumPosts = catchAsync(async (req, res) => {
   const { role } = req.user;
@@ -107,6 +129,8 @@ export const PostControllers = {
   createPost,
   getPostById,
   getAllPosts,
+  getAllPostsNormalForAnalytics,
+  getAllPostsPremiumForAnalytics,
   getAllPremiumPosts,
   updatePost,
   deletePost,

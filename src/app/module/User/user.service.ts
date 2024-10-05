@@ -51,6 +51,16 @@ const getAllPremiumUserFromDB = async (query: Record<string, any>) => {
   };
 };
 
+const getAllUserForAnalytics = async () => {
+  const result = await User.find({ verified: false });
+  return result;
+};
+
+const getAlPremiumUserForAnalytics = async () => {
+  const result = await User.find({ verified: true });
+  return result;
+};
+
 const updateUserStatus = async (id: string, payload: { status: string }) => {
   const result = await User.findByIdAndUpdate(
     id,
@@ -240,6 +250,8 @@ const getSingleUserAllPostsFromDB = async (
 export const UserServices = {
   getAllUserFromDB,
   getAllPremiumUserFromDB,
+  getAlPremiumUserForAnalytics,
+  getAllUserForAnalytics,
   updateUserStatus,
   updateUserRole,
   getUserFromDB,

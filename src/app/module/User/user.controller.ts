@@ -17,6 +17,28 @@ const getAllUser = catchAsync(async (req, res) => {
   });
 });
 
+const getAlPremiumUserForAnalytics = catchAsync(async (req, res) => {
+  const result = await UserServices.getAlPremiumUserForAnalytics();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Premium users retrieved successfully",
+    data: result,
+  });
+});
+
+const getAllUserForAnalytics = catchAsync(async (req, res) => {
+  const result = await UserServices.getAllUserForAnalytics();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Normal users retrieved successfully",
+    data: result,
+  });
+});
+
 const getAlPremiumUser = catchAsync(async (req, res) => {
   const result = await UserServices.getAllPremiumUserFromDB(req.query);
 
@@ -124,6 +146,8 @@ const getSingleUserPosts = catchAsync(async (req, res) => {
 export const UserControllers = {
   getAllUser,
   getAlPremiumUser,
+  getAllUserForAnalytics,
+  getAlPremiumUserForAnalytics,
   getUser,
   updateUserStatus,
   updateUserRole,

@@ -39,22 +39,26 @@ const getPostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 // Get all posts
 const getAllPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const posts = yield post_service_1.PostService.getAllPostsFromDB(req.query);
+    const { role } = req.user;
+    const { result, meta } = yield post_service_1.PostService.getAllPostsFromDB(req.query, role);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Posts retrieved successfully",
-        data: posts,
+        meta: meta,
+        data: result,
     });
 }));
 // Get all  premium posts
 const getAllPremiumPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const posts = yield post_service_1.PostService.getAllPremiumPostsFromDB(req.query);
+    const { role } = req.user;
+    const { result, meta } = yield post_service_1.PostService.getAllPremiumPostsFromDB(req.query, role);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Premium posts retrieved successfully",
-        data: posts,
+        meta: meta,
+        data: result,
     });
 }));
 // Update a post by ID

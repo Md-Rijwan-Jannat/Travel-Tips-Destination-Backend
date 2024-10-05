@@ -50,6 +50,17 @@ const addCommentIntoDB = async (
   }
 };
 
+const getAllCommentFromDB = async (): Promise<IComment[]> => {
+  const comments = await Comment.find({ isDeleted: false })
+    .populate("user")
+    .populate({
+      path: "replies",
+      populate: {
+        path: "user",
+      },
+    });
+  return comments;
+};
 const getCommentForPostFromDB = async (postId: string): Promise<IComment[]> => {
   const comments = await Comment.find({ post: postId, isDeleted: false })
     .populate("user")
@@ -105,6 +116,7 @@ const replyToCommentFromDB = async (
 
 export const CommentService = {
   addCommentIntoDB,
+  getAllCommentFromDB,
   getCommentForPostFromDB,
   updateCommentIntoDB,
   deleteCommentFromDB,

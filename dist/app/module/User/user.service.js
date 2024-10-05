@@ -25,7 +25,7 @@ const user_constants_1 = require("./user.constants");
 const post_model_1 = require("../Post/post.model");
 const post_constants_1 = require("../Post/post.constants");
 const getAllUserFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const usersQueryBuilder = new QueryBuilder_1.default(user_model_1.User.find(), query)
+    const usersQueryBuilder = new QueryBuilder_1.default(user_model_1.User.find({ verified: false }), query)
         .fields()
         .paginate()
         .sort()
@@ -37,6 +37,34 @@ const getAllUserFromDB = (query) => __awaiter(void 0, void 0, void 0, function* 
         meta: meta,
         result: result,
     };
+});
+const getAllPremiumUserFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const usersQueryBuilder = new QueryBuilder_1.default(user_model_1.User.find({ verified: true }), query)
+        .fields()
+        .paginate()
+        .sort()
+        .filter()
+        .search(user_utils_1.UserSearchableFields);
+    const result = yield usersQueryBuilder.modelQuery;
+    const meta = yield usersQueryBuilder.countTotal();
+    return {
+        meta: meta,
+        result: result,
+    };
+});
+const updateUserStatus = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_model_1.User.findByIdAndUpdate(id, { status: payload.status }, { new: true });
+    if (!result) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    return result;
+});
+const updateUserRole = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_model_1.User.findByIdAndUpdate(id, { role: payload.role }, { new: true });
+    if (!result) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    return result;
 });
 const getUserFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_model_1.User.findById(id);
@@ -150,6 +178,9 @@ const getSingleUserAllPostsFromDB = (id, query) => __awaiter(void 0, void 0, voi
 });
 exports.UserServices = {
     getAllUserFromDB,
+    getAllPremiumUserFromDB,
+    updateUserStatus,
+    updateUserRole,
     getUserFromDB,
     followUser,
     unFollowUser,

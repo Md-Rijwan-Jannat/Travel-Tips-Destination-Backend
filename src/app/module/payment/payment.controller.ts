@@ -43,8 +43,20 @@ const getPaymentsData = catchAsync(async (req, res) => {
   });
 });
 
+const getAllPaymentsDatForAnalytics = catchAsync(async (req, res) => {
+  const result = await PaymentService.getAllPaymentsDatForAnalytics();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Payment data retrieved successfully",
+    data: result,
+  });
+});
+
 export const PaymentController = {
   subscriptions,
   paymentConformation,
   getPaymentsData,
+  getAllPaymentsDatForAnalytics,
 };

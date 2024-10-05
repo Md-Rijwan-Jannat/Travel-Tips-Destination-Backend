@@ -5,8 +5,16 @@ import { React } from "./react.model";
 import { Post } from "../Post/post.model";
 import { Comment } from "../Comment/comment.model";
 
-const getAllReacts = async () => {
-  const result = await React.find();
+// Get all likes
+const getAllLikes = async () => {
+  const result = await React.find({ type: "like" });
+
+  return result;
+};
+
+// Get all dislikes
+const getAllDisLikes = async () => {
+  const result = await React.find({ type: "dislike" });
 
   return result;
 };
@@ -17,14 +25,12 @@ const likeFromDB = async (
   targetId: string,
   type: "post" | "comment"
 ): Promise<TReact> => {
-  // Check if the user has already liked this post/comment
   const existingLikeReact = await React.findOne({
     user: userId,
     [type]: targetId,
     type: "like",
   });
 
-  // If user already liked, throw an error or return depending on your needs
   if (existingLikeReact) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
@@ -32,7 +38,6 @@ const likeFromDB = async (
     );
   }
 
-  // Check if the user has disliked the post/comment before and remove the dislike
   const existingDislikeReact = await React.findOneAndDelete({
     user: userId,
     [type]: targetId,
@@ -40,7 +45,6 @@ const likeFromDB = async (
   });
 
   if (existingDislikeReact) {
-    // Remove the user from the dislikes array of the post/comment
     if (type === "post") {
       await Post.findByIdAndUpdate(targetId, {
         $pull: { dislikes: userId },
@@ -59,7 +63,6 @@ const likeFromDB = async (
     type: "like",
   });
 
-  // Push the new React ID to the likes array of the post/comment
   if (type === "post") {
     await Post.findByIdAndUpdate(targetId, {
       $push: { likes: userId },
@@ -107,14 +110,12 @@ const dislikeFromDB = async (
   targetId: string,
   type: "post" | "comment"
 ): Promise<TReact> => {
-  // Check if the user has already disliked this post/comment
   const existingDislikeReact = await React.findOne({
     user: userId,
     [type]: targetId,
     type: "dislike",
   });
 
-  // If user already disliked, throw an error or return depending on your needs
   if (existingDislikeReact) {
     throw new AppError(
       httpStatus.BAD_REQUEST,
@@ -122,7 +123,6 @@ const dislikeFromDB = async (
     );
   }
 
-  // Check if the user has liked the post/comment before and remove the like
   const existingLikeReact = await React.findOneAndDelete({
     user: userId,
     [type]: targetId,
@@ -130,7 +130,6 @@ const dislikeFromDB = async (
   });
 
   if (existingLikeReact) {
-    // Remove the user from the likes array of the post/comment
     if (type === "post") {
       await Post.findByIdAndUpdate(targetId, {
         $pull: { likes: userId },
@@ -149,7 +148,6 @@ const dislikeFromDB = async (
     type: "dislike",
   });
 
-  // Push the new React ID to the dislikes array of the post/comment
   if (type === "post") {
     await Post.findByIdAndUpdate(targetId, {
       $push: { dislikes: userId },
@@ -182,7 +180,6 @@ const undislikeFromDB = async (
     );
   }
 
-  // Remove the React ID from the dislikes array of the post/comment
   if (type === "post") {
     await Post.findByIdAndUpdate(targetId, {
       $pull: { dislikes: userId },
@@ -195,7 +192,8 @@ const undislikeFromDB = async (
 };
 
 export const ReactService = {
-  getAllReacts,
+  getAllLikes,
+  getAllDisLikes,
   likeFromDB,
   unlikeFromDB,
   dislikeFromDB,

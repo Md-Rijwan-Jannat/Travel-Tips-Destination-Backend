@@ -22,9 +22,41 @@ const getAllUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Users retrieved successfully",
+        message: "Normal users retrieved successfully",
         meta: result.meta,
         data: result.result,
+    });
+}));
+const getAlPremiumUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_service_1.UserServices.getAllPremiumUserFromDB(req.query);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Premium users retrieved successfully",
+        meta: result.meta,
+        data: result.result,
+    });
+}));
+const updateUserStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    const { status } = req.body;
+    const updatedUser = yield user_service_1.UserServices.updateUserStatus(id, { status });
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "User status updated successfully",
+        data: updatedUser,
+    });
+}));
+const updateUserRole = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    const { role } = req.body;
+    const updatedUser = yield user_service_1.UserServices.updateUserRole(id, { role });
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "User role updated successfully",
+        data: updatedUser,
     });
 }));
 const getUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -75,7 +107,10 @@ const getSingleUserPosts = (0, catchAsync_1.default)((req, res) => __awaiter(voi
 }));
 exports.UserControllers = {
     getAllUser,
+    getAlPremiumUser,
     getUser,
+    updateUserStatus,
+    updateUserRole,
     followUser: exports.followUser,
     unFollowUser: exports.unFollowUser,
     getSingleUserPosts,

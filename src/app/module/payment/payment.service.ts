@@ -156,8 +156,15 @@ const getPaymentsData = async (query: Record<string, any>) => {
   };
 };
 
+const getAllPaymentsDatForAnalytics = async () => {
+  const result = await Payment.find().populate("user");
+
+  return result;
+};
+
 export const PaymentService = {
   subscriptionsIntoBD,
   paymentConformationIntoDB,
   getPaymentsData,
+  getAllPaymentsDatForAnalytics,
 };
