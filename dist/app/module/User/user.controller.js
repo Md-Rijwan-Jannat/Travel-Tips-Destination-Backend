@@ -27,6 +27,24 @@ const getAllUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
         data: result.result,
     });
 }));
+const getAlPremiumUserForAnalytics = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_service_1.UserServices.getAlPremiumUserForAnalytics();
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Premium users retrieved successfully",
+        data: result,
+    });
+}));
+const getAllUserForAnalytics = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_service_1.UserServices.getAllUserForAnalytics();
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Normal users retrieved successfully",
+        data: result,
+    });
+}));
 const getAlPremiumUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_service_1.UserServices.getAllPremiumUserFromDB(req.query);
     (0, sendResponse_1.default)(res, {
@@ -108,6 +126,8 @@ const getSingleUserPosts = (0, catchAsync_1.default)((req, res) => __awaiter(voi
 exports.UserControllers = {
     getAllUser,
     getAlPremiumUser,
+    getAllUserForAnalytics,
+    getAlPremiumUserForAnalytics,
     getUser,
     updateUserStatus,
     updateUserRole,

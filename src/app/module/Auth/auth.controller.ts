@@ -7,12 +7,11 @@ import config from "../../../config";
 const registerUser = catchAsync(async (req, res) => {
   const result = await UserServices.registerUserIntoDB(req.body);
 
-  // const { refreshToken, accessToken } = result;
-
-  // res.cookie("refreshToken", refreshToken, {
-  //   secure: config.NODE_ENV === "production",
-  //   httpOnly: true,
-  // });
+  res.cookie("accessToken", result?.accessToken, {
+    secure: config.NODE_ENV === "production",
+    httpOnly: true,
+    sameSite: "lax", // Consider 'none' if needed
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -25,11 +24,10 @@ const registerUser = catchAsync(async (req, res) => {
 const loginUser = catchAsync(async (req, res) => {
   const result = await UserServices.loginUserFromDB(req.body);
 
-  const { refreshToken, accessToken } = result;
-
-  res.cookie("refreshToken", refreshToken, {
+  res.cookie("accessToken", result?.accessToken, {
     secure: config.NODE_ENV === "production",
     httpOnly: true,
+    sameSite: "lax",
   });
 
   sendResponse(res, {
@@ -56,7 +54,7 @@ const resetPassword = catchAsync(async (req, res) => {
   console.log("Token =>>", token);
   const result = await UserServices.resetPasswordIntoDB(
     req.body,
-    token as string,
+    token as string
   );
 
   sendResponse(res, {

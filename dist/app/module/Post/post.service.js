@@ -33,8 +33,54 @@ const getPostByIdFromDB = (postId) => __awaiter(void 0, void 0, void 0, function
     }
     return post;
 });
+// Get all posts for normal posts
+const getAllPostsNormalForAnalytics = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "FREE" })
+        .populate({
+        path: "user",
+    })
+        .populate({
+        path: "comments",
+        populate: {
+            path: "user",
+            model: "User",
+        },
+    }), query)
+        .search(post_constants_1.postSearchFelids)
+        .sort()
+        .fields()
+        .filter()
+        .paginate();
+    const result = yield postQueryBuilder.modelQuery;
+    const meta = yield postQueryBuilder.countTotal();
+    // Return meta only if the role is ADMIN
+    return { result: result, meta: meta };
+});
+// Get all posts for premium posts
+const getAllPostsPremiumForAnalytics = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "PREMIUM" })
+        .populate({
+        path: "user",
+    })
+        .populate({
+        path: "comments",
+        populate: {
+            path: "user",
+            model: "User",
+        },
+    }), query)
+        .search(post_constants_1.postSearchFelids)
+        .sort()
+        .fields()
+        .filter()
+        .paginate();
+    const result = yield postQueryBuilder.modelQuery;
+    const meta = yield postQueryBuilder.countTotal();
+    // Return meta only if the role is ADMIN
+    return { result: result, meta: meta };
+});
 // Get all posts (with optional filters)
-const getAllPostsFromDB = (query, role) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "FREE" })
         .populate({
         path: "user",
@@ -50,20 +96,12 @@ const getAllPostsFromDB = (query, role) => __awaiter(void 0, void 0, void 0, fun
         .sort()
         .fields()
         .filter();
-    let result;
-    let meta;
-    if (role === "ADMIN") {
-        result = yield postQueryBuilder.paginate().modelQuery;
-        meta = yield postQueryBuilder.countTotal();
-    }
-    else {
-        result = yield postQueryBuilder.modelQuery;
-    }
+    const result = yield postQueryBuilder.modelQuery;
     // Return meta only if the role is ADMIN
-    return role === "ADMIN" ? { meta, result } : { result };
+    return result;
 });
 // Get all premium posts (with optional filters)
-const getAllPremiumPostsFromDB = (query, role) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllPremiumPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "PREMIUM" })
         .populate({
         path: "user",
@@ -79,17 +117,9 @@ const getAllPremiumPostsFromDB = (query, role) => __awaiter(void 0, void 0, void
         .sort()
         .fields()
         .filter();
-    let result;
-    let meta;
-    if (role === "ADMIN") {
-        result = yield postQueryBuilder.paginate().modelQuery;
-        meta = yield postQueryBuilder.countTotal();
-    }
-    else {
-        result = yield postQueryBuilder.modelQuery;
-    }
+    const result = yield postQueryBuilder.paginate().modelQuery;
     // Return meta only if the role is ADMIN
-    return role === "ADMIN" ? { meta, result } : { result };
+    return result;
 });
 // Update a post by ID
 const updatePostIntoDB = (postId, payload) => __awaiter(void 0, void 0, void 0, function* () {
@@ -148,6 +178,8 @@ const reportPostFromDB = (postId, payload, userId) => __awaiter(void 0, void 0, 
 exports.PostService = {
     createPostIntoDB,
     getPostByIdFromDB,
+    getAllPostsPremiumForAnalytics,
+    getAllPostsNormalForAnalytics,
     getAllPostsFromDB,
     getAllPremiumPostsFromDB,
     updatePostIntoDB,

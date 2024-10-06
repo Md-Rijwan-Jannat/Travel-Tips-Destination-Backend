@@ -76,10 +76,34 @@ const getMyPremiumPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void
         data: result,
     });
 }));
+// Get my posts
+const getMyFollowers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const result = yield profile_service_1.ProfileServices.myFollowersFromDB(user === null || user === void 0 ? void 0 : user.id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Followers retrieved successfully",
+        data: result,
+    });
+}));
+// Get my posts
+const getMyFollowing = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const result = yield profile_service_1.ProfileServices.myFollowingFromDB(user === null || user === void 0 ? void 0 : user.id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Following retrieved successfully",
+        data: result,
+    });
+}));
 exports.ProfileControllers = {
     getMyProfile,
     updateMyProfile,
     deleteMyProfile,
     getMyPosts,
     getMyPremiumPosts,
+    getMyFollowers,
+    getMyFollowing,
 };

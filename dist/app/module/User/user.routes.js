@@ -14,6 +14,10 @@ const router = express_1.default.Router();
 router.get("/normal-users", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.getAllUser);
 // Get all premium users (Admin only)
 router.get("/premium-users", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.getAlPremiumUser);
+// Get all normal users (Admin only)
+router.get("/normal-users-analytics", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.getAllUser);
+// Get all premium users (Admin only)
+router.get("/premium-users-analytics", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.getAlPremiumUser);
 // Get a single user by ID
 router.get("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), user_controller_1.UserControllers.getUser);
 // Update user status by ID (Admin only)
@@ -23,7 +27,7 @@ router.patch("/:id/role", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN),
 // Get all posts from a specific user by userId
 router.get("/posts/:userId", user_controller_1.UserControllers.getSingleUserPosts);
 // Follow a user (User and Admin roles allowed)
-router.post("/follow/:followedUserId", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.followUser);
+router.patch("/follow/:followedUserId", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.followUser);
 // Unfollow a user (User and Admin roles allowed)
-router.post("/un-follow/:unFollowedUserId", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.unFollowUser);
+router.patch("/un-follow/:unFollowedUserId", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.unFollowUser);
 exports.UserRoutes = router;

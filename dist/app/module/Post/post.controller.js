@@ -39,25 +39,43 @@ const getPostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 // Get all posts
 const getAllPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { role } = req.user;
-    const { result, meta } = yield post_service_1.PostService.getAllPostsFromDB(req.query, role);
+    const result = yield post_service_1.PostService.getAllPostsFromDB(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Posts retrieved successfully",
+        data: result,
+    });
+}));
+// Get all normal posts
+const getAllPostsNormalForAnalytics = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { result, meta } = yield post_service_1.PostService.getAllPostsNormalForAnalytics(req.query);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Normal posts retrieved successfully",
+        meta: meta,
+        data: result,
+    });
+}));
+// Get all premium posts
+const getAllPostsPremiumForAnalytics = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { result, meta } = yield post_service_1.PostService.getAllPostsPremiumForAnalytics(req.query);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Premium posts retrieved successfully",
         meta: meta,
         data: result,
     });
 }));
 // Get all  premium posts
 const getAllPremiumPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { role } = req.user;
-    const { result, meta } = yield post_service_1.PostService.getAllPremiumPostsFromDB(req.query, role);
+    const result = yield post_service_1.PostService.getAllPremiumPostsFromDB(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Premium posts retrieved successfully",
-        meta: meta,
         data: result,
     });
 }));
@@ -106,6 +124,8 @@ exports.PostControllers = {
     createPost,
     getPostById,
     getAllPosts,
+    getAllPostsNormalForAnalytics,
+    getAllPostsPremiumForAnalytics,
     getAllPremiumPosts,
     updatePost,
     deletePost,

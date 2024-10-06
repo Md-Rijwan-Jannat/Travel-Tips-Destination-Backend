@@ -50,6 +50,17 @@ const addCommentIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, 
         throw error;
     }
 });
+const getAllCommentFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
+    const comments = yield comment_model_1.Comment.find({ isDeleted: false })
+        .populate("user")
+        .populate({
+        path: "replies",
+        populate: {
+            path: "user",
+        },
+    });
+    return comments;
+});
 const getCommentForPostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function* () {
     const comments = yield comment_model_1.Comment.find({ post: postId, isDeleted: false })
         .populate("user")
@@ -91,6 +102,7 @@ const replyToCommentFromDB = (commentId, replyData, id) => __awaiter(void 0, voi
 });
 exports.CommentService = {
     addCommentIntoDB,
+    getAllCommentFromDB,
     getCommentForPostFromDB,
     updateCommentIntoDB,
     deleteCommentFromDB,

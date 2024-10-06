@@ -110,10 +110,30 @@ const getMyPremiumPosts = (id, query) => __awaiter(void 0, void 0, void 0, funct
     const result = yield postQueryBuilder.modelQuery;
     return result;
 });
+const myFollowersFromDB = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.findById(userId);
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    const followerIds = user.follower;
+    const followers = yield user_model_1.User.find({ _id: { $in: followerIds } });
+    return followers;
+});
+const myFollowingFromDB = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.findById(userId);
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+    }
+    const followingIds = user.following;
+    const following = yield user_model_1.User.find({ _id: { $in: followingIds } });
+    return following;
+});
 exports.ProfileServices = {
     updateMyProfileIntoDB,
     getMyProfileFormDB,
     deleteMyProfileFromDB,
     getMyPosts,
     getMyPremiumPosts,
+    myFollowersFromDB,
+    myFollowingFromDB,
 };

@@ -14,6 +14,8 @@ const router = express_1.default.Router();
 // Add a comment
 router.post("/", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), (0, validateRequest_1.default)(comment_validation_1.CommentValidation.createCommentValidationSchema), comment_controller_1.CommentControllers.addComment);
 // Get comments for a post
+router.get("/all-comments", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), comment_controller_1.CommentControllers.getAllComment);
+// Get comments for a post
 router.get("/:postId", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), comment_controller_1.CommentControllers.getCommentForPost);
 // Update a comment
 router.patch("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), (0, validateRequest_1.default)(comment_validation_1.CommentValidation.updateCommentValidationSchema), comment_controller_1.CommentControllers.updateComment);

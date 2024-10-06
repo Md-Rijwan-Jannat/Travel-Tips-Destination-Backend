@@ -28,6 +28,16 @@ const addComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
         data: comment,
     });
 }));
+// Get all comment
+const getAllComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const comment = yield comment_service_1.CommentService.getAllCommentFromDB();
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.CREATED,
+        success: true,
+        message: "Comments retrieved successfully",
+        data: comment,
+    });
+}));
 // Get all comments for a post
 const getCommentForPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const comments = yield comment_service_1.CommentService.getCommentForPostFromDB(req.params.postId);
@@ -70,6 +80,7 @@ const replyToComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
 }));
 exports.CommentControllers = {
     addComment,
+    getAllComment,
     getCommentForPost,
     updateComment,
     deleteComment,

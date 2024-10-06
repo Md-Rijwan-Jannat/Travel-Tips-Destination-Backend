@@ -16,4 +16,6 @@ router.get("/my-posts", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, use
 router.get("/my-premium-posts", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), profile_controler_1.ProfileControllers.getMyPremiumPosts);
 router.patch("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), (0, validateRequest_1.default)(profile_validation_1.ProfileValidation.updateMyProfileValidationSchema), profile_controler_1.ProfileControllers.updateMyProfile);
 router.delete("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), profile_controler_1.ProfileControllers.deleteMyProfile);
+router.get("/followers", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), profile_controler_1.ProfileControllers.getMyFollowers);
+router.get("/following", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), profile_controler_1.ProfileControllers.getMyFollowing);
 exports.ProfileRoutes = router;

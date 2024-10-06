@@ -30,7 +30,6 @@ const userSchema = new mongoose_1.Schema({
     },
     password: {
         type: String,
-        trim: true,
     },
     image: {
         type: String,
@@ -79,29 +78,38 @@ const userSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 exports.default = userSchema;
+// Pre-save hook for password hashing
 userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const user = this;
-        user.password = yield bcrypt_1.default.hash(user === null || user === void 0 ? void 0 : user.password, Number(config_1.default.bcrypt_salt_rounds));
+        const user = this; // Cast this as TUserDocument
+        // Hash the password only if it has been modified or is new
+        if (user.isModified("password")) {
+            user.password = yield bcrypt_1.default.hash(user === null || user === void 0 ? void 0 : user.password, Number(config_1.default.bcrypt_salt_rounds));
+        }
         next();
     });
 });
+// Post-save hook to avoid returning the password
 userSchema.post("save", function (doc, next) {
     doc.password = "";
     next();
 });
+// Static method to find user by email with password
 userSchema.statics.isUserExistsByEmail = function (email) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield exports.User.findOne({ email }).select("+password");
     });
 };
+// Static method to compare passwords
 userSchema.statics.isPasswordMatched = function (plainTextPassword, hashedPassword) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield bcrypt_1.default.compare(plainTextPassword, hashedPassword);
     });
 };
+// Static method to check if the JWT was issued before the password was changed
 userSchema.statics.isJWTIssuedBeforePasswordChanged = function (passwordChangedTimestamp, jwtIssuedTimestamp) {
     const passwordChangedTime = new Date(passwordChangedTimestamp).getTime() / 1000;
     return passwordChangedTime > jwtIssuedTimestamp;
 };
+// Exporting the User model
 exports.User = (0, mongoose_1.model)("User", userSchema);

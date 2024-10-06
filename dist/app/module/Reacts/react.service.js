@@ -18,30 +18,32 @@ const http_status_1 = __importDefault(require("http-status"));
 const react_model_1 = require("./react.model");
 const post_model_1 = require("../Post/post.model");
 const comment_model_1 = require("../Comment/comment.model");
-const getAllReacts = () => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield react_model_1.React.find();
+// Get all likes
+const getAllLikes = () => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield react_model_1.React.find({ type: "like" });
+    return result;
+});
+// Get all dislikes
+const getAllDisLikes = () => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield react_model_1.React.find({ type: "dislike" });
     return result;
 });
 // Like a post or comment
 const likeFromDB = (userId, targetId, type) => __awaiter(void 0, void 0, void 0, function* () {
-    // Check if the user has already liked this post/comment
     const existingLikeReact = yield react_model_1.React.findOne({
         user: userId,
         [type]: targetId,
         type: "like",
     });
-    // If user already liked, throw an error or return depending on your needs
     if (existingLikeReact) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "You have already liked this item.");
     }
-    // Check if the user has disliked the post/comment before and remove the dislike
     const existingDislikeReact = yield react_model_1.React.findOneAndDelete({
         user: userId,
         [type]: targetId,
         type: "dislike",
     });
     if (existingDislikeReact) {
-        // Remove the user from the dislikes array of the post/comment
         if (type === "post") {
             yield post_model_1.Post.findByIdAndUpdate(targetId, {
                 $pull: { dislikes: userId },
@@ -59,7 +61,6 @@ const likeFromDB = (userId, targetId, type) => __awaiter(void 0, void 0, void 0,
         [type]: targetId,
         type: "like",
     });
-    // Push the new React ID to the likes array of the post/comment
     if (type === "post") {
         yield post_model_1.Post.findByIdAndUpdate(targetId, {
             $push: { likes: userId },
@@ -96,24 +97,20 @@ const unlikeFromDB = (userId, targetId, type) => __awaiter(void 0, void 0, void 
 });
 // Dislike a post or comment
 const dislikeFromDB = (userId, targetId, type) => __awaiter(void 0, void 0, void 0, function* () {
-    // Check if the user has already disliked this post/comment
     const existingDislikeReact = yield react_model_1.React.findOne({
         user: userId,
         [type]: targetId,
         type: "dislike",
     });
-    // If user already disliked, throw an error or return depending on your needs
     if (existingDislikeReact) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "You have already disliked this item.");
     }
-    // Check if the user has liked the post/comment before and remove the like
     const existingLikeReact = yield react_model_1.React.findOneAndDelete({
         user: userId,
         [type]: targetId,
         type: "like",
     });
     if (existingLikeReact) {
-        // Remove the user from the likes array of the post/comment
         if (type === "post") {
             yield post_model_1.Post.findByIdAndUpdate(targetId, {
                 $pull: { likes: userId },
@@ -131,7 +128,6 @@ const dislikeFromDB = (userId, targetId, type) => __awaiter(void 0, void 0, void
         [type]: targetId,
         type: "dislike",
     });
-    // Push the new React ID to the dislikes array of the post/comment
     if (type === "post") {
         yield post_model_1.Post.findByIdAndUpdate(targetId, {
             $push: { dislikes: userId },
@@ -154,7 +150,6 @@ const undislikeFromDB = (userId, targetId, type) => __awaiter(void 0, void 0, vo
     if (!existingReact) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "You haven't disliked this item.");
     }
-    // Remove the React ID from the dislikes array of the post/comment
     if (type === "post") {
         yield post_model_1.Post.findByIdAndUpdate(targetId, {
             $pull: { dislikes: userId },
@@ -167,7 +162,8 @@ const undislikeFromDB = (userId, targetId, type) => __awaiter(void 0, void 0, vo
     }
 });
 exports.ReactService = {
-    getAllReacts,
+    getAllLikes,
+    getAllDisLikes,
     likeFromDB,
     unlikeFromDB,
     dislikeFromDB,

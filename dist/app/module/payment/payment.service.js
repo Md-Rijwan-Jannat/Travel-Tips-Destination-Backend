@@ -136,8 +136,13 @@ const getPaymentsData = (query) => __awaiter(void 0, void 0, void 0, function* (
         result,
     };
 });
+const getAllPaymentsDatForAnalytics = () => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield payment_model_1.default.find().populate("user");
+    return result;
+});
 exports.PaymentService = {
     subscriptionsIntoBD,
     paymentConformationIntoDB,
     getPaymentsData,
+    getAllPaymentsDatForAnalytics,
 };

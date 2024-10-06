@@ -12,4 +12,5 @@ const router = (0, express_1.Router)();
 router.post("/subscriptions/:userId", payment_controller_1.PaymentController.subscriptions);
 router.post("/conformation/:userId", payment_controller_1.PaymentController.paymentConformation);
 router.get("/", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), payment_controller_1.PaymentController.getPaymentsData);
+router.get("/analytics", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), payment_controller_1.PaymentController.getPaymentsData);
 exports.PaymentRoutes = router;

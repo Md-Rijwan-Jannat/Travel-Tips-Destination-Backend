@@ -52,6 +52,14 @@ const getAllPremiumUserFromDB = (query) => __awaiter(void 0, void 0, void 0, fun
         result: result,
     };
 });
+const getAllUserForAnalytics = () => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_model_1.User.find({ verified: false });
+    return result;
+});
+const getAlPremiumUserForAnalytics = () => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield user_model_1.User.find({ verified: true });
+    return result;
+});
 const updateUserStatus = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_model_1.User.findByIdAndUpdate(id, { status: payload.status }, { new: true });
     if (!result) {
@@ -179,6 +187,8 @@ const getSingleUserAllPostsFromDB = (id, query) => __awaiter(void 0, void 0, voi
 exports.UserServices = {
     getAllUserFromDB,
     getAllPremiumUserFromDB,
+    getAlPremiumUserForAnalytics,
+    getAllUserForAnalytics,
     updateUserStatus,
     updateUserRole,
     getUserFromDB,
