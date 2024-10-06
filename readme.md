@@ -100,10 +100,10 @@ The Travel Tips & Destination project is a platform for users to share their tra
 ### React Model
 
 | Field     | Type     | Description                                 |
-| --------- | -------- | ------------------------------------------- | ----- | ------------------------ | --- | ---------- |
+| --------- | -------- | ------------------------------------------- |
 | \_id      | ObjectId | Unique identifier for the react             |
 | User      | ObjectId | Reference to the User model                 |
-| Comment   |          | Post                                        | Array | Reference to the Comment |     | Post model |
+| Comm.Post | Array    | Reference to the Comment- Post model        |
 | Type      | String   | Type the reacts                             |
 | createdAt | Date     | Timestamp when the comment was created      |
 | updatedAt | Date     | Timestamp when the comment was last updated |
