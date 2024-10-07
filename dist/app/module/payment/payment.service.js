@@ -118,7 +118,7 @@ const paymentConformationIntoDB = (transitionId, status, userId) => __awaiter(vo
       <div class="container">
           <div class="success-icon"><img src="${paymentStatus === "success" ? "https://img.icons8.com/?size=100&id=123575&format=png&color=F25081" : "https://img.icons8.com/?size=100&id=35879&format=png&color=F25081"}" /></div>
           <h1>${message}</h1>
-          <a href="http://localhost:3000/profile" class="button">Go Back</a>
+          <a href="https://traveltipsdestinationcommunity.vercel.app/profile" class="button">Go Back</a>
       </div>
   </body>
   </html>

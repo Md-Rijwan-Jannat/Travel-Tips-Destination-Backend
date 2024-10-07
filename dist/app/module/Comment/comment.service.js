@@ -19,6 +19,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const user_model_1 = require("../User/user.model");
 const post_model_1 = require("../Post/post.model");
 const mongoose_1 = __importDefault(require("mongoose"));
+const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 // Add a comment to the DB
 const addCommentIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const session = yield mongoose_1.default.startSession();
@@ -61,15 +62,19 @@ const getAllCommentFromDB = () => __awaiter(void 0, void 0, void 0, function* ()
     });
     return comments;
 });
-const getCommentForPostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function* () {
-    const comments = yield comment_model_1.Comment.find({ post: postId, isDeleted: false })
+const getCommentForPostFromDB = (postId, query) => __awaiter(void 0, void 0, void 0, function* () {
+    const commentQueryBuilder = new QueryBuilder_1.default(comment_model_1.Comment.find({ post: postId, isDeleted: false })
         .populate("user")
         .populate({
         path: "replies",
         populate: {
             path: "user",
         },
-    });
+    }), query)
+        .sort()
+        .fields()
+        .filter();
+    const comments = yield commentQueryBuilder.modelQuery;
     return comments;
 });
 // Update a comment by ID

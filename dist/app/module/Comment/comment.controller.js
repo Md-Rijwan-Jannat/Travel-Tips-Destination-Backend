@@ -40,7 +40,7 @@ const getAllComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
 }));
 // Get all comments for a post
 const getCommentForPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const comments = yield comment_service_1.CommentService.getCommentForPostFromDB(req.params.postId);
+    const comments = yield comment_service_1.CommentService.getCommentForPostFromDB(req.params.postId, req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,

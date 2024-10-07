@@ -10,7 +10,7 @@ import QueryBuilder from "../../builder/QueryBuilder";
 
 const subscriptionsIntoBD = async (
   payload: Omit<TPaymentData, "transitionId">,
-  userId: string,
+  userId: string
 ) => {
   const user = await User.findById(userId);
 
@@ -44,7 +44,7 @@ const subscriptionsIntoBD = async (
 const paymentConformationIntoDB = async (
   transitionId: string,
   status: string,
-  userId: string,
+  userId: string
 ) => {
   let paymentStatus = "failed";
   let message = "Payment Failed. Please try again.";
@@ -58,7 +58,7 @@ const paymentConformationIntoDB = async (
       const updatedPayment = await Payment.findOneAndUpdate(
         { transitionId },
         { status: "Paid" },
-        { new: true },
+        { new: true }
       );
 
       if (!updatedPayment) {
@@ -131,7 +131,7 @@ const paymentConformationIntoDB = async (
       <div class="container">
           <div class="success-icon"><img src="${paymentStatus === "success" ? "https://img.icons8.com/?size=100&id=123575&format=png&color=F25081" : "https://img.icons8.com/?size=100&id=35879&format=png&color=F25081"}" /></div>
           <h1>${message}</h1>
-          <a href="http://localhost:3000/profile" class="button">Go Back</a>
+          <a href="https://traveltipsdestinationcommunity.vercel.app/profile" class="button">Go Back</a>
       </div>
   </body>
   </html>
@@ -141,7 +141,7 @@ const paymentConformationIntoDB = async (
 const getPaymentsData = async (query: Record<string, any>) => {
   const paymentQueryBuilder = new QueryBuilder(
     Payment.find().populate("user"),
-    query,
+    query
   )
     .filter()
     .sort()
