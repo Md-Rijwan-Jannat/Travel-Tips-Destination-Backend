@@ -7,14 +7,10 @@ import { USER_ROLE } from "./user.constants";
 const router = express.Router();
 
 // Get all normal users (Admin only)
-router.get("/normal-users", Auth(USER_ROLE.ADMIN), UserControllers.getAllUser);
+router.get("/normal-users", UserControllers.getAllUser);
 
 // Get all premium users (Admin only)
-router.get(
-  "/premium-users",
-  Auth(USER_ROLE.ADMIN),
-  UserControllers.getAlPremiumUser
-);
+router.get("/premium-users", UserControllers.getAlPremiumUser);
 
 // Get all normal users (Admin only)
 router.get(

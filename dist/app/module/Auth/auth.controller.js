@@ -23,6 +23,7 @@ const registerUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
     res.cookie("accessToken", result === null || result === void 0 ? void 0 : result.accessToken, {
         secure: config_1.default.NODE_ENV === "production",
         httpOnly: true,
+        sameSite: "lax", // Consider 'none' if needed
     });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
@@ -33,10 +34,10 @@ const registerUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
 }));
 const loginUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield auth_service_1.UserServices.loginUserFromDB(req.body);
-    const { refreshToken, accessToken } = result;
-    res.cookie("refreshToken", refreshToken, {
+    res.cookie("accessToken", result === null || result === void 0 ? void 0 : result.accessToken, {
         secure: config_1.default.NODE_ENV === "production",
         httpOnly: true,
+        sameSite: "lax",
     });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
