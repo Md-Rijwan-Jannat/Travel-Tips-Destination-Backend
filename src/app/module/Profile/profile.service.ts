@@ -5,7 +5,7 @@ import { TUpdateUser } from "./profile.interface";
 import { USER_STATUS } from "../User/user.constants";
 import { Post } from "../Post/post.model";
 import QueryBuilder from "../../builder/QueryBuilder";
-import { postSearchFelids } from "../Post/post.constants";
+import { postSearchFields } from "../Post/post.constants";
 
 // Get my profile by email
 const getMyProfileFormDB = async (email: string) => {
@@ -85,7 +85,7 @@ const getMyPosts = async (id: string, query: Record<string, any>) => {
       }),
     query
   )
-    .search(postSearchFelids)
+    .search(postSearchFields)
     .sort()
     .fields()
     .filter();
@@ -120,7 +120,7 @@ const getMyPremiumPosts = async (id: string, query: Record<string, any>) => {
       }),
     query
   )
-    .search(postSearchFelids)
+    .search(postSearchFields)
     .sort()
     .fields()
     .filter();

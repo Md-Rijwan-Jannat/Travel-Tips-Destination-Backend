@@ -9,12 +9,12 @@ import { UserSearchableFields } from "./user.utils";
 import mongoose, { Types } from "mongoose";
 import { USER_STATUS } from "./user.constants";
 import { Post } from "../Post/post.model";
-import { postSearchFelids } from "../Post/post.constants";
+import { postSearchFields } from "../Post/post.constants";
 
 const getAllUserFromDB = async (query: Record<string, any>) => {
   const usersQueryBuilder = new QueryBuilder(
     User.find({ verified: false }),
-    query,
+    query
   )
     .fields()
     .paginate()
@@ -34,7 +34,7 @@ const getAllUserFromDB = async (query: Record<string, any>) => {
 const getAllPremiumUserFromDB = async (query: Record<string, any>) => {
   const usersQueryBuilder = new QueryBuilder(
     User.find({ verified: true }),
-    query,
+    query
   )
     .fields()
     .paginate()
@@ -51,8 +51,13 @@ const getAllPremiumUserFromDB = async (query: Record<string, any>) => {
   };
 };
 
-const getAllUserForAnalytics = async () => {
-  const result = await User.find({ verified: false });
+const getAllUserForAnalytics = async (query: Record<string, any>) => {
+  const usersQueryBuilder = new QueryBuilder(User.find(), query).search(
+    UserSearchableFields
+  );
+
+  const result = await usersQueryBuilder.modelQuery;
+
   return result;
 };
 
@@ -65,7 +70,7 @@ const updateUserStatus = async (id: string, payload: { status: string }) => {
   const result = await User.findByIdAndUpdate(
     id,
     { status: payload.status },
-    { new: true },
+    { new: true }
   );
 
   if (!result) {
@@ -79,7 +84,7 @@ const updateUserRole = async (id: string, payload: { role: string }) => {
   const result = await User.findByIdAndUpdate(
     id,
     { role: payload.role },
-    { new: true },
+    { new: true }
   );
 
   if (!result) {
@@ -102,7 +107,7 @@ const getUserFromDB = async (id: string) => {
 // Follow a user with transaction
 const followUser = async (
   userId: Types.ObjectId,
-  followedUserId: Types.ObjectId,
+  followedUserId: Types.ObjectId
 ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -155,7 +160,7 @@ const followUser = async (
 // Unfollow a user with transaction
 const unFollowUser = async (
   userId: Types.ObjectId,
-  unFollowedUserId: Types.ObjectId,
+  unFollowedUserId: Types.ObjectId
 ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -163,12 +168,12 @@ const unFollowUser = async (
   try {
     const userObjectId = new mongoose.Types.ObjectId(userId);
     const unFollowedUserObjectId = new mongoose.Types.ObjectId(
-      unFollowedUserId,
+      unFollowedUserId
     );
 
     const user = await User.findById(userObjectId).session(session);
     const unFollowedUser = await User.findById(unFollowedUserObjectId).session(
-      session,
+      session
     );
 
     if (!user || !unFollowedUser) {
@@ -178,13 +183,13 @@ const unFollowUser = async (
     const updateFollowingResult = await User.updateOne(
       { _id: userObjectId },
       { $pull: { following: unFollowedUserObjectId } },
-      { session },
+      { session }
     );
 
     const updateFollowerResult = await User.updateOne(
       { _id: unFollowedUserObjectId },
       { $pull: { follower: userObjectId } },
-      { session },
+      { session }
     );
 
     if (
@@ -212,7 +217,7 @@ const unFollowUser = async (
 // Get my posts
 const getSingleUserAllPostsFromDB = async (
   id: string,
-  query: Record<string, any>,
+  query: Record<string, any>
 ) => {
   const user = await User.findById(id);
 
@@ -236,9 +241,9 @@ const getSingleUserAllPostsFromDB = async (
           model: "User",
         },
       }),
-    query,
+    query
   )
-    .search(postSearchFelids)
+    .search(postSearchFields)
     .sort()
     .fields()
     .filter();

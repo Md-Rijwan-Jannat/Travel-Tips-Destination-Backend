@@ -39,12 +39,13 @@ const getPostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 // Get all posts
 const getAllPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield post_service_1.PostService.getAllPostsFromDB(req.query);
+    const { result, meta } = yield post_service_1.PostService.getAllPostsFromDB(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Posts retrieved successfully",
         data: result,
+        meta: meta,
     });
 }));
 // Get all normal posts

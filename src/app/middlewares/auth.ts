@@ -19,12 +19,10 @@ const Auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
 
     const decoded = verifyToken(
       token,
-      config.jwt_access_secret as string,
+      config.jwt_access_secret as string
     ) as JwtPayload;
 
     const { role, email, iat } = decoded;
-
-    console.log(decoded);
 
     // checking if the user is exist
     const user = await User.isUserExistsByEmail(email);
@@ -43,8 +41,6 @@ const Auth = (...requiredRoles: (keyof typeof USER_ROLE)[]) => {
     if (requiredRoles && !requiredRoles.includes(role)) {
       throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized");
     }
-
-    console.log(requiredRoles && !requiredRoles.includes(role));
 
     req.user = decoded as JwtPayload;
     next();

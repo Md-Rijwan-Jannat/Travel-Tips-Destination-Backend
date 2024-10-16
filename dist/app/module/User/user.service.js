@@ -177,7 +177,7 @@ const getSingleUserAllPostsFromDB = (id, query) => __awaiter(void 0, void 0, voi
             model: "User",
         },
     }), query)
-        .search(post_constants_1.postSearchFelids)
+        .search(post_constants_1.postSearchFields)
         .sort()
         .fields()
         .filter();

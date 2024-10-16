@@ -46,7 +46,7 @@ const getAllPostsNormalForAnalytics = (query) => __awaiter(void 0, void 0, void 
             model: "User",
         },
     }), query)
-        .search(post_constants_1.postSearchFelids)
+        .search(post_constants_1.postSearchFields)
         .sort()
         .fields()
         .filter()
@@ -69,7 +69,7 @@ const getAllPostsPremiumForAnalytics = (query) => __awaiter(void 0, void 0, void
             model: "User",
         },
     }), query)
-        .search(post_constants_1.postSearchFelids)
+        .search(post_constants_1.postSearchFields)
         .sort()
         .fields()
         .filter()
@@ -81,7 +81,13 @@ const getAllPostsPremiumForAnalytics = (query) => __awaiter(void 0, void 0, void
 });
 // Get all posts (with optional filters)
 const getAllPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "FREE" })
+    const { categories } = query;
+    let queryObj = { isDeleted: false, status: "FREE" };
+    if (categories) {
+        queryObj = Object.assign(Object.assign({}, queryObj), { category: { $in: categories || "" } });
+    }
+    // Build the post query
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find(queryObj)
         .populate({
         path: "user",
     })
@@ -92,13 +98,16 @@ const getAllPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function*
             model: "User",
         },
     }), query)
-        .search(post_constants_1.postSearchFelids)
+        .search(post_constants_1.postSearchFields)
         .sort()
         .fields()
-        .filter();
+        .filter()
+        .paginate();
+    // Execute the query
     const result = yield postQueryBuilder.modelQuery;
-    // Return meta only if the role is ADMIN
-    return result;
+    const meta = yield postQueryBuilder.countTotal();
+    // Return result and meta (meta only if the role is ADMIN)
+    return { result, meta };
 });
 // Get all premium posts (with optional filters)
 const getAllPremiumPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
@@ -113,11 +122,11 @@ const getAllPremiumPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, fu
             model: "User",
         },
     }), query)
-        .search(post_constants_1.postSearchFelids)
+        .search(post_constants_1.postSearchFields)
         .sort()
         .fields()
         .filter();
-    const result = yield postQueryBuilder.paginate().modelQuery;
+    const result = yield postQueryBuilder.modelQuery;
     // Return meta only if the role is ADMIN
     return result;
 });

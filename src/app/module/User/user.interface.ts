@@ -21,15 +21,34 @@ export interface TLoginUser {
   password: string;
 }
 
+export interface TGetUserOnDataBase {
+  name: string;
+  email: string;
+  image?: string;
+  password: string;
+  role: string;
+  status: string;
+  follower: string[];
+  following: string[];
+  verified: boolean;
+  country: any;
+  address: any;
+  isDeleted: boolean;
+  _id: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 export interface TUserModel extends Model<TUser> {
   isUserExistsByEmail(email: string): Promise<TUser>;
   isPasswordMatched(
     plainTextPassword: string,
-    hashedPassword: string,
+    hashedPassword: string
   ): Promise<boolean>;
   isJWTIssuedBeforePasswordChanged(
     passwordChangedTimestamp: Date,
-    jwtIssuedTimestamp: number,
+    jwtIssuedTimestamp: number
   ): boolean;
 }
 

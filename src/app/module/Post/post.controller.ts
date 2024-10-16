@@ -27,12 +27,13 @@ const getPostById = catchAsync(async (req, res) => {
 
 // Get all posts
 const getAllPosts = catchAsync(async (req, res) => {
-  const result = await PostService.getAllPostsFromDB(req.query);
+  const { result, meta } = await PostService.getAllPostsFromDB(req.query);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Posts retrieved successfully",
     data: result,
+    meta: meta,
   });
 });
 
@@ -110,7 +111,6 @@ const recoverPost = catchAsync(async (req, res) => {
 
 // Report a post by ID
 const reportPost = catchAsync(async (req, res) => {
-  console.log(req.params.id);
   const post = await PostService.reportPostFromDB(
     req.params.id,
     req.body,

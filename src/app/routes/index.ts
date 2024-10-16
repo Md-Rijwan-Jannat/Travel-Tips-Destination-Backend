@@ -6,6 +6,8 @@ import { PostRoutes } from "../module/Post/post.routes";
 import { CommentRoutes } from "../module/Comment/comment.routes";
 import { ReactRoutes } from "../module/Reacts/react.routes";
 import { PaymentRoutes } from "../module/Payment/payment.routes";
+import { MessageRoutes } from "../module/Messages/message.routes";
+import { ChatRoutes } from "../module/Chat/chat.routes";
 
 const router = Router();
 
@@ -37,6 +39,14 @@ const moduleRoutes = [
   {
     path: "/payment",
     route: PaymentRoutes,
+  },
+  {
+    path: "/chats",
+    route: ChatRoutes,
+  },
+  {
+    path: "/messages",
+    route: MessageRoutes,
   },
 ];
 

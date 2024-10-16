@@ -3,7 +3,7 @@ export const POST_STATUS = {
   PREMIUM: "PREMIUM",
 } as const;
 
-export const postSearchFelids = ["title", "description", "category"];
+export const postSearchFields = ["title", "description", "category"];
 
 export const CategoryEnum = [
   "Adventure",

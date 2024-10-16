@@ -52,8 +52,6 @@ const deleteMyProfile = catchAsync(async (req, res) => {
 // Get my posts
 const getMyPosts = catchAsync(async (req, res) => {
   const user = req.user as JwtPayload;
-
-  console.log(user);
   const result = await ProfileServices.getMyPosts(user?.id, req.query);
 
   sendResponse(res, {
@@ -67,8 +65,6 @@ const getMyPosts = catchAsync(async (req, res) => {
 // Get my posts
 const getMyPremiumPosts = catchAsync(async (req, res) => {
   const user = req.user as JwtPayload;
-
-  console.log(user);
   const result = await ProfileServices.getMyPremiumPosts(user?.id, req.query);
 
   sendResponse(res, {

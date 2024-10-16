@@ -1,9 +1,9 @@
-import { TPost, TReport } from "./post.interface";
+import { QueryObj, TPost, TReport } from "./post.interface";
 import { Post } from "./post.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import QueryBuilder from "../../builder/QueryBuilder";
-import { postSearchFelids } from "./post.constants";
+import { postSearchFields } from "./post.constants";
 import mongoose from "mongoose";
 
 // Create a new post
@@ -11,7 +11,6 @@ const createPostIntoDB = async (
   payload: TPost,
   userId: string
 ): Promise<TPost> => {
-  console.log(userId, "id is here");
   const post = await Post.create({ ...payload, user: userId });
   return post;
 };
@@ -41,7 +40,7 @@ const getAllPostsNormalForAnalytics = async (query: Record<string, any>) => {
       }),
     query
   )
-    .search(postSearchFelids)
+    .search(postSearchFields)
     .sort()
     .fields()
     .filter()
@@ -70,7 +69,7 @@ const getAllPostsPremiumForAnalytics = async (query: Record<string, any>) => {
       }),
     query
   )
-    .search(postSearchFelids)
+    .search(postSearchFields)
     .sort()
     .fields()
     .filter()
@@ -85,8 +84,20 @@ const getAllPostsPremiumForAnalytics = async (query: Record<string, any>) => {
 
 // Get all posts (with optional filters)
 const getAllPostsFromDB = async (query: Record<string, any>) => {
+  const { categories } = query;
+
+  let queryObj: QueryObj = { isDeleted: false, status: "FREE" };
+
+  if (categories) {
+    queryObj = {
+      ...queryObj,
+      category: { $in: categories || "" },
+    };
+  }
+
+  // Build the post query
   const postQueryBuilder = new QueryBuilder(
-    Post.find({ isDeleted: false, status: "FREE" })
+    Post.find(queryObj)
       .populate({
         path: "user",
       })
@@ -99,15 +110,18 @@ const getAllPostsFromDB = async (query: Record<string, any>) => {
       }),
     query
   )
-    .search(postSearchFelids)
+    .search(postSearchFields)
     .sort()
     .fields()
-    .filter();
+    .filter()
+    .paginate();
 
+  // Execute the query
   const result = await postQueryBuilder.modelQuery;
+  const meta = await postQueryBuilder.countTotal();
 
-  // Return meta only if the role is ADMIN
-  return result;
+  // Return result and meta (meta only if the role is ADMIN)
+  return { result, meta };
 };
 
 // Get all premium posts (with optional filters)
@@ -126,12 +140,12 @@ const getAllPremiumPostsFromDB = async (query: Record<string, any>) => {
       }),
     query
   )
-    .search(postSearchFelids)
+    .search(postSearchFields)
     .sort()
     .fields()
     .filter();
 
-  const result = await postQueryBuilder.paginate().modelQuery;
+  const result = await postQueryBuilder.modelQuery;
 
   // Return meta only if the role is ADMIN
   return result;

@@ -38,4 +38,10 @@ export interface TReport {
   report: string;
 }
 
+export interface QueryObj {
+  isDeleted: boolean;
+  status: string;
+  category?: { $in: string[] };
+}
+
 export type TPostStatus = keyof typeof POST_STATUS;

@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CategoryEnum = exports.postSearchFelids = exports.POST_STATUS = void 0;
+exports.CategoryEnum = exports.postSearchFields = exports.POST_STATUS = void 0;
 exports.POST_STATUS = {
     FREE: "FREE",
     PREMIUM: "PREMIUM",
 };
-exports.postSearchFelids = ["title", "description", "category"];
+exports.postSearchFields = ["title", "description", "category"];
 exports.CategoryEnum = [
     "Adventure",
     "Exploration",

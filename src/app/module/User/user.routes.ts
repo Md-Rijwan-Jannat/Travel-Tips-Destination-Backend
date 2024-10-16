@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+"us3e client";
+
 import express from "express";
 import { UserControllers } from "./user.controller";
 import Auth from "../../middlewares/auth";
@@ -15,8 +16,8 @@ router.get("/premium-users", UserControllers.getAlPremiumUser);
 // Get all normal users (Admin only)
 router.get(
   "/normal-users-analytics",
-  Auth(USER_ROLE.ADMIN),
-  UserControllers.getAllUser
+  Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
+  UserControllers.getAllUserForAnalytics
 );
 
 // Get all premium users (Admin only)

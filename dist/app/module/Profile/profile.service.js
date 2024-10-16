@@ -76,7 +76,7 @@ const getMyPosts = (id, query) => __awaiter(void 0, void 0, void 0, function* ()
             model: "User",
         },
     }), query)
-        .search(post_constants_1.postSearchFelids)
+        .search(post_constants_1.postSearchFields)
         .sort()
         .fields()
         .filter();
@@ -103,7 +103,7 @@ const getMyPremiumPosts = (id, query) => __awaiter(void 0, void 0, void 0, funct
             model: "User",
         },
     }), query)
-        .search(post_constants_1.postSearchFelids)
+        .search(post_constants_1.postSearchFields)
         .sort()
         .fields()
         .filter();

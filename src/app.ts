@@ -21,8 +21,8 @@ app.use(
       "http://localhost:3000",
       "https://traveltipsdestinationcommunity.vercel.app",
     ],
-    credentials: true,
-  }),
+    credentials: true, // Allow credentials to be sent
+  })
 );
 
 // Application routes
