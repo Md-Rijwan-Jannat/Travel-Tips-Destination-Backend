@@ -1,51 +1,51 @@
-import express from 'express';
-import { ChatController } from './chat.controller';
-import Auth from '../../middlewares/auth';
-import { USER_ROLE } from '../User/user.constants';
+import express from "express";
+import { ChatController } from "./chat.controller";
+import Auth from "../../middlewares/auth";
+import { USER_ROLE } from "../User/user.constants";
 
 const router = express.Router();
 
 // Chat routes
 router.post(
-  '/',
+  "/",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  ChatController.createChat
+  ChatController.createChat,
 );
 
 router.get(
-  '/',
+  "/",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  ChatController.getUserChats
+  ChatController.getUserChats,
 );
 
 router.get(
-  '/:chatId',
+  "/:chatId",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  ChatController.getSingleChat
+  ChatController.getSingleChat,
 );
 
 router.post(
-  '/group',
+  "/group",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  ChatController.createGroupChat
+  ChatController.createGroupChat,
 );
 
 router.put(
-  '/rename',
+  "/rename",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  ChatController.renameGroup
+  ChatController.renameGroup,
 );
 
 router.put(
-  '/group-remove',
+  "/group-remove",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  ChatController.removeFromGroup
+  ChatController.removeFromGroup,
 );
 
 router.put(
-  '/group-add',
+  "/group-add",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  ChatController.addToGroup
+  ChatController.addToGroup,
 );
 
 export const ChatRoutes = router;

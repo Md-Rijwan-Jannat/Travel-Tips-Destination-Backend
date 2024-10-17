@@ -9,12 +9,12 @@ const router = express.Router();
 router.post(
   "/",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  MessageController.createMessage
+  MessageController.createMessage,
 );
 router.get(
   "/:chatId",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  MessageController.getMessages
+  MessageController.getMessages,
 );
 
 export const MessageRoutes = router;

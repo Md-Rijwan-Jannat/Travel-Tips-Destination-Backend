@@ -1,8 +1,8 @@
-import httpStatus from 'http-status';
-import sendResponse from '../../utils/sendResponse';
-import catchAsync from '../../utils/catchAsync';
-import { ChatServices } from './chat.service';
-import { User } from '../User/user.model';
+import httpStatus from "http-status";
+import sendResponse from "../../utils/sendResponse";
+import catchAsync from "../../utils/catchAsync";
+import { ChatServices } from "./chat.service";
+import { User } from "../User/user.model";
 
 // Create a new chat
 const createChat = catchAsync(async (req, res) => {
@@ -11,7 +11,7 @@ const createChat = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Chat created successfully',
+    message: "Chat created successfully",
     data: chat,
   });
 });
@@ -20,17 +20,17 @@ const createChat = catchAsync(async (req, res) => {
 const getUserChats = catchAsync(async (req, res) => {
   const { result, meta } = await ChatServices.getUserChatsFromDB(
     req.user.id,
-    req.query
+    req.query,
   );
   const populatedResults = await User.populate(result, {
-    path: 'latestMessage.sender',
-    select: '_id name image email verified',
+    path: "latestMessage.sender",
+    select: "_id name image email verified",
   });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Chats retrieved successfully',
+    message: "Chats retrieved successfully",
     meta,
     data: populatedResults,
   });
@@ -41,14 +41,14 @@ const getSingleChat = catchAsync(async (req, res) => {
   const { chatId } = req.params;
   const result = await ChatServices.getSingleChatFromDB(chatId, req.user.id);
   const populatedResults = await User.populate(result, {
-    path: 'latestMessage.sender',
-    select: '_id name image email verified',
+    path: "latestMessage.sender",
+    select: "_id name image email verified",
   });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Chat retrieved successfully',
+    message: "Chat retrieved successfully",
     data: populatedResults,
   });
 });
@@ -57,13 +57,13 @@ const getSingleChat = catchAsync(async (req, res) => {
 const createGroupChat = catchAsync(async (req, res) => {
   const groupChat = await ChatServices.createGroupChatInDB(
     req.body,
-    req.user.id
+    req.user.id,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: 'Group chat created successfully',
+    message: "Group chat created successfully",
     data: groupChat,
   });
 });
@@ -75,7 +75,7 @@ const renameGroup = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Group chat renamed successfully',
+    message: "Group chat renamed successfully",
     data: updatedChat,
   });
 });
@@ -87,7 +87,7 @@ const removeFromGroup = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'User removed from group',
+    message: "User removed from group",
     data: updatedChat,
   });
 });
@@ -99,7 +99,7 @@ const addToGroup = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'User added to group',
+    message: "User added to group",
     data: updatedChat,
   });
 });

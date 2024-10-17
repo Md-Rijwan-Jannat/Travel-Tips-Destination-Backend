@@ -17,35 +17,35 @@ router.get("/premium-users", UserControllers.getAlPremiumUser);
 router.get(
   "/normal-users-analytics",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  UserControllers.getAllUserForAnalytics
+  UserControllers.getAllUserForAnalytics,
 );
 
 // Get all premium users (Admin only)
 router.get(
   "/premium-users-analytics",
   Auth(USER_ROLE.ADMIN),
-  UserControllers.getAlPremiumUser
+  UserControllers.getAlPremiumUser,
 );
 
 // Get a single user by ID
 router.get(
   "/:id",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
-  UserControllers.getUser
+  UserControllers.getUser,
 );
 
 // Update user status by ID (Admin only)
 router.patch(
   "/:id/status",
   Auth(USER_ROLE.ADMIN),
-  UserControllers.updateUserStatus
+  UserControllers.updateUserStatus,
 );
 
 // Update user role by ID (Admin only)
 router.patch(
   "/:id/role",
   Auth(USER_ROLE.ADMIN),
-  UserControllers.updateUserRole
+  UserControllers.updateUserRole,
 );
 
 // Get all posts from a specific user by userId
@@ -55,14 +55,14 @@ router.get("/posts/:userId", UserControllers.getSingleUserPosts);
 router.patch(
   "/follow/:followedUserId",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  UserControllers.followUser
+  UserControllers.followUser,
 );
 
 // Unfollow a user (User and Admin roles allowed)
 router.patch(
   "/un-follow/:unFollowedUserId",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  UserControllers.unFollowUser
+  UserControllers.unFollowUser,
 );
 
 export const UserRoutes = router;

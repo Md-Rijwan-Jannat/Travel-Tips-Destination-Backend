@@ -25,13 +25,13 @@ const registerUserIntoDB = async (payload: TRegister) => {
     const accessToken = createToken(
       jwtPayload,
       config.jwt_access_secret as string,
-      config.jwt_access_expires_in as string
+      config.jwt_access_expires_in as string,
     );
 
     const refreshToken = createToken(
       jwtPayload,
       config.jwt_access_secret as string,
-      config.jwt_refresh_expires_in as string
+      config.jwt_refresh_expires_in as string,
     );
 
     return {
@@ -69,13 +69,13 @@ const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
   const accessToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
-    config.jwt_access_expires_in as string
+    config.jwt_access_expires_in as string,
   );
 
   const refreshToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
-    config.jwt_refresh_expires_in as string
+    config.jwt_refresh_expires_in as string,
   );
 
   return {
@@ -108,7 +108,7 @@ const forgetPasswordIntoDB = async (email: string) => {
   const resetToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
-    "10m"
+    "10m",
   );
 
   const resetLink = `${config.reset_link_url}?email=${user.email}&token=${resetToken}`;
@@ -119,7 +119,7 @@ const forgetPasswordIntoDB = async (email: string) => {
 
 const resetPasswordIntoDB = async (
   payload: { email: string; newPassword: string },
-  token: string
+  token: string,
 ) => {
   console.log(payload);
   const user = await User.findOne({ email: payload?.email });
@@ -149,7 +149,7 @@ const resetPasswordIntoDB = async (
 
   const newHashPassword = await bcrypt.hash(
     payload.newPassword,
-    Number(config.bcrypt_salt_rounds)
+    Number(config.bcrypt_salt_rounds),
   );
 
   const result = await User.findOneAndUpdate(
@@ -157,7 +157,7 @@ const resetPasswordIntoDB = async (
     {
       password: newHashPassword,
     },
-    { new: true }
+    { new: true },
   );
 
   return result;

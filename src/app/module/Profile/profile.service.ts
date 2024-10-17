@@ -26,7 +26,7 @@ const getMyProfileFormDB = async (email: string) => {
 const updateMyProfileIntoDB = async (
   payload: Partial<TUpdateUser>,
   id: string,
-  email: string
+  email: string,
 ) => {
   const user = await User.findOne({ _id: id, email });
 
@@ -83,7 +83,7 @@ const getMyPosts = async (id: string, query: Record<string, any>) => {
           model: "User",
         },
       }),
-    query
+    query,
   )
     .search(postSearchFields)
     .sort()
@@ -118,7 +118,7 @@ const getMyPremiumPosts = async (id: string, query: Record<string, any>) => {
           model: "User",
         },
       }),
-    query
+    query,
   )
     .search(postSearchFields)
     .sort()

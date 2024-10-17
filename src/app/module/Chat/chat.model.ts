@@ -1,5 +1,5 @@
-import { model, Schema } from 'mongoose';
-import { IChat } from '../Chat/chat.interface';
+import { model, Schema } from "mongoose";
+import { IChat } from "../Chat/chat.interface";
 
 const chatSchema = new Schema<IChat>(
   {
@@ -9,7 +9,7 @@ const chatSchema = new Schema<IChat>(
     },
     user: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
     },
 
     isGroupChat: {
@@ -19,19 +19,19 @@ const chatSchema = new Schema<IChat>(
     users: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
       },
     ],
     latestMessage: {
       type: Schema.Types.ObjectId,
-      ref: 'Message',
+      ref: "Message",
     },
     groupAdmin: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const Chat = model<IChat>('Chat', chatSchema);
+export const Chat = model<IChat>("Chat", chatSchema);

@@ -10,7 +10,7 @@ import QueryBuilder from "../../builder/QueryBuilder";
 // Add a comment to the DB
 const addCommentIntoDB = async (
   payload: Partial<IComment>,
-  userId: string
+  userId: string,
 ): Promise<IComment> => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -36,7 +36,7 @@ const addCommentIntoDB = async (
       {
         $push: { comments: comment[0]._id },
       },
-      { session }
+      { session },
     );
 
     // Commit the transaction
@@ -64,7 +64,7 @@ const getAllCommentFromDB = async (): Promise<IComment[]> => {
 };
 const getCommentForPostFromDB = async (
   postId: string,
-  query: Record<string, any>
+  query: Record<string, any>,
 ): Promise<IComment[]> => {
   const commentQueryBuilder = new QueryBuilder(
     Comment.find({ post: postId, isDeleted: false })
@@ -75,7 +75,7 @@ const getCommentForPostFromDB = async (
           path: "user",
         },
       }),
-    query
+    query,
   )
     .sort()
     .fields()
@@ -88,7 +88,7 @@ const getCommentForPostFromDB = async (
 // Update a comment by ID
 const updateCommentIntoDB = async (
   commentId: string,
-  updateData: Partial<IComment>
+  updateData: Partial<IComment>,
 ): Promise<IComment | null> => {
   const comment = await Comment.findByIdAndUpdate(commentId, updateData, {
     new: true,
@@ -101,7 +101,7 @@ const updateCommentIntoDB = async (
 
 // Soft delete a comment by ID
 const deleteCommentFromDB = async (
-  commentId: string
+  commentId: string,
 ): Promise<IComment | null> => {
   const comment = await Comment.findByIdAndDelete(commentId);
   if (!comment) {
@@ -113,7 +113,7 @@ const deleteCommentFromDB = async (
 const replyToCommentFromDB = async (
   commentId: string,
   replyData: Partial<IComment>,
-  id: string
+  id: string,
 ): Promise<IComment> => {
   const comment = await Comment.findById(commentId);
 

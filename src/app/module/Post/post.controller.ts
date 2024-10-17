@@ -40,7 +40,7 @@ const getAllPosts = catchAsync(async (req, res) => {
 // Get all normal posts
 const getAllPostsNormalForAnalytics = catchAsync(async (req, res) => {
   const { result, meta } = await PostService.getAllPostsNormalForAnalytics(
-    req.query
+    req.query,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -54,7 +54,7 @@ const getAllPostsNormalForAnalytics = catchAsync(async (req, res) => {
 // Get all premium posts
 const getAllPostsPremiumForAnalytics = catchAsync(async (req, res) => {
   const { result, meta } = await PostService.getAllPostsPremiumForAnalytics(
-    req.query
+    req.query,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -114,7 +114,7 @@ const reportPost = catchAsync(async (req, res) => {
   const post = await PostService.reportPostFromDB(
     req.params.id,
     req.body,
-    req.user.id
+    req.user.id,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,

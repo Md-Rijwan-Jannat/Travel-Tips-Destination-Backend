@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 // Create a new post
 const createPostIntoDB = async (
   payload: TPost,
-  userId: string
+  userId: string,
 ): Promise<TPost> => {
   const post = await Post.create({ ...payload, user: userId });
   return post;
@@ -38,7 +38,7 @@ const getAllPostsNormalForAnalytics = async (query: Record<string, any>) => {
           model: "User",
         },
       }),
-    query
+    query,
   )
     .search(postSearchFields)
     .sort()
@@ -67,7 +67,7 @@ const getAllPostsPremiumForAnalytics = async (query: Record<string, any>) => {
           model: "User",
         },
       }),
-    query
+    query,
   )
     .search(postSearchFields)
     .sort()
@@ -108,7 +108,7 @@ const getAllPostsFromDB = async (query: Record<string, any>) => {
           model: "User",
         },
       }),
-    query
+    query,
   )
     .search(postSearchFields)
     .sort()
@@ -138,7 +138,7 @@ const getAllPremiumPostsFromDB = async (query: Record<string, any>) => {
           model: "User",
         },
       }),
-    query
+    query,
   )
     .search(postSearchFields)
     .sort()
@@ -154,7 +154,7 @@ const getAllPremiumPostsFromDB = async (query: Record<string, any>) => {
 // Update a post by ID
 const updatePostIntoDB = async (
   postId: string,
-  payload: Partial<TPost>
+  payload: Partial<TPost>,
 ): Promise<TPost | null> => {
   const post = await Post.findByIdAndUpdate(postId, payload, { new: true });
   if (!post || post.isDeleted) {
@@ -168,7 +168,7 @@ const deletePostFromDB = async (postId: string): Promise<TPost | null> => {
   const post = await Post.findByIdAndUpdate(
     postId,
     { isDeleted: true },
-    { new: true }
+    { new: true },
   );
   if (!post) {
     throw new AppError(httpStatus.NOT_FOUND, "Post not found");
@@ -181,7 +181,7 @@ const recoverPostFromDB = async (postId: string): Promise<TPost | null> => {
   const post = await Post.findByIdAndUpdate(
     postId,
     { isDeleted: false },
-    { new: true }
+    { new: true },
   );
   if (!post) {
     throw new AppError(httpStatus.NOT_FOUND, "Post not found");
@@ -192,7 +192,7 @@ const recoverPostFromDB = async (postId: string): Promise<TPost | null> => {
 const reportPostFromDB = async (
   postId: string,
   payload: TReport,
-  userId: string
+  userId: string,
 ): Promise<TPost | null> => {
   if (!mongoose.Types.ObjectId.isValid(postId)) {
     throw new AppError(httpStatus.BAD_REQUEST, "Invalid Post ID");
@@ -229,7 +229,7 @@ const reportPostFromDB = async (
       reportCount: updatedReportCount,
       isDeleted: isSoftDeleted,
     },
-    { new: true }
+    { new: true },
   );
 
   return updatedPost;

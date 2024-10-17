@@ -1,19 +1,19 @@
-import { Types } from 'mongoose';
-import { IChat } from './chat.interface';
-import { Chat } from './chat.model';
-import { User } from '../User/user.model';
-import AppError from '../../errors/AppError';
-import httpStatus from 'http-status';
+import { Types } from "mongoose";
+import { IChat } from "./chat.interface";
+import { Chat } from "./chat.model";
+import { User } from "../User/user.model";
+import AppError from "../../errors/AppError";
+import httpStatus from "http-status";
 
 // Create chart service
 const createChatIntoDB = async (
   payload: IChat,
-  userId: string
+  userId: string,
 ): Promise<IChat> => {
   const user = await User.findById(payload.user);
 
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'This user not found');
+    throw new AppError(httpStatus.NOT_FOUND, "This user not found");
   }
 
   const existingChat = await Chat.find({
@@ -23,21 +23,21 @@ const createChatIntoDB = async (
       { users: { $elemMatch: { $eq: user._id } } },
     ],
   })
-    .populate('users', '-password')
-    .populate('latestMessage')
-    .populate('groupAdmin', '-password');
+    .populate("users", "-password")
+    .populate("latestMessage")
+    .populate("groupAdmin", "-password");
 
   if (existingChat.length > 0) {
     await User.populate(existingChat, {
-      path: 'latestMessage.sender',
-      select: '-password',
+      path: "latestMessage.sender",
+      select: "-password",
     });
 
     return existingChat[0];
   }
 
   const chatData: Partial<IChat> = {
-    chatName: 'sender',
+    chatName: "sender",
     isGroupChat: false,
     users: [new Types.ObjectId(userId), new Types.ObjectId(user._id)],
   };
@@ -45,8 +45,8 @@ const createChatIntoDB = async (
   const newChat = await Chat.create(chatData);
 
   const fullChat = await Chat.findOne({ _id: newChat._id })
-    .populate('users', '-password')
-    .populate('latestMessage');
+    .populate("users", "-password")
+    .populate("latestMessage");
 
   return fullChat as IChat;
 };
@@ -54,7 +54,7 @@ const createChatIntoDB = async (
 // Fetch all chats for a user
 const getUserChatsFromDB = async (
   userId: string,
-  query: any
+  query: any,
 ): Promise<{ result: IChat[]; meta: any }> => {
   const limit = parseInt(query.limit) || 10;
   const page = parseInt(query.page) || 1;
@@ -62,15 +62,15 @@ const getUserChatsFromDB = async (
   const user = await User.findById(userId);
 
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, 'This user is not found');
+    throw new AppError(httpStatus.NOT_FOUND, "This user is not found");
   }
 
   const chats = await Chat.find({
     users: { $elemMatch: { $eq: userId } },
   })
-    .populate('users', '-password')
-    .populate('latestMessage')
-    .populate('groupAdmin', '-password')
+    .populate("users", "-password")
+    .populate("latestMessage")
+    .populate("groupAdmin", "-password")
     .sort({ updatedAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit);
@@ -90,20 +90,20 @@ const getUserChatsFromDB = async (
 // Fetch a single chat by chatId
 const getSingleChatFromDB = async (
   chatId: string,
-  userId: string
+  userId: string,
 ): Promise<IChat> => {
   const chat = await Chat.findOne({
     _id: chatId,
     users: { $elemMatch: { $eq: userId } },
   })
-    .populate('users', '-password')
-    .populate('latestMessage')
-    .populate('groupAdmin', '-password');
+    .populate("users", "-password")
+    .populate("latestMessage")
+    .populate("groupAdmin", "-password");
 
   if (!chat) {
     throw new AppError(
       httpStatus.NOT_FOUND,
-      'Chat not found or user is not a participant'
+      "Chat not found or user is not a participant",
     );
   }
 
@@ -113,19 +113,19 @@ const getSingleChatFromDB = async (
 // Create a new group chat
 const createGroupChatInDB = async (
   payload: Partial<IChat>,
-  userId: Types.ObjectId
+  userId: Types.ObjectId,
 ) => {
   console.log(userId, payload);
 
   const users = payload.users;
 
   if (!userId) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'User ID is not provided');
+    throw new AppError(httpStatus.BAD_REQUEST, "User ID is not provided");
   }
 
   if (users) {
     if (users.length < 2) {
-      throw new Error('More than 2 users are required to form a group chat');
+      throw new Error("More than 2 users are required to form a group chat");
     }
 
     users.push(userId);
@@ -139,8 +139,8 @@ const createGroupChatInDB = async (
   });
 
   return await Chat.findOne({ _id: groupChat._id })
-    .populate('users', '-password')
-    .populate('groupAdmin', '-password');
+    .populate("users", "-password")
+    .populate("groupAdmin", "-password");
 };
 
 // Rename group chat
@@ -152,13 +152,13 @@ const renameGroupChat = async (payload: {
   const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
     { chatName },
-    { new: true }
+    { new: true },
   )
-    .populate('users', '-password')
-    .populate('groupAdmin', '-password');
+    .populate("users", "-password")
+    .populate("groupAdmin", "-password");
 
   if (!updatedChat) {
-    throw new AppError(httpStatus.NOT_FOUND, 'Chat Not Found');
+    throw new AppError(httpStatus.NOT_FOUND, "Chat Not Found");
   }
 
   return updatedChat;
@@ -170,13 +170,13 @@ const removeFromGroup = async (payload: { chatId: string; userId: string }) => {
   const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
     { $pull: { users: userId } },
-    { new: true }
+    { new: true },
   )
-    .populate('users', '-password')
-    .populate('groupAdmin', '-password');
+    .populate("users", "-password")
+    .populate("groupAdmin", "-password");
 
   if (!updatedChat) {
-    throw new Error('Chat Not Found');
+    throw new Error("Chat Not Found");
   }
 
   return updatedChat;
@@ -188,13 +188,13 @@ const addToGroup = async (payload: { chatId: string; userId: string }) => {
   const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
     { $push: { users: userId } },
-    { new: true }
+    { new: true },
   )
-    .populate('users', '-password')
-    .populate('groupAdmin', '-password');
+    .populate("users", "-password")
+    .populate("groupAdmin", "-password");
 
   if (!updatedChat) {
-    throw new Error('Chat Not Found');
+    throw new Error("Chat Not Found");
   }
 
   return updatedChat;

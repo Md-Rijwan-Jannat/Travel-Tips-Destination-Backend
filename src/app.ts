@@ -22,7 +22,7 @@ app.use(
       "https://traveltipsdestinationcommunity.vercel.app",
     ],
     credentials: true, // Allow credentials to be sent
-  })
+  }),
 );
 
 // Application routes

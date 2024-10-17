@@ -7,7 +7,7 @@ import { MessageServices } from "./message.service";
 const createMessage = catchAsync(async (req, res) => {
   const message = await MessageServices.createMessageIntoDB(
     req.body,
-    req.user.id
+    req.user.id,
   );
 
   sendResponse(res, {

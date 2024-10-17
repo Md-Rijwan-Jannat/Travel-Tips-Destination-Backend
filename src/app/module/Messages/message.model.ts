@@ -22,7 +22,7 @@ const messageSchema = new Schema<IMessage>(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Message = model<IMessage>("Message", messageSchema);

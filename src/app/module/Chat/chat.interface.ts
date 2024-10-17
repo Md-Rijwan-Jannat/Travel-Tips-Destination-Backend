@@ -1,4 +1,4 @@
-import { Document, Types } from 'mongoose';
+import { Document, Types } from "mongoose";
 
 export interface IChat extends Document {
   chatName: string;

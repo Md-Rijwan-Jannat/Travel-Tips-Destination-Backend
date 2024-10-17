@@ -10,7 +10,7 @@ import QueryBuilder from "../../builder/QueryBuilder";
 
 const subscriptionsIntoBD = async (
   payload: Omit<TPaymentData, "transitionId">,
-  userId: string
+  userId: string,
 ) => {
   const user = await User.findById(userId);
 
@@ -44,7 +44,7 @@ const subscriptionsIntoBD = async (
 const paymentConformationIntoDB = async (
   transitionId: string,
   status: string,
-  userId: string
+  userId: string,
 ) => {
   let paymentStatus = "failed";
   let message = "Payment Failed. Please try again.";
@@ -58,7 +58,7 @@ const paymentConformationIntoDB = async (
       const updatedPayment = await Payment.findOneAndUpdate(
         { transitionId },
         { status: "Paid" },
-        { new: true }
+        { new: true },
       );
 
       if (!updatedPayment) {
@@ -141,7 +141,7 @@ const paymentConformationIntoDB = async (
 const getPaymentsData = async (query: Record<string, any>) => {
   const paymentQueryBuilder = new QueryBuilder(
     Payment.find().populate("user"),
-    query
+    query,
   )
     .filter()
     .sort()

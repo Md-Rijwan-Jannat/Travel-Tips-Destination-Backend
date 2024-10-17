@@ -68,7 +68,7 @@ const userSchema = new Schema<TUser, TUserModel>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default userSchema;
@@ -81,7 +81,7 @@ userSchema.pre("save", async function (next) {
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(
       user?.password as string,
-      Number(config.bcrypt_salt_rounds)
+      Number(config.bcrypt_salt_rounds),
     );
   }
   next();
@@ -101,7 +101,7 @@ userSchema.statics.isUserExistsByEmail = async function (email: string) {
 // Static method to compare passwords
 userSchema.statics.isPasswordMatched = async function (
   plainTextPassword: string,
-  hashedPassword: string
+  hashedPassword: string,
 ) {
   return await bcrypt.compare(plainTextPassword, hashedPassword);
 };
@@ -109,7 +109,7 @@ userSchema.statics.isPasswordMatched = async function (
 // Static method to check if the JWT was issued before the password was changed
 userSchema.statics.isJWTIssuedBeforePasswordChanged = function (
   passwordChangedTimestamp: Date,
-  jwtIssuedTimestamp: number
+  jwtIssuedTimestamp: number,
 ) {
   const passwordChangedTime =
     new Date(passwordChangedTimestamp).getTime() / 1000;

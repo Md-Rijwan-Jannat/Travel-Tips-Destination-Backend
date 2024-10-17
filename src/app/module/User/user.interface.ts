@@ -44,11 +44,11 @@ export interface TUserModel extends Model<TUser> {
   isUserExistsByEmail(email: string): Promise<TUser>;
   isPasswordMatched(
     plainTextPassword: string,
-    hashedPassword: string
+    hashedPassword: string,
   ): Promise<boolean>;
   isJWTIssuedBeforePasswordChanged(
     passwordChangedTimestamp: Date,
-    jwtIssuedTimestamp: number
+    jwtIssuedTimestamp: number,
   ): boolean;
 }
 

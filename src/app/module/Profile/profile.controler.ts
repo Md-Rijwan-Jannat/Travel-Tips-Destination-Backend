@@ -24,7 +24,7 @@ const updateMyProfile = catchAsync(async (req, res) => {
   const result = await ProfileServices.updateMyProfileIntoDB(
     req.body,
     id,
-    email
+    email,
   );
 
   sendResponse(res, {
