@@ -7,7 +7,7 @@ import { CommentRoutes } from "../module/Comment/comment.routes";
 import { ReactRoutes } from "../module/Reacts/react.routes";
 import { MessageRoutes } from "../module/Messages/message.routes";
 import { ChatRoutes } from "../module/Chat/chat.routes";
-import { PaymentRoutes } from "../module/Payment/payment.routes";
+import { PaymentRoutes } from "../module/payment/payment.routes";
 
 const router = express.Router();
 
