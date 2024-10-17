@@ -19,19 +19,19 @@ const message_model_1 = require("./message.model");
 const chat_model_1 = require("../Chat/chat.model");
 // Create a new message
 const createMessageIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    const message = (yield (yield message_model_1.Message.create(Object.assign(Object.assign({}, payload), { sender: userId }))).populate('sender', '-password')).populate({
-        path: 'chat',
+    const message = (yield (yield message_model_1.Message.create(Object.assign(Object.assign({}, payload), { sender: userId }))).populate("sender", "-password")).populate({
+        path: "chat",
         populate: [
-            { path: 'users', select: '-password' },
+            { path: "users", select: "-password" },
             {
-                path: 'latestMessage',
-                populate: { path: 'sender', select: '-password' },
+                path: "latestMessage",
+                populate: { path: "sender", select: "-password" },
             },
         ],
     });
     const chat = yield chat_model_1.Chat.findById(payload.chat);
     if (!chat) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Chat not found');
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat not found");
     }
     yield chat_model_1.Chat.findByIdAndUpdate(payload.chat, {
         latestMessage: (yield message)._id,
@@ -41,19 +41,19 @@ const createMessageIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 
 // Get all messages by chat ID
 const getMessagesByChatId = (chatId) => __awaiter(void 0, void 0, void 0, function* () {
     const messages = yield message_model_1.Message.find({ chat: chatId })
-        .populate('sender', '-password')
+        .populate("sender", "-password")
         .populate({
-        path: 'chat',
+        path: "chat",
         populate: [
-            { path: 'users', select: '-password' },
+            { path: "users", select: "-password" },
             {
-                path: 'latestMessage',
-                populate: { path: 'sender', select: '-password' },
+                path: "latestMessage",
+                populate: { path: "sender", select: "-password" },
             },
         ],
     });
     if (!messages.length) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'No messages found for this chat');
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "No messages found for this chat");
     }
     return messages;
 });

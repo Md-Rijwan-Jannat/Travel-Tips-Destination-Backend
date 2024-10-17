@@ -9,7 +9,7 @@ const chatSchema = new mongoose_1.Schema({
     },
     user: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
     },
     isGroupChat: {
         type: Boolean,
@@ -18,16 +18,16 @@ const chatSchema = new mongoose_1.Schema({
     users: [
         {
             type: mongoose_1.Schema.Types.ObjectId,
-            ref: 'User',
+            ref: "User",
         },
     ],
     latestMessage: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'Message',
+        ref: "Message",
     },
     groupAdmin: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
     },
 }, { timestamps: true });
-exports.Chat = (0, mongoose_1.model)('Chat', chatSchema);
+exports.Chat = (0, mongoose_1.model)("Chat", chatSchema);

@@ -12,7 +12,7 @@ const comment_routes_1 = require("../module/Comment/comment.routes");
 const react_routes_1 = require("../module/Reacts/react.routes");
 const message_routes_1 = require("../module/Messages/message.routes");
 const chat_routes_1 = require("../module/Chat/chat.routes");
-const payment_routes_1 = require("../module/Payment/payment.routes");
+const payment_routes_1 = require("../module/payment/payment.routes");
 const router = express_1.default.Router();
 const moduleRoutes = [
     {

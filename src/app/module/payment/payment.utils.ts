@@ -1,6 +1,6 @@
 import axios from "axios";
-import { TPaymentData } from "./payment.interface";
 import config from "../../../config";
+import { TPaymentData } from "./payment.interface";
 
 export const initialPayment = async (paymentData: TPaymentData) => {
   const frontendUrl = `${config.NODE_ENV === "development" ? config.frontend_base_url : config.frontend_live_url}`;

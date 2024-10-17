@@ -1,12 +1,12 @@
 import { User } from "../User/user.model";
-import Payment from "./payment.model";
-import { initialPayment, verifyPayment } from "./payment.utils";
-import { TPaymentData } from "./payment.interface";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { v4 as uuidv4 } from "uuid";
 import { Post } from "../Post/post.model";
 import QueryBuilder from "../../builder/QueryBuilder";
+import { TPaymentData } from "./payment.interface";
+import { initialPayment, verifyPayment } from "./payment.utils";
+import Payment from "./payment.model";
 
 const subscriptionsIntoBD = async (
   payload: Omit<TPaymentData, "transitionId">,

@@ -9,7 +9,7 @@ const PaymentSchema = new mongoose_1.Schema({
     },
     user: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "User",
+        ref: 'User',
     },
     amount: {
         type: Number,
@@ -34,12 +34,12 @@ const PaymentSchema = new mongoose_1.Schema({
     },
     status: {
         type: String,
-        enum: ["Un-Paid", "Paid"],
-        default: "Un-Paid",
+        enum: ['Un-Paid', 'Paid'],
+        default: 'Un-Paid',
     },
 }, {
     timestamps: true,
 });
 // Create the Payment model
-const Payment = (0, mongoose_1.model)("Payment", PaymentSchema);
+const Payment = (0, mongoose_1.model)('Payment', PaymentSchema);
 exports.default = Payment;

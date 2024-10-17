@@ -24,7 +24,7 @@ const createChat = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: 'Chat created successfully',
+        message: "Chat created successfully",
         data: chat,
     });
 }));
@@ -32,13 +32,13 @@ const createChat = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
 const getUserChats = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { result, meta } = yield chat_service_1.ChatServices.getUserChatsFromDB(req.user.id, req.query);
     const populatedResults = yield user_model_1.User.populate(result, {
-        path: 'latestMessage.sender',
-        select: '_id name image email verified',
+        path: "latestMessage.sender",
+        select: "_id name image email verified",
     });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: 'Chats retrieved successfully',
+        message: "Chats retrieved successfully",
         meta,
         data: populatedResults,
     });
@@ -48,13 +48,13 @@ const getSingleChat = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
     const { chatId } = req.params;
     const result = yield chat_service_1.ChatServices.getSingleChatFromDB(chatId, req.user.id);
     const populatedResults = yield user_model_1.User.populate(result, {
-        path: 'latestMessage.sender',
-        select: '_id name image email verified',
+        path: "latestMessage.sender",
+        select: "_id name image email verified",
     });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: 'Chat retrieved successfully',
+        message: "Chat retrieved successfully",
         data: populatedResults,
     });
 }));
@@ -64,7 +64,7 @@ const createGroupChat = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.CREATED,
         success: true,
-        message: 'Group chat created successfully',
+        message: "Group chat created successfully",
         data: groupChat,
     });
 }));
@@ -74,7 +74,7 @@ const renameGroup = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: 'Group chat renamed successfully',
+        message: "Group chat renamed successfully",
         data: updatedChat,
     });
 }));
@@ -84,7 +84,7 @@ const removeFromGroup = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: 'User removed from group',
+        message: "User removed from group",
         data: updatedChat,
     });
 }));
@@ -94,7 +94,7 @@ const addToGroup = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: 'User added to group',
+        message: "User added to group",
         data: updatedChat,
     });
 }));

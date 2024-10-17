@@ -22,7 +22,7 @@ const http_status_1 = __importDefault(require("http-status"));
 const createChatIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findById(payload.user);
     if (!user) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user not found');
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user not found");
     }
     const existingChat = yield chat_model_1.Chat.find({
         isGroupChat: false,
@@ -31,25 +31,25 @@ const createChatIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, 
             { users: { $elemMatch: { $eq: user._id } } },
         ],
     })
-        .populate('users', '-password')
-        .populate('latestMessage')
-        .populate('groupAdmin', '-password');
+        .populate("users", "-password")
+        .populate("latestMessage")
+        .populate("groupAdmin", "-password");
     if (existingChat.length > 0) {
         yield user_model_1.User.populate(existingChat, {
-            path: 'latestMessage.sender',
-            select: '-password',
+            path: "latestMessage.sender",
+            select: "-password",
         });
         return existingChat[0];
     }
     const chatData = {
-        chatName: 'sender',
+        chatName: "sender",
         isGroupChat: false,
         users: [new mongoose_1.Types.ObjectId(userId), new mongoose_1.Types.ObjectId(user._id)],
     };
     const newChat = yield chat_model_1.Chat.create(chatData);
     const fullChat = yield chat_model_1.Chat.findOne({ _id: newChat._id })
-        .populate('users', '-password')
-        .populate('latestMessage');
+        .populate("users", "-password")
+        .populate("latestMessage");
     return fullChat;
 });
 // Fetch all chats for a user
@@ -58,14 +58,14 @@ const getUserChatsFromDB = (userId, query) => __awaiter(void 0, void 0, void 0, 
     const page = parseInt(query.page) || 1;
     const user = yield user_model_1.User.findById(userId);
     if (!user) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user is not found');
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user is not found");
     }
     const chats = yield chat_model_1.Chat.find({
         users: { $elemMatch: { $eq: userId } },
     })
-        .populate('users', '-password')
-        .populate('latestMessage')
-        .populate('groupAdmin', '-password')
+        .populate("users", "-password")
+        .populate("latestMessage")
+        .populate("groupAdmin", "-password")
         .sort({ updatedAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit);
@@ -84,11 +84,11 @@ const getSingleChatFromDB = (chatId, userId) => __awaiter(void 0, void 0, void 0
         _id: chatId,
         users: { $elemMatch: { $eq: userId } },
     })
-        .populate('users', '-password')
-        .populate('latestMessage')
-        .populate('groupAdmin', '-password');
+        .populate("users", "-password")
+        .populate("latestMessage")
+        .populate("groupAdmin", "-password");
     if (!chat) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Chat not found or user is not a participant');
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat not found or user is not a participant");
     }
     return chat;
 });
@@ -97,11 +97,11 @@ const createGroupChatInDB = (payload, userId) => __awaiter(void 0, void 0, void 
     console.log(userId, payload);
     const users = payload.users;
     if (!userId) {
-        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'User ID is not provided');
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "User ID is not provided");
     }
     if (users) {
         if (users.length < 2) {
-            throw new Error('More than 2 users are required to form a group chat');
+            throw new Error("More than 2 users are required to form a group chat");
         }
         users.push(userId);
     }
@@ -112,17 +112,17 @@ const createGroupChatInDB = (payload, userId) => __awaiter(void 0, void 0, void 
         groupAdmin: userId,
     });
     return yield chat_model_1.Chat.findOne({ _id: groupChat._id })
-        .populate('users', '-password')
-        .populate('groupAdmin', '-password');
+        .populate("users", "-password")
+        .populate("groupAdmin", "-password");
 });
 // Rename group chat
 const renameGroupChat = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { chatId, chatName } = payload;
     const updatedChat = yield chat_model_1.Chat.findByIdAndUpdate(chatId, { chatName }, { new: true })
-        .populate('users', '-password')
-        .populate('groupAdmin', '-password');
+        .populate("users", "-password")
+        .populate("groupAdmin", "-password");
     if (!updatedChat) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Chat Not Found');
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat Not Found");
     }
     return updatedChat;
 });
@@ -130,10 +130,10 @@ const renameGroupChat = (payload) => __awaiter(void 0, void 0, void 0, function*
 const removeFromGroup = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { chatId, userId } = payload;
     const updatedChat = yield chat_model_1.Chat.findByIdAndUpdate(chatId, { $pull: { users: userId } }, { new: true })
-        .populate('users', '-password')
-        .populate('groupAdmin', '-password');
+        .populate("users", "-password")
+        .populate("groupAdmin", "-password");
     if (!updatedChat) {
-        throw new Error('Chat Not Found');
+        throw new Error("Chat Not Found");
     }
     return updatedChat;
 });
@@ -141,10 +141,10 @@ const removeFromGroup = (payload) => __awaiter(void 0, void 0, void 0, function*
 const addToGroup = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { chatId, userId } = payload;
     const updatedChat = yield chat_model_1.Chat.findByIdAndUpdate(chatId, { $push: { users: userId } }, { new: true })
-        .populate('users', '-password')
-        .populate('groupAdmin', '-password');
+        .populate("users", "-password")
+        .populate("groupAdmin", "-password");
     if (!updatedChat) {
-        throw new Error('Chat Not Found');
+        throw new Error("Chat Not Found");
     }
     return updatedChat;
 });
