@@ -1,6 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
+const express_1 = __importDefault(require("express"));
 const user_routes_1 = require("../module/User/user.routes");
 const profile_routes_1 = require("../module/Profile/profile.routes");
 const auth_routes_1 = require("../module/Auth/auth.routes");
@@ -10,7 +13,7 @@ const react_routes_1 = require("../module/Reacts/react.routes");
 const message_routes_1 = require("../module/Messages/message.routes");
 const chat_routes_1 = require("../module/Chat/chat.routes");
 const payment_routes_1 = require("../module/Payment/payment.routes");
-const router = (0, express_1.Router)();
+const router = express_1.default.Router();
 const moduleRoutes = [
     {
         path: '/auth',
