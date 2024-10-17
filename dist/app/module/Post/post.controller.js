@@ -112,7 +112,6 @@ const recoverPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 // Report a post by ID
 const reportPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.params.id);
     const post = yield post_service_1.PostService.reportPostFromDB(req.params.id, req.body, req.user.id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,

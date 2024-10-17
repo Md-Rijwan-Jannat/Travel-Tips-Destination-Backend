@@ -22,7 +22,7 @@ app.use((0, cors_1.default)({
         "http://localhost:3000",
         "https://traveltipsdestinationcommunity.vercel.app",
     ],
-    credentials: true,
+    credentials: true, // Allow credentials to be sent
 }));
 // Application routes
 app.use("/api/v1", routes_1.default);

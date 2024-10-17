@@ -15,7 +15,7 @@ router.get("/normal-users", user_controller_1.UserControllers.getAllUser);
 // Get all premium users (Admin only)
 router.get("/premium-users", user_controller_1.UserControllers.getAlPremiumUser);
 // Get all normal users (Admin only)
-router.get("/normal-users-analytics", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.getAllUser);
+router.get("/normal-users-analytics", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), user_controller_1.UserControllers.getAllUserForAnalytics);
 // Get all premium users (Admin only)
 router.get("/premium-users-analytics", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.getAlPremiumUser);
 // Get a single user by ID

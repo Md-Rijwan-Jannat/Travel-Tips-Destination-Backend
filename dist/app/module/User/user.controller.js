@@ -37,7 +37,7 @@ const getAlPremiumUserForAnalytics = (0, catchAsync_1.default)((req, res) => __a
     });
 }));
 const getAllUserForAnalytics = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield user_service_1.UserServices.getAllUserForAnalytics();
+    const result = yield user_service_1.UserServices.getAllUserForAnalytics(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -90,7 +90,6 @@ const getUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0
 exports.followUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id: userId } = req.user;
     const { followedUserId } = req.params;
-    console.log("user Id follow===>", userId, followedUserId);
     const result = yield user_service_1.UserServices.followUser(userId, followedUserId);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
@@ -103,7 +102,6 @@ exports.followUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
 exports.unFollowUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id: userId } = req.user;
     const { unFollowedUserId } = req.params;
-    console.log("user Id follow===>", userId, unFollowedUserId);
     const result = yield user_service_1.UserServices.unFollowUser(userId, unFollowedUserId);
     (0, sendResponse_1.default)(res, {
         statusCode: 200,

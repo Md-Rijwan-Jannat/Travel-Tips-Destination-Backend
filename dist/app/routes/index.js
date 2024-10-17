@@ -7,36 +7,46 @@ const auth_routes_1 = require("../module/Auth/auth.routes");
 const post_routes_1 = require("../module/Post/post.routes");
 const comment_routes_1 = require("../module/Comment/comment.routes");
 const react_routes_1 = require("../module/Reacts/react.routes");
+const message_routes_1 = require("../module/Messages/message.routes");
+const chat_routes_1 = require("../module/Chat/chat.routes");
 const payment_routes_1 = require("../module/Payment/payment.routes");
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     {
-        path: "/auth",
+        path: '/auth',
         route: auth_routes_1.AuthRoutes,
     },
     {
-        path: "/users",
+        path: '/users',
         route: user_routes_1.UserRoutes,
     },
     {
-        path: "/profile",
+        path: '/profile',
         route: profile_routes_1.ProfileRoutes,
     },
     {
-        path: "/posts",
+        path: '/posts',
         route: post_routes_1.PostRoutes,
     },
     {
-        path: "/comments",
+        path: '/comments',
         route: comment_routes_1.CommentRoutes,
     },
     {
-        path: "/react",
+        path: '/react',
         route: react_routes_1.ReactRoutes,
     },
     {
-        path: "/payment",
+        path: '/payment',
         route: payment_routes_1.PaymentRoutes,
+    },
+    {
+        path: '/chats',
+        route: chat_routes_1.ChatRoutes,
+    },
+    {
+        path: '/messages',
+        route: message_routes_1.MessageRoutes,
     },
 ];
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

@@ -52,8 +52,9 @@ const getAllPremiumUserFromDB = (query) => __awaiter(void 0, void 0, void 0, fun
         result: result,
     };
 });
-const getAllUserForAnalytics = () => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield user_model_1.User.find({ verified: false });
+const getAllUserForAnalytics = (query) => __awaiter(void 0, void 0, void 0, function* () {
+    const usersQueryBuilder = new QueryBuilder_1.default(user_model_1.User.find(), query).search(user_utils_1.UserSearchableFields);
+    const result = yield usersQueryBuilder.modelQuery;
     return result;
 });
 const getAlPremiumUserForAnalytics = () => __awaiter(void 0, void 0, void 0, function* () {

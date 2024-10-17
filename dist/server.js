@@ -16,6 +16,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const app_1 = __importDefault(require("./app"));
 const config_1 = __importDefault(require("./config"));
 const seeding_1 = require("./app/utils/seeding");
+const socketIoServer_1 = require("./socketIoServer");
 let server;
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -23,9 +24,10 @@ function main() {
             yield mongoose_1.default.connect(config_1.default.database_url);
             yield (0, seeding_1.seed)();
             server = app_1.default.listen(config_1.default.port, () => {
-                console.log(" MongoDB connect successfully");
-                console.log(`app is listening on port ${config_1.default.port}`);
+                console.log("MongoDB connected successfully");
+                console.log(`App is listening on port ${config_1.default.port}`);
             });
+            (0, socketIoServer_1.socketServer)(server);
         }
         catch (err) {
             console.log(err);
@@ -34,15 +36,14 @@ function main() {
 }
 main();
 process.on("unhandledRejection", (err) => {
-    console.log(`😈 unahandledRejection is detected , shutting down ...`, err);
+    console.log("Unhandled rejection detected, shutting down...", err);
     if (server) {
         server.close(() => {
             process.exit(1);
         });
     }
-    process.exit(1);
 });
 process.on("uncaughtException", () => {
-    console.log(`😈 uncaughtException is detected , shutting down ...`);
+    console.log("Uncaught exception detected, shutting down...");
     process.exit(1);
 });

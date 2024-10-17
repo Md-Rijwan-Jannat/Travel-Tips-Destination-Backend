@@ -67,7 +67,6 @@ const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function*
 });
 const forgetPasswordIntoDB = (email) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findOne({ email: email });
-    console.log("email===>", email, user);
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user is not found!");
     }
@@ -101,7 +100,6 @@ const resetPasswordIntoDB = (payload, token) => __awaiter(void 0, void 0, void 0
     }
     // Check if token is valid
     const decoded = jsonwebtoken_1.default.verify(token, config_1.default.jwt_access_secret);
-    console.log(decoded);
     if (payload.email !== decoded.email) {
         throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is forbidden!");
     }
