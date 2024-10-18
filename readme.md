@@ -179,6 +179,36 @@ The Travel Tips & Destination project is a platform for users to share their tra
 | updatedAt | Date     | Timestamp when the review was last updated |
 
 
+## Chat Model
+
+| Field         | Type       | Description                                      |
+| ------------- | ---------- | ------------------------------------------------ |
+| `_id`         | `ObjectId` | Unique identifier for the chat                   |
+| `chatName`    | `String`   | Name of the chat, either a user or group chat    |
+| `isGroupChat` | `Boolean`  | Indicates if the chat is a group chat            |
+| `users`       | `Array`    | Array of users (references to User model)        |
+| `createdAt`   | `Date`     | Timestamp when the chat was created              |
+| `updatedAt`   | `Date`     | Timestamp when the chat was last updated         |
+| `latestM`     | `ObjectId` | Reference to the latest message in the chat      |
+| `__v`         | `Number`   | Version key for the document                     |
+
+
+## Message Model
+
+| Field        | Type       | Description                                      |
+| ------------ | ---------- | ------------------------------------------------ |
+| _id          | ObjectId   | Unique identifier for the message                   |
+| sender       | ObjectId   | User model for the message sender   |
+| content      | Boolean    | The content of the message            |
+| chat         | ObjectId   | Array of users (references to User model)        |
+| readBy       | ObjectId   | Array of users who have read the message      |
+| updatedAt    | Date       | Timestamp when the chat was last updated         |
+| createdAt    | ObjectId   | Timestamp when the message was created      |
+| __v          | Number     | Version key for the document                     |
+
+
+
+
 ## Conclusion
 
 This README provides an overview of the "Travel Tips & Destination Guides" backend API. Each endpoint is designed to facilitate user interactions and enrich the travel community with shared experiences. For further information, feel free to explore the codebase and its documentation.
