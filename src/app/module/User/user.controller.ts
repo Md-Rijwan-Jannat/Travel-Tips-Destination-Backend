@@ -1,9 +1,8 @@
-import httpStatus from "http-status";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import { UserServices } from "./user.service";
-import { Types } from "mongoose";
-import { ProfileServices } from "../Profile/profile.service";
+import httpStatus from 'http-status';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { UserServices } from './user.service';
+import { Types } from 'mongoose';
 
 const getAllUser = catchAsync(async (req, res) => {
   const result = await UserServices.getAllUserFromDB(req.query);
@@ -11,7 +10,7 @@ const getAllUser = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Normal users retrieved successfully",
+    message: 'Normal users retrieved successfully',
     meta: result.meta,
     data: result.result,
   });
@@ -23,7 +22,7 @@ const getAlPremiumUserForAnalytics = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Premium users retrieved successfully",
+    message: 'Premium users retrieved successfully',
     data: result,
   });
 });
@@ -34,7 +33,7 @@ const getAllUserForAnalytics = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Normal users retrieved successfully",
+    message: 'Normal users retrieved successfully',
     data: result,
   });
 });
@@ -45,7 +44,7 @@ const getAlPremiumUser = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Premium users retrieved successfully",
+    message: 'Premium users retrieved successfully',
     meta: result.meta,
     data: result.result,
   });
@@ -60,7 +59,7 @@ const updateUserStatus = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "User status updated successfully",
+    message: 'User status updated successfully',
     data: updatedUser,
   });
 });
@@ -74,7 +73,7 @@ const updateUserRole = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "User role updated successfully",
+    message: 'User role updated successfully',
     data: updatedUser,
   });
 });
@@ -86,7 +85,7 @@ const getUser = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "User retrieved successfully",
+    message: 'User retrieved successfully',
     data: result,
   });
 });
@@ -96,7 +95,7 @@ export const followUser = catchAsync(async (req, res) => {
   const { followedUserId } = req.params;
   const result = await UserServices.followUser(
     userId,
-    followedUserId as unknown as Types.ObjectId,
+    followedUserId as unknown as Types.ObjectId
   );
 
   sendResponse(res, {
@@ -113,7 +112,7 @@ export const unFollowUser = catchAsync(async (req, res) => {
   const { unFollowedUserId } = req.params;
   const result = await UserServices.unFollowUser(
     userId,
-    unFollowedUserId as unknown as Types.ObjectId,
+    unFollowedUserId as unknown as Types.ObjectId
   );
 
   sendResponse(res, {
@@ -129,13 +128,13 @@ const getSingleUserPosts = catchAsync(async (req, res) => {
   const { userId } = req.params;
   const result = await UserServices.getSingleUserAllPostsFromDB(
     userId,
-    req.query,
+    req.query
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "My posts retrieved successfully",
+    message: 'My posts retrieved successfully',
     data: result,
   });
 });
