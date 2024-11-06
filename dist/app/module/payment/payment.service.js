@@ -24,7 +24,7 @@ const payment_model_1 = __importDefault(require("./payment.model"));
 const subscriptionsIntoBD = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findById(userId);
     if (!user) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User is not found');
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User is not found");
     }
     const post = yield post_model_1.Post.find({ user: user._id });
     // Generate a transition ID
@@ -33,7 +33,7 @@ const subscriptionsIntoBD = (payload, userId) => __awaiter(void 0, void 0, void 
     // Make the initial payment request
     const paymentResponse = yield (0, payment_utils_1.initialPayment)(paymentData);
     if (!paymentResponse) {
-        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'Payment initiation failed');
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Payment initiation failed");
     }
     // Save payment data to the database
     const result = yield payment_model_1.default.create(Object.assign(Object.assign({}, paymentData), { user: userId }));
@@ -43,19 +43,19 @@ const subscriptionsIntoBD = (payload, userId) => __awaiter(void 0, void 0, void 
     };
 });
 const paymentConformationIntoDB = (transitionId, status, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    let paymentStatus = 'failed';
-    let message = 'Payment Failed. Please try again.';
-    if (status === 'success') {
+    let paymentStatus = "failed";
+    let message = "Payment Failed. Please try again.";
+    if (status === "success") {
         const verifyResponse = yield (0, payment_utils_1.verifyPayment)(transitionId);
-        if (verifyResponse && verifyResponse.pay_status === 'Successful') {
+        if (verifyResponse && verifyResponse.pay_status === "Successful") {
             yield user_model_1.User.findByIdAndUpdate(userId, { verified: true }, { new: true });
-            const updatedPayment = yield payment_model_1.default.findOneAndUpdate({ transitionId }, { status: 'Paid' }, { new: true });
+            const updatedPayment = yield payment_model_1.default.findOneAndUpdate({ transitionId }, { status: "Paid" }, { new: true });
             if (!updatedPayment) {
-                throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Payment record not found');
+                throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Payment record not found");
             }
-            paymentStatus = 'success';
+            paymentStatus = "success";
             message =
-                'Thank you for upgrading to premium access.Your transaction <br /> has been completed successfully!';
+                "Thank you for upgrading to premium access.Your transaction <br /> has been completed successfully!";
         }
     }
     // Return the HTML for both success and failed cases
@@ -85,7 +85,7 @@ const paymentConformationIntoDB = (transitionId, status, userId) => __awaiter(vo
               text-align: center;
           }
           .container h1 {
-              color: ${paymentStatus === 'success' ? '#FF69B4' : '#F25081'};
+              color: ${paymentStatus === "success" ? "#FF69B4" : "#F25081"};
               font-size: 20px;
               margin-bottom: 20px;
           }
@@ -96,12 +96,12 @@ const paymentConformationIntoDB = (transitionId, status, userId) => __awaiter(vo
           }
           .icon {
               font-size: 4rem;
-              color: ${paymentStatus === 'success' ? '#FF69B4' : '#F25081'};
+              color: ${paymentStatus === "success" ? "#FF69B4" : "#F25081"};
               margin-bottom: 20px;
           }
           .button {
               display: inline-block;
-              background-color: ${paymentStatus === 'success' ? '#FF69B4' : '#F25081'};
+              background-color: ${paymentStatus === "success" ? "#FF69B4" : "#F25081"};
               color: #ffffff;
               padding: 15px 30px;
               text-decoration: none;
@@ -110,13 +110,13 @@ const paymentConformationIntoDB = (transitionId, status, userId) => __awaiter(vo
               transition: background-color 0.3s ease;
           }
           .button:hover {
-              background-color: ${paymentStatus === 'success' ? '#FF85B2' : '#FF4588'};
+              background-color: ${paymentStatus === "success" ? "#FF85B2" : "#FF4588"};
           }
       </style>
   </head>
   <body>
       <div class="container">
-          <div class="success-icon"><img src="${paymentStatus === 'success' ? 'https://img.icons8.com/?size=100&id=123575&format=png&color=F25081' : 'https://img.icons8.com/?size=100&id=35879&format=png&color=F25081'}" /></div>
+          <div class="success-icon"><img src="${paymentStatus === "success" ? "https://img.icons8.com/?size=100&id=123575&format=png&color=F25081" : "https://img.icons8.com/?size=100&id=35879&format=png&color=F25081"}" /></div>
           <h1>${message}</h1>
           <a href="https://traveltipsdestinationcommunity.vercel.app/profile" class="button">Go Back</a>
       </div>
@@ -125,7 +125,7 @@ const paymentConformationIntoDB = (transitionId, status, userId) => __awaiter(vo
   `;
 });
 const getPaymentsData = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const paymentQueryBuilder = new QueryBuilder_1.default(payment_model_1.default.find().populate('user'), query)
+    const paymentQueryBuilder = new QueryBuilder_1.default(payment_model_1.default.find().populate("user"), query)
         .filter()
         .sort()
         .paginate();
@@ -137,7 +137,7 @@ const getPaymentsData = (query) => __awaiter(void 0, void 0, void 0, function* (
     };
 });
 const getAllPaymentsDatForAnalytics = () => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield payment_model_1.default.find().populate('user');
+    const result = yield payment_model_1.default.find().populate("user");
     return result;
 });
 exports.PaymentService = {

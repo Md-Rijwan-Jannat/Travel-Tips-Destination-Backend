@@ -23,7 +23,7 @@ const subscriptions = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Your subscriptions successful",
+        message: 'Your subscriptions successful',
         data: result,
     });
 }));
@@ -38,7 +38,7 @@ const getPaymentsData = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Payment data retrieved successfully",
+        message: 'Payment data retrieved successfully',
         meta: meta,
         data: result,
     });
@@ -48,7 +48,7 @@ const getAllPaymentsDatForAnalytics = (0, catchAsync_1.default)((req, res) => __
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Payment data retrieved successfully",
+        message: 'Payment data retrieved successfully',
         data: result,
     });
 }));

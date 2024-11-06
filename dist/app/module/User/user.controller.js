@@ -22,7 +22,7 @@ const getAllUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Normal users retrieved successfully",
+        message: 'Normal users retrieved successfully',
         meta: result.meta,
         data: result.result,
     });
@@ -32,7 +32,7 @@ const getAlPremiumUserForAnalytics = (0, catchAsync_1.default)((req, res) => __a
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Premium users retrieved successfully",
+        message: 'Premium users retrieved successfully',
         data: result,
     });
 }));
@@ -41,7 +41,7 @@ const getAllUserForAnalytics = (0, catchAsync_1.default)((req, res) => __awaiter
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Normal users retrieved successfully",
+        message: 'Normal users retrieved successfully',
         data: result,
     });
 }));
@@ -50,7 +50,7 @@ const getAlPremiumUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Premium users retrieved successfully",
+        message: 'Premium users retrieved successfully',
         meta: result.meta,
         data: result.result,
     });
@@ -62,7 +62,7 @@ const updateUserStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
-        message: "User status updated successfully",
+        message: 'User status updated successfully',
         data: updatedUser,
     });
 }));
@@ -73,7 +73,7 @@ const updateUserRole = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
-        message: "User role updated successfully",
+        message: 'User role updated successfully',
         data: updatedUser,
     });
 }));
@@ -83,7 +83,7 @@ const getUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "User retrieved successfully",
+        message: 'User retrieved successfully',
         data: result,
     });
 }));
@@ -117,7 +117,7 @@ const getSingleUserPosts = (0, catchAsync_1.default)((req, res) => __awaiter(voi
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "My posts retrieved successfully",
+        message: 'My posts retrieved successfully',
         data: result,
     });
 }));

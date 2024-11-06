@@ -21,7 +21,6 @@ const userSchema = new Schema<TUser, TUserModel>(
     },
     password: {
       type: String,
-      select: false,
     },
     image: {
       type: String,

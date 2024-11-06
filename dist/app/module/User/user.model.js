@@ -37,14 +37,14 @@ const userSchema = new mongoose_1.Schema({
     },
     role: {
         type: String,
-        enum: ["ADMIN", "USER"],
-        default: "USER",
+        enum: ['ADMIN', 'USER'],
+        default: 'USER',
         trim: true,
     },
     status: {
         type: String,
-        enum: ["IN_PROGRESS", "BLOCKED"],
-        default: "IN_PROGRESS",
+        enum: ['IN_PROGRESS', 'BLOCKED'],
+        default: 'IN_PROGRESS',
         trim: true,
     },
     follower: [
@@ -79,25 +79,25 @@ const userSchema = new mongoose_1.Schema({
 });
 exports.default = userSchema;
 // Pre-save hook for password hashing
-userSchema.pre("save", function (next) {
+userSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this; // Cast this as TUserDocument
         // Hash the password only if it has been modified or is new
-        if (user.isModified("password")) {
+        if (user.isModified('password')) {
             user.password = yield bcrypt_1.default.hash(user === null || user === void 0 ? void 0 : user.password, Number(config_1.default.bcrypt_salt_rounds));
         }
         next();
     });
 });
 // Post-save hook to avoid returning the password
-userSchema.post("save", function (doc, next) {
-    doc.password = "";
+userSchema.post('save', function (doc, next) {
+    doc.password = '';
     next();
 });
 // Static method to find user by email with password
 userSchema.statics.isUserExistsByEmail = function (email) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield exports.User.findOne({ email }).select("+password");
+        return yield exports.User.findOne({ email }).select('+password');
     });
 };
 // Static method to compare passwords
@@ -112,4 +112,4 @@ userSchema.statics.isJWTIssuedBeforePasswordChanged = function (passwordChangedT
     return passwordChangedTime > jwtIssuedTimestamp;
 };
 // Exporting the User model
-exports.User = (0, mongoose_1.model)("User", userSchema);
+exports.User = (0, mongoose_1.model)('User', userSchema);

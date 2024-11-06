@@ -16,8 +16,8 @@ exports.verifyPayment = exports.initialPayment = void 0;
 const axios_1 = __importDefault(require("axios"));
 const config_1 = __importDefault(require("../../../config"));
 const initialPayment = (paymentData) => __awaiter(void 0, void 0, void 0, function* () {
-    const frontendUrl = `${config_1.default.NODE_ENV === 'development' ? config_1.default.frontend_base_url : config_1.default.frontend_live_url}`;
-    const backendUrl = `${config_1.default.NODE_ENV === 'development' ? 'http://localhost:5000' : config_1.default.backend_live_url}`;
+    const frontendUrl = `${config_1.default.NODE_ENV === "development" ? config_1.default.frontend_base_url : config_1.default.frontend_live_url}`;
+    const backendUrl = `${config_1.default.NODE_ENV === "development" ? "http://localhost:5000" : config_1.default.backend_live_url}`;
     const response = yield axios_1.default.post(config_1.default.aamarpay_url, {
         store_id: config_1.default.store_id,
         signature_key: config_1.default.signature_key,
@@ -26,18 +26,18 @@ const initialPayment = (paymentData) => __awaiter(void 0, void 0, void 0, functi
         fail_url: `${backendUrl}/api/v1/payment/conformation/${paymentData.user}?transitionId=${paymentData.transitionId}&status=failed`,
         cancel_url: `${frontendUrl}`,
         amount: paymentData.amount,
-        currency: 'BDT',
-        desc: 'Payment for get a premium accessability on the TT&DG',
+        currency: "BDT",
+        desc: "Payment for get a premium accessability on the TT&DG",
         cus_name: paymentData.customerName,
         cus_email: paymentData.customerEmail,
         cus_add1: paymentData.customerAddress,
-        cus_add2: 'N/A',
-        cus_city: 'N/A',
-        cus_state: 'N/A',
-        cus_postcode: 'N/A',
+        cus_add2: "N/A",
+        cus_city: "N/A",
+        cus_state: "N/A",
+        cus_postcode: "N/A",
         cus_country: paymentData.customerCountry,
-        cus_phone: 'N/A',
-        type: 'json',
+        cus_phone: "N/A",
+        type: "json",
     });
     return response.data;
 });
@@ -49,7 +49,7 @@ const verifyPayment = (transitionId) => __awaiter(void 0, void 0, void 0, functi
             request_id: transitionId,
             store_id: config_1.default.store_id,
             signature_key: config_1.default.signature_key,
-            type: 'json',
+            type: "json",
         },
     });
     return response.data;
