@@ -23,7 +23,7 @@ const createPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.CREATED,
         success: true,
-        message: "Post created successfully",
+        message: 'Post created successfully',
         data: post,
     });
 }));
@@ -33,7 +33,7 @@ const getPostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Post retrieved successfully",
+        message: 'Post retrieved successfully',
         data: post,
     });
 }));
@@ -43,7 +43,7 @@ const getAllPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Posts retrieved successfully",
+        message: 'Posts retrieved successfully',
         data: result,
         meta: meta,
     });
@@ -54,7 +54,7 @@ const getAllPostsNormalForAnalytics = (0, catchAsync_1.default)((req, res) => __
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Normal posts retrieved successfully",
+        message: 'Normal posts retrieved successfully',
         meta: meta,
         data: result,
     });
@@ -65,18 +65,19 @@ const getAllPostsPremiumForAnalytics = (0, catchAsync_1.default)((req, res) => _
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Premium posts retrieved successfully",
+        message: 'Premium posts retrieved successfully',
         meta: meta,
         data: result,
     });
 }));
 // Get all  premium posts
 const getAllPremiumPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield post_service_1.PostService.getAllPremiumPostsFromDB(req.query);
+    const { result, meta } = yield post_service_1.PostService.getAllPremiumPostsFromDB(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Premium posts retrieved successfully",
+        message: 'Premium posts retrieved successfully',
+        meta: meta,
         data: result,
     });
 }));
@@ -86,7 +87,7 @@ const updatePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Post updated successfully",
+        message: 'Post updated successfully',
         data: post,
     });
 }));
@@ -96,7 +97,7 @@ const deletePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Post deleted successfully",
+        message: 'Post deleted successfully',
         data: post,
     });
 }));
@@ -106,7 +107,7 @@ const recoverPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Post recover successfully",
+        message: 'Post recover successfully',
         data: post,
     });
 }));
@@ -116,7 +117,7 @@ const reportPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Report successful",
+        message: 'Report successful',
         data: post,
     });
 }));

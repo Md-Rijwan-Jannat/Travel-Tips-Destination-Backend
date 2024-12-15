@@ -28,6 +28,10 @@ const userSchema = new mongoose_1.Schema({
         unique: true,
         trim: true,
     },
+    bio: {
+        type: String,
+        trim: true,
+    },
     password: {
         type: String,
     },

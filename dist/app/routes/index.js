@@ -13,6 +13,7 @@ const react_routes_1 = require("../module/Reacts/react.routes");
 const message_routes_1 = require("../module/Messages/message.routes");
 const chat_routes_1 = require("../module/Chat/chat.routes");
 const payment_routes_1 = require("../module/payment/payment.routes");
+const story_routes_1 = require("../module/Story/story.routes");
 const router = express_1.default.Router();
 const moduleRoutes = [
     {
@@ -50,6 +51,10 @@ const moduleRoutes = [
     {
         path: '/messages',
         route: message_routes_1.MessageRoutes,
+    },
+    {
+        path: '/stories',
+        route: story_routes_1.StoryRoutes,
     },
 ];
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

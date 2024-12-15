@@ -26,23 +26,23 @@ const createPostIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, 
 });
 // Get a post by ID
 const getPostByIdFromDB = (postId) => __awaiter(void 0, void 0, void 0, function* () {
-    const post = yield post_model_1.Post.findById(postId).populate("user comments");
+    const post = yield post_model_1.Post.findById(postId).populate('user comments');
     if (!post || post.isDeleted) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Post not found');
     }
     return post;
 });
 // Get all posts for normal posts
 const getAllPostsNormalForAnalytics = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "FREE" })
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: 'FREE' })
         .populate({
-        path: "user",
+        path: 'user',
     })
         .populate({
-        path: "comments",
+        path: 'comments',
         populate: {
-            path: "user",
-            model: "User",
+            path: 'user',
+            model: 'User',
         },
     }), query)
         .search(post_constants_1.postSearchFields)
@@ -57,15 +57,15 @@ const getAllPostsNormalForAnalytics = (query) => __awaiter(void 0, void 0, void 
 });
 // Get all posts for premium posts
 const getAllPostsPremiumForAnalytics = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "PREMIUM" })
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: 'PREMIUM' })
         .populate({
-        path: "user",
+        path: 'user',
     })
         .populate({
-        path: "comments",
+        path: 'comments',
         populate: {
-            path: "user",
-            model: "User",
+            path: 'user',
+            model: 'User',
         },
     }), query)
         .search(post_constants_1.postSearchFields)
@@ -81,20 +81,20 @@ const getAllPostsPremiumForAnalytics = (query) => __awaiter(void 0, void 0, void
 // Get all posts (with optional filters)
 const getAllPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const { categories } = query;
-    let queryObj = { isDeleted: false, status: "FREE" };
+    let queryObj = { isDeleted: false, status: 'FREE' };
     if (categories) {
-        queryObj = Object.assign(Object.assign({}, queryObj), { category: { $in: categories || "" } });
+        queryObj = Object.assign(Object.assign({}, queryObj), { category: { $in: categories || '' } });
     }
     // Build the post query
     const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find(queryObj)
         .populate({
-        path: "user",
+        path: 'user',
     })
         .populate({
-        path: "comments",
+        path: 'comments',
         populate: {
-            path: "user",
-            model: "User",
+            path: 'user',
+            model: 'User',
         },
     }), query)
         .search(post_constants_1.postSearchFields)
@@ -110,30 +110,39 @@ const getAllPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function*
 });
 // Get all premium posts (with optional filters)
 const getAllPremiumPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find({ isDeleted: false, status: "PREMIUM" })
+    const { categories } = query;
+    let queryObj = { isDeleted: false, status: 'PREMIUM' };
+    if (categories) {
+        queryObj = Object.assign(Object.assign({}, queryObj), { category: { $in: categories || '' } });
+    }
+    // Build the post query
+    const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find(queryObj)
         .populate({
-        path: "user",
+        path: 'user',
     })
         .populate({
-        path: "comments",
+        path: 'comments',
         populate: {
-            path: "user",
-            model: "User",
+            path: 'user',
+            model: 'User',
         },
     }), query)
         .search(post_constants_1.postSearchFields)
         .sort()
         .fields()
-        .filter();
+        .filter()
+        .paginate();
+    // Execute the query
     const result = yield postQueryBuilder.modelQuery;
-    // Return meta only if the role is ADMIN
-    return result;
+    const meta = yield postQueryBuilder.countTotal();
+    // Return result and meta (meta only if the role is ADMIN)
+    return { result, meta };
 });
 // Update a post by ID
 const updatePostIntoDB = (postId, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const post = yield post_model_1.Post.findByIdAndUpdate(postId, payload, { new: true });
     if (!post || post.isDeleted) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Post not found');
     }
     return post;
 });
@@ -141,7 +150,7 @@ const updatePostIntoDB = (postId, payload) => __awaiter(void 0, void 0, void 0, 
 const deletePostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function* () {
     const post = yield post_model_1.Post.findByIdAndUpdate(postId, { isDeleted: true }, { new: true });
     if (!post) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Post not found');
     }
     return post;
 });
@@ -149,21 +158,21 @@ const deletePostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function*
 const recoverPostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function* () {
     const post = yield post_model_1.Post.findByIdAndUpdate(postId, { isDeleted: false }, { new: true });
     if (!post) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Post not found');
     }
     return post;
 });
 const reportPostFromDB = (postId, payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     if (!mongoose_1.default.Types.ObjectId.isValid(postId)) {
-        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid Post ID");
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'Invalid Post ID');
     }
     if (!mongoose_1.default.Types.ObjectId.isValid(userId)) {
-        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid User ID");
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, 'Invalid User ID');
     }
     // Find the post first to check the reportCount
     const post = yield post_model_1.Post.findById(postId);
     if (!post) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Post not found");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Post not found');
     }
     // Increment the report count
     const updatedReportCount = post.reportCount + 1;
