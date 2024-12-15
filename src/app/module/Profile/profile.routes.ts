@@ -1,50 +1,49 @@
-import express from "express";
-import { ProfileControllers } from "./profile.controler";
-import Auth from "../../middlewares/auth";
-import { USER_ROLE } from "../User/user.constants";
-import { ProfileValidation } from "./profile.validation";
-import validateRequest from "../../middlewares/validateRequest";
+import express from 'express';
+import { ProfileControllers } from './profile.controler';
+import Auth from '../../middlewares/auth';
+import { USER_ROLE } from '../User/user.constants';
+import { ProfileValidation } from './profile.validation';
+import validateRequest from '../../middlewares/validateRequest';
 
 const router = express.Router();
 
 router.get(
-  "/",
+  '/',
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ProfileControllers.getMyProfile,
+  ProfileControllers.getMyProfile
 );
 router.get(
-  "/my-posts",
+  '/my-posts',
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ProfileControllers.getMyPosts,
+  ProfileControllers.getMyPosts
 );
 router.get(
-  "/my-premium-posts",
+  '/my-premium-posts',
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ProfileControllers.getMyPremiumPosts,
+  ProfileControllers.getMyPremiumPosts
 );
 
 router.patch(
-  "/:id",
+  '/:id',
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  validateRequest(ProfileValidation.updateMyProfileValidationSchema),
-  ProfileControllers.updateMyProfile,
+  ProfileControllers.updateMyProfile
 );
 
 router.delete(
-  "/:id",
+  '/:id',
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ProfileControllers.deleteMyProfile,
+  ProfileControllers.deleteMyProfile
 );
 
 router.get(
-  "/followers",
+  '/followers',
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ProfileControllers.getMyFollowers,
+  ProfileControllers.getMyFollowers
 );
 router.get(
-  "/following",
+  '/following',
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  ProfileControllers.getMyFollowing,
+  ProfileControllers.getMyFollowing
 );
 
 export const ProfileRoutes = router;

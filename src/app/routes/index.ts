@@ -8,6 +8,7 @@ import { ReactRoutes } from '../module/Reacts/react.routes';
 import { MessageRoutes } from '../module/Messages/message.routes';
 import { ChatRoutes } from '../module/Chat/chat.routes';
 import { PaymentRoutes } from '../module/payment/payment.routes';
+import { StoryRoutes } from '../module/Story/story.routes';
 
 const router = express.Router();
 
@@ -47,6 +48,10 @@ const moduleRoutes = [
   {
     path: '/messages',
     route: MessageRoutes,
+  },
+  {
+    path: '/stories',
+    route: StoryRoutes,
   },
 ];
 

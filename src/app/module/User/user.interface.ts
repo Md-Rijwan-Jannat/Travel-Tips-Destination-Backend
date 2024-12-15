@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
-import { Model, Types } from "mongoose";
-import { USER_ROLE, USER_STATUS } from "../User/user.constants";
+import { Model, Types } from 'mongoose';
+import { USER_ROLE, USER_STATUS } from '../User/user.constants';
 
 export interface TUser {
   name: string;
@@ -8,6 +8,7 @@ export interface TUser {
   password?: string;
   image?: string;
   role: TUserRole;
+  bio: string;
   status: TUserStatus;
   follower: Types.ObjectId[];
   following: Types.ObjectId[];
@@ -27,6 +28,7 @@ export interface TGetUserOnDataBase {
   image?: string;
   password: string;
   role: string;
+  bio: string;
   status: string;
   follower: string[];
   following: string[];
@@ -44,11 +46,11 @@ export interface TUserModel extends Model<TUser> {
   isUserExistsByEmail(email: string): Promise<TUser>;
   isPasswordMatched(
     plainTextPassword: string,
-    hashedPassword: string,
+    hashedPassword: string
   ): Promise<boolean>;
   isJWTIssuedBeforePasswordChanged(
     passwordChangedTimestamp: Date,
-    jwtIssuedTimestamp: number,
+    jwtIssuedTimestamp: number
   ): boolean;
 }
 

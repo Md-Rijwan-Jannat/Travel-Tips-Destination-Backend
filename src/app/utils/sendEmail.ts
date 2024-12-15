@@ -1,20 +1,20 @@
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer';
 
 export const sendEmail = async (to: string, resetLink: string) => {
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host: 'smtp.gmail.com',
     port: 587,
     secure: false,
     auth: {
-      user: "rijwanjannat36@gmail.com",
-      pass: "lych epuz scux pmkg",
+      user: 'rijwanjannat36@gmail.com',
+      pass: 'lych epuz scux pmkg',
     },
   });
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to,
-    subject: "Password Reset - Travel Tips & Destination Guides",
+    subject: 'Password Reset - Travel Tips & Destination Guides',
     html: `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #dddddd; border-radius: 10px;">
     <h2 style="color: #0073e6; text-align: center;">Travel Tips & Destination Guides</h2>

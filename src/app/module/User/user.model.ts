@@ -19,6 +19,10 @@ const userSchema = new Schema<TUser, TUserModel>(
       unique: true,
       trim: true,
     },
+    bio: {
+      type: String,
+      trim: true,
+    },
     password: {
       type: String,
     },

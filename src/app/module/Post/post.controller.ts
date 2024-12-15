@@ -1,7 +1,7 @@
-import { PostService } from "./post.service";
-import sendResponse from "../../utils/sendResponse";
-import catchAsync from "../../utils/catchAsync";
-import httpStatus from "http-status";
+import { PostService } from './post.service';
+import sendResponse from '../../utils/sendResponse';
+import catchAsync from '../../utils/catchAsync';
+import httpStatus from 'http-status';
 
 // Create a new post
 const createPost = catchAsync(async (req, res) => {
@@ -9,7 +9,7 @@ const createPost = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: "Post created successfully",
+    message: 'Post created successfully',
     data: post,
   });
 });
@@ -20,7 +20,7 @@ const getPostById = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Post retrieved successfully",
+    message: 'Post retrieved successfully',
     data: post,
   });
 });
@@ -31,7 +31,7 @@ const getAllPosts = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Posts retrieved successfully",
+    message: 'Posts retrieved successfully',
     data: result,
     meta: meta,
   });
@@ -40,12 +40,12 @@ const getAllPosts = catchAsync(async (req, res) => {
 // Get all normal posts
 const getAllPostsNormalForAnalytics = catchAsync(async (req, res) => {
   const { result, meta } = await PostService.getAllPostsNormalForAnalytics(
-    req.query,
+    req.query
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Normal posts retrieved successfully",
+    message: 'Normal posts retrieved successfully',
     meta: meta,
     data: result,
   });
@@ -54,12 +54,12 @@ const getAllPostsNormalForAnalytics = catchAsync(async (req, res) => {
 // Get all premium posts
 const getAllPostsPremiumForAnalytics = catchAsync(async (req, res) => {
   const { result, meta } = await PostService.getAllPostsPremiumForAnalytics(
-    req.query,
+    req.query
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Premium posts retrieved successfully",
+    message: 'Premium posts retrieved successfully',
     meta: meta,
     data: result,
   });
@@ -67,11 +67,14 @@ const getAllPostsPremiumForAnalytics = catchAsync(async (req, res) => {
 
 // Get all  premium posts
 const getAllPremiumPosts = catchAsync(async (req, res) => {
-  const result = await PostService.getAllPremiumPostsFromDB(req.query);
+  const { result, meta } = await PostService.getAllPremiumPostsFromDB(
+    req.query
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Premium posts retrieved successfully",
+    message: 'Premium posts retrieved successfully',
+    meta: meta,
     data: result,
   });
 });
@@ -82,7 +85,7 @@ const updatePost = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Post updated successfully",
+    message: 'Post updated successfully',
     data: post,
   });
 });
@@ -93,7 +96,7 @@ const deletePost = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Post deleted successfully",
+    message: 'Post deleted successfully',
     data: post,
   });
 });
@@ -104,7 +107,7 @@ const recoverPost = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Post recover successfully",
+    message: 'Post recover successfully',
     data: post,
   });
 });
@@ -114,12 +117,12 @@ const reportPost = catchAsync(async (req, res) => {
   const post = await PostService.reportPostFromDB(
     req.params.id,
     req.body,
-    req.user.id,
+    req.user.id
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Report successful",
+    message: 'Report successful',
     data: post,
   });
 });

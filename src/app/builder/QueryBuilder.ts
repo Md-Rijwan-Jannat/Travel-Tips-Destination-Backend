@@ -1,4 +1,4 @@
-import { FilterQuery, Query } from "mongoose";
+import { FilterQuery, Query } from 'mongoose';
 
 class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
@@ -16,7 +16,7 @@ class QueryBuilder<T> {
     if (searchTerm) {
       this.modelQuery = this.modelQuery.find({
         $or: searchingFields.map((field) => ({
-          [field]: { $regex: searchTerm, $options: "i" },
+          [field]: { $regex: searchTerm, $options: 'i' },
         })),
       } as FilterQuery<T>);
     }
@@ -27,7 +27,7 @@ class QueryBuilder<T> {
   // filter method -2
   filter() {
     const queryObj = { ...this.query };
-    const excludedFields = ["searchTerm", "sort", "limit", "page", "fields"];
+    const excludedFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
 
     excludedFields.forEach((el) => delete queryObj[el]);
 
@@ -39,7 +39,7 @@ class QueryBuilder<T> {
   // sort method -3
   sort() {
     const sort =
-      (this.query?.sort as string)?.split(",")?.join(" ") || "-createdAt";
+      (this.query?.sort as string)?.split(',')?.join(' ') || '-createdAt';
 
     this.modelQuery = this.modelQuery.sort(sort);
 
@@ -48,7 +48,7 @@ class QueryBuilder<T> {
 
   // paginate method -4
   paginate() {
-    const limit = (this.query?.limit as number) || 10;
+    const limit = (this.query?.limit as number) || 10000000000000;
     const page = (this.query?.page as number) || 1;
     const skip = (page - 1) * limit;
 
@@ -60,7 +60,7 @@ class QueryBuilder<T> {
   // fields method -5
   fields() {
     const fields =
-      (this.query?.fields as string)?.split(",")?.join(" ") || "-__v";
+      (this.query?.fields as string)?.split(',')?.join(' ') || '-__v';
 
     this.modelQuery = this.modelQuery.select(fields);
 
