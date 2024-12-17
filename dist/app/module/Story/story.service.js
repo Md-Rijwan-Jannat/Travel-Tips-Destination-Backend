@@ -49,7 +49,7 @@ const getAllUserStories = () => __awaiter(void 0, void 0, void 0, function* () {
         },
         {
             $lookup: {
-                from: 'users', // Name of the users collection
+                from: 'users', // Populate user details for the story owner
                 localField: 'user',
                 foreignField: '_id',
                 as: 'userDetails',
@@ -57,6 +57,24 @@ const getAllUserStories = () => __awaiter(void 0, void 0, void 0, function* () {
         },
         {
             $unwind: '$userDetails', // Deconstruct the userDetails array
+        },
+        // Populate reactions.userId
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'reactions.userId',
+                foreignField: '_id',
+                as: 'reactionUserDetails',
+            },
+        },
+        // Populate views (user IDs in the views array)
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'views',
+                foreignField: '_id',
+                as: 'viewUserDetails',
+            },
         },
         {
             $group: {
@@ -68,6 +86,27 @@ const getAllUserStories = () => __awaiter(void 0, void 0, void 0, function* () {
                         media: '$media',
                         createdAt: '$createdAt',
                         expiresAt: '$expiresAt',
+                        reactions: {
+                            $map: {
+                                input: '$reactions',
+                                as: 'reaction',
+                                in: {
+                                    type: '$$reaction.type',
+                                    user: {
+                                        $arrayElemAt: [
+                                            '$reactionUserDetails',
+                                            {
+                                                $indexOfArray: [
+                                                    '$reactions.userId',
+                                                    '$$reaction.userId',
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                },
+                            },
+                        },
+                        views: '$viewUserDetails', // Populated views array
                     },
                 },
             },
@@ -87,10 +126,8 @@ const getAllUserStories = () => __awaiter(void 0, void 0, void 0, function* () {
             },
         },
     ]);
-    if (!stories || stories.length === 0) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'No stories found');
-    }
-    return stories;
+    // Return an empty array instead of throwing an error
+    return stories || [];
 });
 const getSingleStories = (storyId) => __awaiter(void 0, void 0, void 0, function* () {
     const stories = yield story_model_1.Story.findById(storyId)

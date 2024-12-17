@@ -41,7 +41,7 @@ const getAllUserStories = async () => {
     },
     {
       $lookup: {
-        from: 'users', // Name of the users collection
+        from: 'users', // Populate user details for the story owner
         localField: 'user',
         foreignField: '_id',
         as: 'userDetails',
@@ -49,6 +49,24 @@ const getAllUserStories = async () => {
     },
     {
       $unwind: '$userDetails', // Deconstruct the userDetails array
+    },
+    // Populate reactions.userId
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'reactions.userId',
+        foreignField: '_id',
+        as: 'reactionUserDetails',
+      },
+    },
+    // Populate views (user IDs in the views array)
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'views',
+        foreignField: '_id',
+        as: 'viewUserDetails',
+      },
     },
     {
       $group: {
@@ -60,6 +78,27 @@ const getAllUserStories = async () => {
             media: '$media',
             createdAt: '$createdAt',
             expiresAt: '$expiresAt',
+            reactions: {
+              $map: {
+                input: '$reactions',
+                as: 'reaction',
+                in: {
+                  type: '$$reaction.type',
+                  user: {
+                    $arrayElemAt: [
+                      '$reactionUserDetails',
+                      {
+                        $indexOfArray: [
+                          '$reactions.userId',
+                          '$$reaction.userId',
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            views: '$viewUserDetails', // Populated views array
           },
         },
       },
@@ -80,11 +119,8 @@ const getAllUserStories = async () => {
     },
   ]);
 
-  if (!stories || stories.length === 0) {
-    throw new AppError(httpStatus.NOT_FOUND, 'No stories found');
-  }
-
-  return stories;
+  // Return an empty array instead of throwing an error
+  return stories || [];
 };
 
 const getSingleStories = async (storyId: string) => {
