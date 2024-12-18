@@ -1,14 +1,14 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import httpStatus from "http-status";
-import config from "../../../config";
-import AppError from "../../errors/AppError";
-import { createToken } from "../../utils/tokenGenerateFunction";
-import { TLoginUser, TRegister } from "./auth.interface";
-import { User } from "../User/user.model";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
-import { sendEmail } from "../../utils/sendEmail";
+import httpStatus from 'http-status';
+import config from '../../../config';
+import AppError from '../../errors/AppError';
+import { createToken } from '../../utils/tokenGenerateFunction';
+import { TLoginUser, TRegister } from './auth.interface';
+import { User } from '../User/user.model';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import { sendEmail } from '../../utils/sendEmail';
 
 const registerUserIntoDB = async (payload: TRegister) => {
   const user = await User.findOne({ email: payload.email });
@@ -19,19 +19,19 @@ const registerUserIntoDB = async (payload: TRegister) => {
     const jwtPayload = {
       id: result._id,
       email: payload.email,
-      role: "USER",
+      role: 'USER',
     };
 
     const accessToken = createToken(
       jwtPayload,
       config.jwt_access_secret as string,
-      config.jwt_access_expires_in as string,
+      config.jwt_access_expires_in as string
     );
 
     const refreshToken = createToken(
       jwtPayload,
       config.jwt_access_secret as string,
-      config.jwt_refresh_expires_in as string,
+      config.jwt_refresh_expires_in as string
     );
 
     return {
@@ -46,19 +46,19 @@ const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
   const user = await User.findOne({ email: payload.email });
 
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
 
   const userStatus = user?.status;
 
-  if (userStatus === "BLOCKED") {
-    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked!");
+  if (userStatus === 'BLOCKED') {
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked!');
   }
 
   //checking if the password is correct
 
   if (!(await User.isPasswordMatched(payload.password!, user?.password!)))
-    throw new AppError(httpStatus.FORBIDDEN, "Password do not matched");
+    throw new AppError(httpStatus.FORBIDDEN, 'Password do not matched');
 
   const jwtPayload = {
     id: user._id,
@@ -69,13 +69,13 @@ const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
   const accessToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
-    config.jwt_access_expires_in as string,
+    config.jwt_access_expires_in as string
   );
 
   const refreshToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
-    config.jwt_refresh_expires_in as string,
+    config.jwt_refresh_expires_in as string
   );
 
   return {
@@ -88,15 +88,15 @@ const forgetPasswordIntoDB = async (email: string) => {
   const user = await User.findOne({ email: email });
 
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
+    throw new AppError(httpStatus.NOT_FOUND, 'This user is not found!');
   }
 
   if (user.isDeleted === true) {
-    throw new AppError(httpStatus.FORBIDDEN, "This user is deleted!");
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is deleted!');
   }
 
-  if (user.status == "BLOCKED") {
-    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked!");
+  if (user.status == 'BLOCKED') {
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked!');
   }
 
   const jwtPayload = {
@@ -108,7 +108,7 @@ const forgetPasswordIntoDB = async (email: string) => {
   const resetToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
-    "10m",
+    '10m'
   );
 
   const resetLink = `${config.reset_link_url}?email=${user.email}&token=${resetToken}`;
@@ -117,23 +117,23 @@ const forgetPasswordIntoDB = async (email: string) => {
   await sendEmail(user.email, resetLink);
 };
 
-const resetPasswordIntoDB = async (
+const changePasswordIntoDB = async (
   payload: { email: string; newPassword: string },
-  token: string,
+  token: string
 ) => {
   console.log(payload);
   const user = await User.findOne({ email: payload?.email });
 
   if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, "This user is not found!");
+    throw new AppError(httpStatus.NOT_FOUND, 'This user is not found!');
   }
 
   if (user.isDeleted === true) {
-    throw new AppError(httpStatus.FORBIDDEN, "This user is deleted!");
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is deleted!');
   }
 
-  if (user.status == "BLOCKED") {
-    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked!");
+  if (user.status == 'BLOCKED') {
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked!');
   }
 
   // Check if token is valid
@@ -144,12 +144,12 @@ const resetPasswordIntoDB = async (
   };
 
   if (payload.email !== decoded.email) {
-    throw new AppError(httpStatus.FORBIDDEN, "This user is forbidden!");
+    throw new AppError(httpStatus.FORBIDDEN, 'This user is forbidden!');
   }
 
   const newHashPassword = await bcrypt.hash(
     payload.newPassword,
-    Number(config.bcrypt_salt_rounds),
+    Number(config.bcrypt_salt_rounds)
   );
 
   const result = await User.findOneAndUpdate(
@@ -157,7 +157,7 @@ const resetPasswordIntoDB = async (
     {
       password: newHashPassword,
     },
-    { new: true },
+    { new: true }
   );
 
   return result;
@@ -167,5 +167,5 @@ export const UserServices = {
   registerUserIntoDB,
   loginUserFromDB,
   forgetPasswordIntoDB,
-  resetPasswordIntoDB,
+  changePasswordIntoDB,
 };
