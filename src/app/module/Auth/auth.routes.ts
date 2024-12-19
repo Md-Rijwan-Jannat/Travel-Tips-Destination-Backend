@@ -20,6 +20,8 @@ router.post(
   UserControllers.loginUser
 );
 
+router.post('/reset-link', UserControllers.resetLink);
+
 router.post('/forget-password', UserControllers.forgetPassword);
 
 router.post(

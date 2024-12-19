@@ -30,7 +30,7 @@ const registerUserIntoDB = (payload) => __awaiter(void 0, void 0, void 0, functi
         const jwtPayload = {
             id: result._id,
             email: payload.email,
-            role: "USER",
+            role: 'USER',
         };
         const accessToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_access_expires_in);
         const refreshToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, config_1.default.jwt_refresh_expires_in);
@@ -44,15 +44,15 @@ const registerUserIntoDB = (payload) => __awaiter(void 0, void 0, void 0, functi
 const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findOne({ email: payload.email });
     if (!user) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
     }
     const userStatus = user === null || user === void 0 ? void 0 : user.status;
-    if (userStatus === "BLOCKED") {
-        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is blocked!");
+    if (userStatus === 'BLOCKED') {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is blocked!');
     }
     //checking if the password is correct
     if (!(yield user_model_1.User.isPasswordMatched(payload.password, user === null || user === void 0 ? void 0 : user.password)))
-        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "Password do not matched");
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'Password do not matched');
     const jwtPayload = {
         id: user._id,
         email: user.email,
@@ -65,43 +65,66 @@ const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function*
         refreshToken: refreshToken,
     };
 });
-const forgetPasswordIntoDB = (email) => __awaiter(void 0, void 0, void 0, function* () {
+const resetLinkIntoDB = (email) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findOne({ email: email });
     if (!user) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user is not found!");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user is not found!');
     }
     if (user.isDeleted === true) {
-        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is deleted!");
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is deleted!');
     }
-    if (user.status == "BLOCKED") {
-        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is blocked!");
+    if (user.status == 'BLOCKED') {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is blocked!');
     }
     const jwtPayload = {
         id: user._id,
         email: user.email,
         role: user.role,
     };
-    const resetToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, "10m");
+    const resetToken = (0, tokenGenerateFunction_1.createToken)(jwtPayload, config_1.default.jwt_access_secret, '10m');
     const resetLink = `${config_1.default.reset_link_url}?email=${user.email}&token=${resetToken}`;
     // Send email to the user with the reset link
     yield (0, sendEmail_1.sendEmail)(user.email, resetLink);
 });
-const resetPasswordIntoDB = (payload, token) => __awaiter(void 0, void 0, void 0, function* () {
+const forgetPasswordIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(payload);
     const user = yield user_model_1.User.findOne({ email: payload === null || payload === void 0 ? void 0 : payload.email });
     if (!user) {
-        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user is not found!");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user is not found!');
     }
     if (user.isDeleted === true) {
-        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is deleted!");
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is deleted!');
     }
-    if (user.status == "BLOCKED") {
-        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is blocked!");
+    if (user.status == 'BLOCKED') {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is blocked!');
+    }
+    // Check if token is valid
+    const decoded = jsonwebtoken_1.default.verify(payload.token, config_1.default.jwt_access_secret);
+    if (payload.email !== decoded.email) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is forbidden!');
+    }
+    const newHashPassword = yield bcrypt_1.default.hash(payload.newPassword, Number(config_1.default.bcrypt_salt_rounds));
+    const result = yield user_model_1.User.findOneAndUpdate({ _id: decoded.id, role: decoded.role }, {
+        password: newHashPassword,
+    }, { new: true });
+    return result;
+});
+const changePasswordIntoDB = (payload, token) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(payload);
+    const user = yield user_model_1.User.findOne({ email: payload === null || payload === void 0 ? void 0 : payload.email });
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user is not found!');
+    }
+    if (user.isDeleted === true) {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is deleted!');
+    }
+    if (user.status == 'BLOCKED') {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is blocked!');
     }
     // Check if token is valid
     const decoded = jsonwebtoken_1.default.verify(token, config_1.default.jwt_access_secret);
     if (payload.email !== decoded.email) {
-        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "This user is forbidden!");
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is forbidden!');
     }
     const newHashPassword = yield bcrypt_1.default.hash(payload.newPassword, Number(config_1.default.bcrypt_salt_rounds));
     const result = yield user_model_1.User.findOneAndUpdate({ _id: decoded.id, role: decoded.role }, {
@@ -112,6 +135,7 @@ const resetPasswordIntoDB = (payload, token) => __awaiter(void 0, void 0, void 0
 exports.UserServices = {
     registerUserIntoDB,
     loginUserFromDB,
+    resetLinkIntoDB,
     forgetPasswordIntoDB,
-    resetPasswordIntoDB,
+    changePasswordIntoDB,
 };

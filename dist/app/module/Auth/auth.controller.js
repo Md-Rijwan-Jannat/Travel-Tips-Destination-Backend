@@ -20,55 +20,64 @@ const auth_service_1 = require("./auth.service");
 const config_1 = __importDefault(require("../../../config"));
 const registerUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield auth_service_1.UserServices.registerUserIntoDB(req.body);
-    res.cookie("accessToken", result === null || result === void 0 ? void 0 : result.accessToken, {
-        secure: config_1.default.NODE_ENV === "production",
+    res.cookie('accessToken', result === null || result === void 0 ? void 0 : result.accessToken, {
+        secure: config_1.default.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: "lax", // Consider 'none' if needed
+        sameSite: 'lax', // Consider 'none' if needed
     });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "User is created successfully",
+        message: 'User is created successfully',
         data: result,
     });
 }));
 const loginUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield auth_service_1.UserServices.loginUserFromDB(req.body);
-    res.cookie("accessToken", result === null || result === void 0 ? void 0 : result.accessToken, {
-        secure: config_1.default.NODE_ENV === "production",
+    res.cookie('accessToken', result === null || result === void 0 ? void 0 : result.accessToken, {
+        secure: config_1.default.NODE_ENV === 'production',
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: 'lax',
     });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "User login successfully",
+        message: 'User login successfully',
+        data: result,
+    });
+}));
+const resetLink = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield auth_service_1.UserServices.resetLinkIntoDB(req.body);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'The link create successfully!',
         data: result,
     });
 }));
 const forgetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const email = req.body.email;
-    const result = yield auth_service_1.UserServices.forgetPasswordIntoDB(email);
+    const result = yield auth_service_1.UserServices.forgetPasswordIntoDB(req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "The link create successfully!",
+        message: 'The link create successfully!',
         data: result,
     });
 }));
-const resetPassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const changePassword = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const token = req.headers.authorization;
-    const result = yield auth_service_1.UserServices.resetPasswordIntoDB(req.body, token);
+    const result = yield auth_service_1.UserServices.changePasswordIntoDB(req.body, token);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Password reset successful!",
+        message: 'Password reset successful!',
         data: result,
     });
 }));
 exports.UserControllers = {
     registerUser,
     loginUser,
+    resetLink,
     forgetPassword,
-    resetPassword,
+    changePassword,
 };

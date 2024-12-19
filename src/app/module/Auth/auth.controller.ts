@@ -38,9 +38,18 @@ const loginUser = catchAsync(async (req, res) => {
   });
 });
 
+const resetLink = catchAsync(async (req, res) => {
+  const result = await UserServices.resetLinkIntoDB(req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'The link create successfully!',
+    data: result,
+  });
+});
+
 const forgetPassword = catchAsync(async (req, res) => {
-  const email = req.body.email;
-  const result = await UserServices.forgetPasswordIntoDB(email);
+  const result = await UserServices.forgetPasswordIntoDB(req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -67,6 +76,7 @@ const changePassword = catchAsync(async (req, res) => {
 export const UserControllers = {
   registerUser,
   loginUser,
+  resetLink,
   forgetPassword,
   changePassword,
 };
