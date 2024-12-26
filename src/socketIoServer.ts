@@ -1,5 +1,10 @@
-import { Server as HttpServer } from 'http';
-import { Server as SocketIoServer, Socket } from 'socket.io';
+import { Server as HttpServer } from "http";
+import { Server as SocketIoServer, Socket } from "socket.io";
+
+interface ConnectedUser {
+  socketId: string;
+  userId: string;
+}
 
 export const socketServer = (server: HttpServer): void => {
   // Set up the Socket.IO server
@@ -7,70 +12,98 @@ export const socketServer = (server: HttpServer): void => {
     pingTimeout: 60000,
     cors: {
       origin: [
-        'http://localhost:3000',
-        'https://traveltipsdestinationcommunity.vercel.app',
+        "http://localhost:3000",
+        "https://traveltipsdestinationcommunity.vercel.app",
       ],
-      methods: ['GET', 'POST'],
+      methods: ["GET", "POST"],
       credentials: true,
     },
   });
 
+  const connectedUsers: ConnectedUser[] = [];
+
   // Handle new socket connection
-  io.on('connection', (socket: Socket) => {
-    console.log('Connected to socket.io');
+  io.on("connection", (socket: Socket) => {
+    console.log(`Connected to socket.io: ${socket.id}`);
 
     // Setup user when connected
-    socket.on('setup', (userData: any) => {
+    socket.on("setup", (userData: any) => {
       if (userData && userData._id) {
+        // Add user to the connected list
+        connectedUsers.push({ socketId: socket.id, userId: userData._id });
         socket.join(userData._id);
-        console.log('User ID:', userData._id);
-        socket.emit('connected');
+
+        console.log("User ID connected:", userData._id);
+        socket.emit("connected");
+
+        // Notify all users about online users
+        io.emit(
+          "online users",
+          connectedUsers.map((user) => user.userId)
+        );
       } else {
-        console.log('No user ID provided!');
+        console.log("No user ID provided!");
       }
     });
 
     // Join user to a chat room
-    socket.on('join chat', (room: string) => {
-      socket.join(room); // Join the specified chat room
-      console.log('User Joined Room:', room);
+    socket.on("join chat", (room: string) => {
+      socket.join(room);
+      console.log("User Joined Room:", room);
     });
 
     // Typing event
-    socket.on('typing', (room: string) => {
-      socket.in(room).emit('typing');
+    socket.on("typing", (room: string) => {
+      socket.in(room).emit("typing");
     });
 
     // Stop typing event
-    socket.on('stop typing', (room: string) => {
-      socket.in(room).emit('stop typing');
+    socket.on("stop typing", (room: string) => {
+      socket.in(room).emit("stop typing");
     });
 
     // Handle new message event
-    socket.on('new message', (newMessageReceived: any) => {
-      console.log('newMessageReceived', newMessageReceived);
+    socket.on("new message", (newMessageReceived: any) => {
+      console.log("newMessageReceived", newMessageReceived);
       const chat = newMessageReceived.chat;
 
       if (!chat || !chat.users) {
-        return console.log('chat.users not defined');
+        return console.log("chat.users not defined");
       }
 
       // Broadcast the message to all users in the chat, except the sender
       chat.users.forEach((user: any) => {
         if (user._id === newMessageReceived.sender._id) return;
 
-        socket.in(user._id).emit('message received', newMessageReceived);
+        socket.in(user._id).emit("message received", newMessageReceived);
       });
     });
 
     // Handle disconnect
-    socket.on('disconnect', () => {
-      console.log('USER DISCONNECTED');
+    socket.on("disconnect", () => {
+      console.log("USER DISCONNECTED");
+      // Remove user from the connected list
+      const index = connectedUsers.findIndex(
+        (user) => user.socketId === socket.id
+      );
+
+      if (index !== -1) {
+        const disconnectedUser = connectedUsers[index];
+        connectedUsers.splice(index, 1);
+
+        console.log("User disconnected:", disconnectedUser.userId);
+
+        // Notify all users about online users
+        io.emit(
+          "online users",
+          connectedUsers.map((user) => user.userId)
+        );
+      }
     });
 
     // Handle setup cleanup (optional)
-    socket.off('setup', () => {
-      console.log('USER DISCONNECTED');
+    socket.off("setup", () => {
+      console.log("USER DISCONNECTED");
       socket.leave([...socket.rooms][0]);
     });
   });

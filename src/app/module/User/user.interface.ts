@@ -14,6 +14,7 @@ export interface TUser {
   following: Types.ObjectId[];
   verified: boolean;
   country?: string;
+  isActive: boolean;
   address?: string;
   isDeleted: boolean;
 }

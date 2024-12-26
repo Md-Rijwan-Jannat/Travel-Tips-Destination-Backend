@@ -65,6 +65,10 @@ const userSchema = new Schema<TUser, TUserModel>(
       type: String,
       default: null,
     },
+    isActive: {
+      type: Boolean,
+      default: false,
+    },
     isDeleted: {
       type: Boolean,
       default: false,
