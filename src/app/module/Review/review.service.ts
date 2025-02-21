@@ -1,7 +1,6 @@
-import QueryBuilder from '../../builder/QueryBuilder';
-import AppError from '../../errors/AppError';
-import { Post } from '../Post/post.model';
-import { Review } from './review.mnodel';
+import QueryBuilder from "../../builder/QueryBuilder";
+import AppError from "../../errors/AppError";
+import { Review } from "./review.mnodel";
 
 const createReview = async (userId: string, data: any) => {
   const review = await Review.create({ ...data, user: userId });
@@ -11,11 +10,11 @@ const createReview = async (userId: string, data: any) => {
 const getReviews = async (query: Record<string, any>) => {
   const reviewQueryBuilder = new QueryBuilder(
     Review.find().populate({
-      path: 'user',
+      path: "user",
     }),
     query
   )
-    .search(['content'])
+    .search(["content"])
     .sort()
     .fields()
     .filter()
@@ -35,14 +34,14 @@ const updateReview = async (reviewId: string, userId: string, data: any) => {
     { new: true }
   );
 
-  if (!review) throw new AppError(404, 'Review not found or unauthorized');
+  if (!review) throw new AppError(404, "Review not found or unauthorized");
   return review;
 };
 
 const deleteReview = async (reviewId: string, userId: string) => {
   const review = await Review.findOneAndDelete({ _id: reviewId, user: userId });
 
-  if (!review) throw new AppError(404, 'Review not found or unauthorized');
+  if (!review) throw new AppError(404, "Review not found or unauthorized");
   return review;
 };
 

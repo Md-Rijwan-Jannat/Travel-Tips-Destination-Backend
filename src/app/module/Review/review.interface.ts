@@ -1,8 +1,9 @@
-import { Types } from 'mongoose';
+import { Types } from "mongoose";
 
 export interface TReview {
   user: Types.ObjectId;
-  content: string;
+  quote: string;
+  variant: string;
   rating: number;
   createdAt?: Date;
   updatedAt?: Date;

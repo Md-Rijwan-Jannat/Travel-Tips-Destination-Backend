@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-
 import config from "../../config";
 import { USER_ROLE, USER_STATUS } from "../module/User/user.constants";
 import { User } from "../module/User/user.model";

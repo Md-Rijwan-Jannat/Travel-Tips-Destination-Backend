@@ -22,7 +22,7 @@ const reportSchema = new Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 // Post Schema
@@ -85,7 +85,7 @@ const postSchema = new Schema<TPost>(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const Post = mongoose.model<TPost>("Post", postSchema);
