@@ -11,8 +11,8 @@ const validateRequest_1 = __importDefault(require("../../middlewares/validateReq
 const review_validations_1 = require("./review.validations");
 const user_constants_1 = require("../User/user.constants");
 const router = express_1.default.Router();
-router.post('/', (0, validateRequest_1.default)(review_validations_1.ReviewValidation.createReviewValidationSchema), review_controller_1.ReviewController.createReview);
-router.get('/', (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), review_controller_1.ReviewController.getReviews);
-router.patch('/:reviewId', (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), (0, validateRequest_1.default)(review_validations_1.ReviewValidation.updateReviewValidationSchema), review_controller_1.ReviewController.updateReview);
-router.delete('/:reviewId', (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), review_controller_1.ReviewController.deleteReview);
+router.post("/", (0, validateRequest_1.default)(review_validations_1.ReviewValidation.createReviewValidationSchema), (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), review_controller_1.ReviewController.createReview);
+router.get("/", review_controller_1.ReviewController.getReviews);
+router.patch("/:reviewId", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), (0, validateRequest_1.default)(review_validations_1.ReviewValidation.updateReviewValidationSchema), review_controller_1.ReviewController.updateReview);
+router.delete("/:reviewId", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), review_controller_1.ReviewController.deleteReview);
 exports.ReviewRoutes = router;

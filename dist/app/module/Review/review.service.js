@@ -22,9 +22,9 @@ const createReview = (userId, data) => __awaiter(void 0, void 0, void 0, functio
 });
 const getReviews = (query) => __awaiter(void 0, void 0, void 0, function* () {
     const reviewQueryBuilder = new QueryBuilder_1.default(review_mnodel_1.Review.find().populate({
-        path: 'user',
+        path: "user",
     }), query)
-        .search(['content'])
+        .search(["content"])
         .sort()
         .fields()
         .filter()
@@ -37,13 +37,13 @@ const getReviews = (query) => __awaiter(void 0, void 0, void 0, function* () {
 const updateReview = (reviewId, userId, data) => __awaiter(void 0, void 0, void 0, function* () {
     const review = yield review_mnodel_1.Review.findOneAndUpdate({ _id: reviewId, user: userId }, data, { new: true });
     if (!review)
-        throw new AppError_1.default(404, 'Review not found or unauthorized');
+        throw new AppError_1.default(404, "Review not found or unauthorized");
     return review;
 });
 const deleteReview = (reviewId, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const review = yield review_mnodel_1.Review.findOneAndDelete({ _id: reviewId, user: userId });
     if (!review)
-        throw new AppError_1.default(404, 'Review not found or unauthorized');
+        throw new AppError_1.default(404, "Review not found or unauthorized");
     return review;
 });
 exports.ReviewService = {
