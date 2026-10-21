@@ -29,7 +29,7 @@ app.use(
 app.use("/api/v1", router);
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello Travel Tips & Destination Guides");
+  res.send("Hello Aura Trip");
 });
 
 // Global Error

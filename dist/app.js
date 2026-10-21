@@ -27,7 +27,7 @@ app.use((0, cors_1.default)({
 // Application routes
 app.use("/api/v1", routes_1.default);
 app.get("/", (req, res) => {
-    res.send("Hello Travel Tips & Destination Guides");
+    res.send("Hello Aura Trip");
 });
 // Global Error
 app.use(globalErrorhandler_1.default);

@@ -27,7 +27,7 @@ const initialPayment = (paymentData) => __awaiter(void 0, void 0, void 0, functi
         cancel_url: `${frontendUrl}`,
         amount: paymentData.amount,
         currency: "BDT",
-        desc: "Payment for get a premium accessability on the TT&DG",
+        desc: "Payment for premium access on Aura Trip",
         cus_name: paymentData.customerName,
         cus_email: paymentData.customerEmail,
         cus_add1: paymentData.customerAddress,

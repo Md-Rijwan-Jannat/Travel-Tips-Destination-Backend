@@ -1,10 +1,10 @@
-# Travel Tips & Destination Guides - Backend
+# Aura Trip - Backend
 
 ## Project Overview
 
-The **"Travel Tips & Destination Guides"** backend is a RESTful API designed to support user authentication, profile management, post creation, and interactions among users. This README outlines the API endpoints available in the project.
+The **Aura Trip** (formerly "Travel Tips & Destination Guides") backend is a RESTful API designed to support user authentication, profile management, post creation, and interactions among users. This README outlines the API endpoints available in the project.
 
-The Travel Tips & Destination project is a platform for users to share their travel experiences, tips, and reviews. Users can create posts with images and descriptions, comment on posts, react to content, and leave reviews on various travel destinations.
+Aura Trip is a platform for users to share their travel experiences, tips, and reviews. Users can create posts with images and descriptions, comment on posts, react to content, and leave reviews on various travel destinations.
 
 ## Technologies Used
 
@@ -204,4 +204,4 @@ The Travel Tips & Destination project is a platform for users to share their tra
 
 ## Conclusion
 
-This README provides an overview of the "Travel Tips & Destination Guides" backend API. Each endpoint is designed to facilitate user interactions and enrich the travel community with shared experiences. For further information, feel free to explore the codebase and its documentation.
+This README provides an overview of the Aura Trip backend API. Each endpoint is designed to facilitate user interactions and enrich the travel community with shared experiences. For further information, feel free to explore the codebase and its documentation.
