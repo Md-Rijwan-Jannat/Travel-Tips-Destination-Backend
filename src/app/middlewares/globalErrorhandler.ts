@@ -63,12 +63,15 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 
   //ultimate return
+  // Never expose the raw error object in production: Mongoose/driver errors
+  // can contain connection details and schema information.
   return res.status(statusCode).json({
     success: false,
     message,
     errorSources,
-    err,
-    stack: config.NODE_ENV === "development" ? err?.stack : null,
+    ...(config.NODE_ENV === "development"
+      ? { err: err?.message, stack: err?.stack }
+      : {}),
   });
 };
 

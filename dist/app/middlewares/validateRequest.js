@@ -15,10 +15,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const catchAsync_1 = __importDefault(require("../utils/catchAsync"));
 const validateRequest = (schema) => {
     return (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-        yield schema.parseAsync({
+        const parsed = yield schema.parseAsync({
             body: req.body,
+            query: req.query,
             cookies: req.cookies,
         });
+        // Use the parsed (validated + transformed + stripped) values so that
+        // unknown fields (e.g. role, verified) are dropped and transforms apply.
+        if (parsed.body !== undefined) {
+            req.body = parsed.body;
+        }
+        if (parsed.cookies !== undefined) {
+            req.cookies = parsed.cookies;
+        }
+        if (parsed.query !== undefined) {
+            req.query = parsed.query;
+        }
         next();
     }));
 };

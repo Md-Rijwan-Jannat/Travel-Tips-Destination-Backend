@@ -20,11 +20,11 @@ router.get(
   UserControllers.getAllUserForAnalytics,
 );
 
-// Get all premium users (Admin only)
+// Get premium users for analytics (Admin only)
 router.get(
   "/premium-users-analytics",
   Auth(USER_ROLE.ADMIN),
-  UserControllers.getAlPremiumUser,
+  UserControllers.getAlPremiumUserForAnalytics,
 );
 
 // Get a single user by ID

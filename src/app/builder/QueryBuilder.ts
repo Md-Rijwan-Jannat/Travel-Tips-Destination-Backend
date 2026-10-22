@@ -1,5 +1,32 @@
 import { FilterQuery, Query } from 'mongoose';
 
+const MAX_PAGE_LIMIT = 500;
+const DEFAULT_PAGE_LIMIT = 100;
+
+// Recursively drop MongoDB operator keys ($..., dotted paths) from user input
+// so values like ?media[$ne]=x cannot smuggle operators into queries.
+const stripUnsafeOperators = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(stripUnsafeOperators);
+  }
+  if (value && typeof value === 'object') {
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value)) {
+      if (key.startsWith('$') || key.includes('.')) {
+        continue;
+      }
+      sanitized[key] = stripUnsafeOperators(val);
+    }
+    return sanitized;
+  }
+  return value;
+};
+
+// Escape regex metacharacters so searchTerm cannot trigger ReDoS or
+// unexpected pattern matches.
+const escapeRegex = (term: string): string =>
+  term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
   public query: Record<string, unknown>;
@@ -13,10 +40,11 @@ class QueryBuilder<T> {
   search(searchingFields: string[]) {
     const searchTerm = this.query?.searchTerm;
 
-    if (searchTerm) {
+    if (searchTerm && typeof searchTerm === 'string') {
+      const safeTerm = escapeRegex(searchTerm);
       this.modelQuery = this.modelQuery.find({
         $or: searchingFields.map((field) => ({
-          [field]: { $regex: searchTerm, $options: 'i' },
+          [field]: { $regex: safeTerm, $options: 'i' },
         })),
       } as FilterQuery<T>);
     }
@@ -26,7 +54,10 @@ class QueryBuilder<T> {
 
   // filter method -2
   filter() {
-    const queryObj = { ...this.query };
+    const queryObj = stripUnsafeOperators({ ...this.query }) as Record<
+      string,
+      unknown
+    >;
     const excludedFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
 
     excludedFields.forEach((el) => delete queryObj[el]);
@@ -48,8 +79,15 @@ class QueryBuilder<T> {
 
   // paginate method -4
   paginate() {
-    const limit = (this.query?.limit as number) || 10000000000000;
-    const page = (this.query?.page as number) || 1;
+    const rawLimit = Number(this.query?.limit);
+    const rawPage = Number(this.query?.page);
+
+    const limit =
+      Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(Math.floor(rawLimit), MAX_PAGE_LIMIT)
+        : DEFAULT_PAGE_LIMIT;
+    const page =
+      Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
     const skip = (page - 1) * limit;
 
     this.modelQuery = this.modelQuery.skip(skip).limit(limit);
@@ -71,7 +109,7 @@ class QueryBuilder<T> {
     const totalQueries = this.modelQuery.getFilter();
     const total = await this.modelQuery.model.countDocuments(totalQueries);
     const page = Number(this?.query?.page) || 1;
-    const limit = Number(this?.query?.limit) || 10;
+    const limit = Number(this?.query?.limit) || DEFAULT_PAGE_LIMIT;
     const totalPage = Math.ceil(total / limit);
 
     return {

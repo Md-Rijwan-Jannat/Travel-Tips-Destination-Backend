@@ -67,12 +67,11 @@ const globalErrorHandler = (err, req, res, next) => {
         ];
     }
     //ultimate return
-    return res.status(statusCode).json({
-        success: false,
-        message,
-        errorSources,
-        err,
-        stack: config_1.default.NODE_ENV === "development" ? err === null || err === void 0 ? void 0 : err.stack : null,
-    });
+    // Never expose the raw error object in production: Mongoose/driver errors
+    // can contain connection details and schema information.
+    return res.status(statusCode).json(Object.assign({ success: false, message,
+        errorSources }, (config_1.default.NODE_ENV === "development"
+        ? { err: err === null || err === void 0 ? void 0 : err.message, stack: err === null || err === void 0 ? void 0 : err.stack }
+        : {})));
 };
 exports.default = globalErrorHandler;

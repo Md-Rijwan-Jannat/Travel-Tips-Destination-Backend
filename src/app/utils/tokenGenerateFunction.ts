@@ -5,8 +5,6 @@ export const createToken = (
   secret: string,
   expiresIn: string | number,
 ) => {
-  // Cast: jsonwebtoken v9 types expect branded StringValue; callers pass
-  // plain config strings like "7d" which are valid at runtime.
   return jwt.sign(jwtPayload, secret, {
     expiresIn: expiresIn as SignOptions["expiresIn"],
   });

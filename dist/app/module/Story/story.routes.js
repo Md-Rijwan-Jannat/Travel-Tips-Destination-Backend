@@ -14,7 +14,7 @@ const router = express_1.default.Router();
 router.post('/', (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), (0, validateRequest_1.default)(story_validation_1.StoryValidations.createStoryValidationSchema), story_controller_1.StoryController.createStory);
 router.get('/', (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), story_controller_1.StoryController.getUserStories);
 router.get('/all-users-stories', (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), story_controller_1.StoryController.getAllUserStories);
-router.get('/:storyId', (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), story_controller_1.StoryController.getUserStories);
+router.get('/:storyId', (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), story_controller_1.StoryController.getSingleStories);
 router.patch('/:storyId', (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), (0, validateRequest_1.default)(story_validation_1.StoryValidations.updateStoryValidationSchema), story_controller_1.StoryController.updateStory);
 router.post('/:storyId/view', (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), (0, validateRequest_1.default)(story_validation_1.StoryValidations.addViewValidationSchema), story_controller_1.StoryController.addView);
 router.post('/:storyId/reaction', (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), (0, validateRequest_1.default)(story_validation_1.StoryValidations.addReactionValidationSchema), story_controller_1.StoryController.addReaction);

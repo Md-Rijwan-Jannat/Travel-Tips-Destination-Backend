@@ -7,8 +7,9 @@
     "build": "tsc",
     "prod": "node ./dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
-    "lint": "npm eslint .",
+    "lint": "eslint .",
     "lint:fix": "npx eslint src --fix",
+    "test": "vitest run",
     "prettier": "prettier --ignore-path .gitignore --write \"./src/**/*.+(js|ts|json)\"",
     "prettier:fix": "npx prettier --write src"
   },
@@ -43,12 +44,16 @@
     "@types/multer": "^1.4.11",
     "@types/node": "^20.14.9",
     "@types/nodemailer": "^6.4.16",
+    "@types/supertest": "^6.0.3",
     "@types/uuid": "^10.0.0",
     "eslint": "^8.57.0",
+    "globals": "^17.13.0",
     "nodemon": "^3.1.4",
     "prettier": "^3.3.2",
+    "supertest": "^7.3.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.2",
-    "typescript-eslint": "^7.14.1"
+    "typescript-eslint": "^7.14.1",
+    "vitest": "^2.1.9"
   }
 }

@@ -29,7 +29,7 @@ router.get(
 router.get(
   '/:storyId',
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
-  StoryController.getUserStories
+  StoryController.getSingleStories
 );
 
 router.patch(
