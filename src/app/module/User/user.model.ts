@@ -25,6 +25,9 @@ const userSchema = new Schema<TUser, TUserModel>(
     },
     password: {
       type: String,
+      // Never returned by queries/find/update results; only flows that must
+      // compare hashes opt in with `.select("+password")` (e.g. login).
+      select: false,
     },
     image: {
       type: String,
@@ -95,15 +98,17 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Post-save hook to avoid returning the password
+// Post-save hook: drop the password from the returned document entirely so it
+// is never serialized into an API response (previously set to an empty string,
+// which still emitted a `password` key).
 userSchema.post('save', function (doc, next) {
-  doc.password = '';
+  doc.password = undefined;
   next();
 });
 
-// Static method to find user by email with password
-userSchema.statics.isUserExistsByEmail = async function (email: string) {
-  return await User.findOne({ email }).select('+password');
+// Static method to find user by email (password is excluded by schema default)
+userSchema.statics.isUserExistsByEmail = async function (email) {
+  return await User.findOne({ email });
 };
 
 // Static method to compare passwords

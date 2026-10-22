@@ -1,14 +1,24 @@
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
+import AppError from '../../errors/AppError';
 import { PaymentService } from './payment.service';
 
 const subscriptions = catchAsync(async (req, res) => {
   const { userId } = req.params;
 
+  // The record must be bound to the authenticated caller — a token for user A
+  // may never initiate (and pay for) user B's account.
+  if (String(req.user.id) !== String(userId)) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'You can only start a payment for your own account',
+    );
+  }
+
   const result = await PaymentService.subscriptionsIntoBD(
     req.body,
-    userId as string
+    String(req.user.id),
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -20,12 +30,14 @@ const subscriptions = catchAsync(async (req, res) => {
 
 const paymentConformation = catchAsync(async (req, res) => {
   const { transitionId, status } = req.query;
-  const { userId } = req.params;
+  // NOTE: `:userId` in the route is only there because the aamarpay redirect
+  // URL contains it — the service never trusts it (grants go to the payment
+  // record's owner only). No Auth middleware: the gateway redirects the
+  // browser here, so no Authorization header is available.
 
   const result = await PaymentService.paymentConformationIntoDB(
-    transitionId as string,
-    status as string,
-    userId as string
+    transitionId as string | undefined,
+    status as string | undefined,
   );
 
   res.send(result);

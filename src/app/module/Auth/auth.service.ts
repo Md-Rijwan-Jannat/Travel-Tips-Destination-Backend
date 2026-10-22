@@ -43,7 +43,10 @@ const registerUserIntoDB = async (payload: TRegister) => {
 };
 
 const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
-  const user = await User.findOne({ email: payload.email });
+  // password has `select: false`; login is the one flow that must compare it.
+  const user = await User.findOne({ email: payload.email }).select(
+    '+password'
+  );
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
@@ -56,8 +59,11 @@ const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
   }
 
   //checking if the password is correct
+  const passwordMatches =
+    !!user.password &&
+    (await User.isPasswordMatched(payload.password!, user.password));
 
-  if (!(await User.isPasswordMatched(payload.password!, user?.password!)))
+  if (!passwordMatches)
     throw new AppError(httpStatus.FORBIDDEN, 'Password do not matched');
 
   const jwtPayload = {
@@ -86,8 +92,6 @@ const loginUserFromDB = async (payload: Partial<TLoginUser>) => {
 
 const resetLinkIntoDB = async ({ email }: { email: string }) => {
   const user = await User.findOne({ email: email });
-
-  console.log(user);
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'This user is not found!');
@@ -124,7 +128,6 @@ const forgetPasswordIntoDB = async (payload: {
   newPassword: string;
   token: string;
 }) => {
-  console.log(payload);
   const user = await User.findOne({ email: payload?.email });
 
   if (!user) {
@@ -172,7 +175,6 @@ const changePasswordIntoDB = async (
   payload: { email: string; newPassword: string },
   token: string
 ) => {
-  console.log(payload);
   const user = await User.findOne({ email: payload?.email });
 
   if (!user) {

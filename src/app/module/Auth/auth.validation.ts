@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { USER_STATUS } from "../User/user.constants";
 
+// Public registration whitelist: identity fields only. Privilege/integrity
+// fields (role, status, verified, isDeleted) are NOT client-selectable — the
+// model applies its defaults (role USER, verified false, ...). Previously this
+// schema accepted `role` (incl. "admin") and defaulted it to lowercase "user",
+// which violated the model enum and broke registration.
 export const registerUserValidationSchema = z.object({
   body: z.object({
     name: z.string().nonempty("Name is required"),
@@ -14,16 +19,8 @@ export const registerUserValidationSchema = z.object({
       .nonempty("Password is required")
       .optional(),
     image: z.string().optional(),
-    role: z.enum(["admin", "user"]).default("user"),
-    status: z
-      .enum([USER_STATUS.IN_PROGRESS, USER_STATUS.BLOCKED])
-      .default(USER_STATUS.IN_PROGRESS),
-    flower: z.number().default(0),
-    flowing: z.number().default(0),
-    verified: z.boolean().default(false),
-    country: z.string().optional().optional(),
-    address: z.string().optional().optional(),
-    isDeleted: z.boolean().default(false),
+    country: z.string().optional(),
+    address: z.string().optional(),
   }),
 });
 

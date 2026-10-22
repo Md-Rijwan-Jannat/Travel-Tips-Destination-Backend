@@ -28,4 +28,7 @@ exports.default = {
     backend_live_url: process.env.BACKEND_LIVE_URL,
     frontend_live_url: process.env.FRONTEND_LIVE_URL,
     frontend_base_url: process.env.FRONTEND_BASE_URL,
+    // Premium subscription price (BDT) — server-side price table; client-sent
+    // amounts are ignored. Defaults to the amount the frontend displays (1000).
+    premium_price: Number(process.env.PREMIUM_PRICE) || 1000,
 };

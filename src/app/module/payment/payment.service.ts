@@ -1,15 +1,16 @@
+import { Types } from "mongoose";
 import { User } from "../User/user.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
 import { v4 as uuidv4 } from "uuid";
-import { Post } from "../Post/post.model";
 import QueryBuilder from "../../builder/QueryBuilder";
 import { TPaymentData } from "./payment.interface";
 import { initialPayment, verifyPayment } from "./payment.utils";
 import Payment from "./payment.model";
+import config from "../../../config";
 
 const subscriptionsIntoBD = async (
-  payload: Omit<TPaymentData, "transitionId">,
+  payload: Partial<TPaymentData>,
   userId: string,
 ) => {
   const user = await User.findById(userId);
@@ -18,22 +19,38 @@ const subscriptionsIntoBD = async (
     throw new AppError(httpStatus.NOT_FOUND, "User is not found");
   }
 
-  const post = await Post.find({ user: user._id });
-
-  // Generate a transition ID
+  // Generate a transition ID (server-owned)
   const transitionId = uuidv4();
 
-  const paymentData = { ...payload, transitionId };
+  // Server-owned payment data: the record is bound to the authenticated user,
+  // the amount comes from the server price table, and status always starts as
+  // Un-Paid. Client-sent user/amount/transitionId/status are never trusted.
+  const paymentData: TPaymentData = {
+    transitionId,
+    user: user._id as Types.ObjectId,
+    amount: config.premium_price,
+    customerName: payload.customerName || user.name || "N/A",
+    customerEmail: payload.customerEmail || user.email,
+    customerNumber: payload.customerNumber,
+    customerAddress: payload.customerAddress,
+    customerCountry: payload.customerCountry,
+    status: "Un-Paid",
+  };
 
   // Make the initial payment request
-  const paymentResponse = await initialPayment(paymentData);
+  let paymentResponse;
+  try {
+    paymentResponse = await initialPayment(paymentData);
+  } catch {
+    throw new AppError(httpStatus.BAD_REQUEST, "Payment initiation failed");
+  }
 
   if (!paymentResponse) {
     throw new AppError(httpStatus.BAD_REQUEST, "Payment initiation failed");
   }
 
-  // Save payment data to the database
-  const result = await Payment.create({ ...paymentData, user: userId });
+  // Save payment data to the database (only after the gateway accepted)
+  const result = await Payment.create(paymentData);
 
   return {
     paymentResponse,
@@ -42,32 +59,54 @@ const subscriptionsIntoBD = async (
 };
 
 const paymentConformationIntoDB = async (
-  transitionId: string,
-  status: string,
-  userId: string,
+  transitionId: string | undefined,
+  status: string | undefined,
 ) => {
   let paymentStatus = "failed";
   let message = "Payment Failed. Please try again.";
 
-  if (status === "success") {
-    const verifyResponse = await verifyPayment(transitionId);
+  // The gateway redirects the browser here (no Authorization header can be
+  // required), so safety comes from: (1) lookup the server-side record, (2)
+  // verify with aamarpay, (3) grant ONLY to the record's owner — the route
+  // param userId is never trusted and a paid transitionId can never be
+  // replayed to verify a different account.
+  const isValidTransitionId =
+    typeof transitionId === "string" && transitionId.length > 0;
 
-    if (verifyResponse && verifyResponse.pay_status === "Successful") {
-      await User.findByIdAndUpdate(userId, { verified: true }, { new: true });
+  const paymentRecord = isValidTransitionId
+    ? await Payment.findOne({ transitionId })
+    : null;
 
-      const updatedPayment = await Payment.findOneAndUpdate(
-        { transitionId },
-        { status: "Paid" },
-        { new: true },
-      );
-
-      if (!updatedPayment) {
-        throw new AppError(httpStatus.NOT_FOUND, "Payment record not found");
-      }
-
+  if (status === "success" && paymentRecord) {
+    if (paymentRecord.status === "Paid") {
+      // Already processed — show success without re-granting anything.
       paymentStatus = "success";
       message =
         "Thank you for upgrading to premium access.Your transaction <br /> has been completed successfully!";
+    } else {
+      try {
+        const verifyResponse = await verifyPayment(paymentRecord.transitionId);
+
+        if (verifyResponse && verifyResponse.pay_status === "Successful") {
+          // Grant strictly to the payment record's owner.
+          await User.findByIdAndUpdate(
+            paymentRecord.user,
+            { verified: true },
+            { new: true },
+          );
+
+          paymentRecord.status = "Paid";
+          await paymentRecord.save();
+
+          paymentStatus = "success";
+          message =
+            "Thank you for upgrading to premium access.Your transaction <br /> has been completed successfully!";
+        }
+      } catch {
+        // Gateway unreachable / verification error → keep the failed page.
+        paymentStatus = "failed";
+        message = "Payment Failed. Please try again.";
+      }
     }
   }
 
@@ -138,7 +177,7 @@ const paymentConformationIntoDB = async (
   `;
 };
 
-const getPaymentsData = async (query: Record<string, any>) => {
+const getPaymentsData = async (query: Record<string, unknown>) => {
   const paymentQueryBuilder = new QueryBuilder(
     Payment.find().populate("user"),
     query,

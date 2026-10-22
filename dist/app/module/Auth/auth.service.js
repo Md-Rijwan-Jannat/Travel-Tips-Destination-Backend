@@ -42,7 +42,8 @@ const registerUserIntoDB = (payload) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield user_model_1.User.findOne({ email: payload.email });
+    // password has `select: false`; login is the one flow that must compare it.
+    const user = yield user_model_1.User.findOne({ email: payload.email }).select('+password');
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'User not found');
     }
@@ -51,7 +52,9 @@ const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function*
         throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is blocked!');
     }
     //checking if the password is correct
-    if (!(yield user_model_1.User.isPasswordMatched(payload.password, user === null || user === void 0 ? void 0 : user.password)))
+    const passwordMatches = !!user.password &&
+        (yield user_model_1.User.isPasswordMatched(payload.password, user.password));
+    if (!passwordMatches)
         throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'Password do not matched');
     const jwtPayload = {
         id: user._id,
@@ -67,7 +70,6 @@ const loginUserFromDB = (payload) => __awaiter(void 0, void 0, void 0, function*
 });
 const resetLinkIntoDB = (_a) => __awaiter(void 0, [_a], void 0, function* ({ email }) {
     const user = yield user_model_1.User.findOne({ email: email });
-    console.log(user);
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user is not found!');
     }
@@ -88,7 +90,6 @@ const resetLinkIntoDB = (_a) => __awaiter(void 0, [_a], void 0, function* ({ ema
     yield (0, sendEmail_1.sendEmail)(user.email, resetLink);
 });
 const forgetPasswordIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(payload);
     const user = yield user_model_1.User.findOne({ email: payload === null || payload === void 0 ? void 0 : payload.email });
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user is not found!');
@@ -111,7 +112,6 @@ const forgetPasswordIntoDB = (payload) => __awaiter(void 0, void 0, void 0, func
     return result;
 });
 const changePasswordIntoDB = (payload, token) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(payload);
     const user = yield user_model_1.User.findOne({ email: payload === null || payload === void 0 ? void 0 : payload.email });
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user is not found!');

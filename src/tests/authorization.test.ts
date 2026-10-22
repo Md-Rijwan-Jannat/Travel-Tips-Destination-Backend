@@ -100,9 +100,9 @@ beforeAll(async () => {
     password: "AdminPass123!",
     role: "ADMIN",
   });
-  // post('save') blanks doc.password on the returned document; re-read the
-  // stored hash from the DB as the untouched baseline.
-  const aliceFresh = await User.findById(alice._id);
+  // post('save') blanks doc.password on the returned document, and the schema
+  // now has `select: false`; re-read the stored hash explicitly as baseline.
+  const aliceFresh = await User.findById(alice._id).select("+password");
   alicePasswordHash = String(aliceFresh?.password);
 
   aliceToken = makeToken(alice);
@@ -390,7 +390,7 @@ describe("profile whitelist and cross-user protection", () => {
       });
     expect(res.status).toBe(200);
 
-    const fresh = await User.findById(alice._id);
+    const fresh = await User.findById(alice._id).select("+password");
     expect(fresh?.name).toBe("Alice Updated");
     expect(fresh?.role).toBe("USER");
     expect(fresh?.verified).toBe(false);

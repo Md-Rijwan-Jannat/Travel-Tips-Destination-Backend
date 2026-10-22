@@ -3,6 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserValidation = exports.updateUserValidationSchema = exports.registerUserValidationSchema = void 0;
 const zod_1 = require("zod");
 const user_constants_1 = require("../User/user.constants");
+// Public registration whitelist: identity fields only. Privilege/integrity
+// fields (role, status, verified, isDeleted) are NOT client-selectable — the
+// model applies its defaults (role USER, verified false, ...). Previously this
+// schema accepted `role` (incl. "admin") and defaulted it to lowercase "user",
+// which violated the model enum and broke registration.
 exports.registerUserValidationSchema = zod_1.z.object({
     body: zod_1.z.object({
         name: zod_1.z.string().nonempty("Name is required"),
@@ -16,16 +21,8 @@ exports.registerUserValidationSchema = zod_1.z.object({
             .nonempty("Password is required")
             .optional(),
         image: zod_1.z.string().optional(),
-        role: zod_1.z.enum(["admin", "user"]).default("user"),
-        status: zod_1.z
-            .enum([user_constants_1.USER_STATUS.IN_PROGRESS, user_constants_1.USER_STATUS.BLOCKED])
-            .default(user_constants_1.USER_STATUS.IN_PROGRESS),
-        flower: zod_1.z.number().default(0),
-        flowing: zod_1.z.number().default(0),
-        verified: zod_1.z.boolean().default(false),
-        country: zod_1.z.string().optional().optional(),
-        address: zod_1.z.string().optional().optional(),
-        isDeleted: zod_1.z.boolean().default(false),
+        country: zod_1.z.string().optional(),
+        address: zod_1.z.string().optional(),
     }),
 });
 exports.updateUserValidationSchema = zod_1.z.object({
