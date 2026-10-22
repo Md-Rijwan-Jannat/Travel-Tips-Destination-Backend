@@ -1,13 +1,22 @@
 import nodemailer from 'nodemailer';
 
 export const sendEmail = async (to: string, resetLink: string) => {
+  const emailUser = process.env.EMAIL_USER;
+  const emailPass = process.env.EMAIL_PASS;
+
+  if (!emailUser || !emailPass) {
+    throw new Error(
+      'Email is not configured: set EMAIL_USER and EMAIL_PASS in the environment',
+    );
+  }
+
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
     auth: {
-      user: 'rijwanjannat36@gmail.com',
-      pass: 'lych epuz scux pmkg',
+      user: emailUser,
+      pass: emailPass,
     },
   });
 

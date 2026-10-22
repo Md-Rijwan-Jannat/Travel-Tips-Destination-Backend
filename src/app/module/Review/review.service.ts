@@ -1,13 +1,14 @@
 import QueryBuilder from "../../builder/QueryBuilder";
 import AppError from "../../errors/AppError";
 import { Review } from "./review.mnodel";
+import { TReview } from "./review.interface";
 
-const createReview = async (userId: string, data: any) => {
+const createReview = async (userId: string, data: Partial<TReview>) => {
   const review = await Review.create({ ...data, user: userId });
   return review;
 };
 
-const getReviews = async (query: Record<string, any>) => {
+const getReviews = async (query: Record<string, unknown>) => {
   const reviewQueryBuilder = new QueryBuilder(
     Review.find().populate({
       path: "user",
@@ -27,7 +28,11 @@ const getReviews = async (query: Record<string, any>) => {
   return { result, meta };
 };
 
-const updateReview = async (reviewId: string, userId: string, data: any) => {
+const updateReview = async (
+  reviewId: string,
+  userId: string,
+  data: Partial<TReview>,
+) => {
   const review = await Review.findOneAndUpdate(
     { _id: reviewId, user: userId },
     data,

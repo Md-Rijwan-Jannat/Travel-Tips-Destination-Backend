@@ -34,8 +34,8 @@ export interface TGetUserOnDataBase {
   follower: string[];
   following: string[];
   verified: boolean;
-  country: any;
-  address: any;
+  country: string;
+  address: string;
   isDeleted: boolean;
   _id: string;
   createdAt: string;

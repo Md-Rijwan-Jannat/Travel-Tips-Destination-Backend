@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { TReact } from "./react.interface";
 
 const reactSchema = new Schema<TReact>(
