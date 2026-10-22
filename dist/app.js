@@ -28,10 +28,11 @@ app.use((0, cookie_parser_1.default)());
 // Strip NoSQL operators / dangerous keys from bodies and query strings
 // before anything downstream sees them.
 app.use(sanitize_1.default);
-// Rate limiting: blanket cap for everyone, strict budget for credential and
-// payment-initiation endpoints.
+// Rate limiting: blanket cap for everyone; moderate budget for all auth
+// actions; strict budget reserved for credential endpoints (per-route in
+// auth.routes.ts) and payment initiation.
 app.use(rateLimiter_1.globalLimiter);
-app.use("/api/v1/auth", rateLimiter_1.authLimiter);
+app.use("/api/v1/auth", rateLimiter_1.authGeneralLimiter);
 app.use("/api/v1/payment/subscriptions", rateLimiter_1.authLimiter);
 app.use((0, cors_1.default)({
     origin: [

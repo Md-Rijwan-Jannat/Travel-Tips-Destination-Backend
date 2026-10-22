@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "Travel-tips-destination-guides",
+      "name": "Aura Trip",
       "dependencies": {
         "axios": "^1.7.7",
         "bcrypt": "^5.1.1",

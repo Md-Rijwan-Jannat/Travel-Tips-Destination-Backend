@@ -31,4 +31,25 @@ export default {
   // rate limiting). 0 = off (safe default); set TRUST_PROXY=1 when deployed
   // behind exactly one trusted proxy.
   trust_proxy: Number(process.env.TRUST_PROXY) || 0,
+
+  // Official Aura Trip support/contact identity (application-facing only —
+  // never used as a user account email).
+  support_email: process.env.SUPPORT_EMAIL || "auratrip.support@gmail.com",
+  // SMTP display name. The actual SMTP credentials stay in EMAIL_USER/EMAIL_PASS.
+  email_from_name: process.env.EMAIL_FROM_NAME || "Aura Trip Support",
+  // Optional override for the SMTP From address. Must be authorized for the
+  // SMTP account (Gmail send-as / Workspace alias); falls back to EMAIL_USER.
+  email_from_address: process.env.EMAIL_FROM_ADDRESS || "",
+
+  // Google OAuth (server-side id_token verification). Only the client ID is
+  // safe to expose publicly; the secret must never leave the server.
+  google_client_id: process.env.GOOGLE_CLIENT_ID || "",
+  google_client_secret: process.env.GOOGLE_CLIENT_SECRET || "",
+
+  // TOTP 2FA: base64-encoded 32-byte key used with AES-256-GCM to encrypt
+  // authenticator secrets at rest. Generate with:
+  //   openssl rand -base64 32
+  totp_encryption_key: process.env.TOTP_ENCRYPTION_KEY || "",
+  // Issuer label shown in authenticator apps.
+  totp_issuer: process.env.TOTP_ISSUER || "Aura Trip",
 };

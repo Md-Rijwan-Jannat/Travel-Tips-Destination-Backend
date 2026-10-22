@@ -1,4 +1,5 @@
 import rateLimit from "express-rate-limit";
+import { NextFunction, Request, Response } from "express";
 
 const tooManyRequestsMessage = {
   success: false,
@@ -26,8 +27,8 @@ export const globalLimiter = createRateLimiter({
   limit: 300,
 });
 
-// Strict budget for credential endpoints (login/register/password reset) and
-// payment initiation — brute-force protection.
+// Strict budget for credential endpoints (login/register/password reset,
+// 2FA login verification) and payment initiation — brute-force protection.
 export const authLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 10,
@@ -37,3 +38,43 @@ export const authLimiter = createRateLimiter({
     message: "Too many attempts, please try again later.",
   },
 });
+
+// Moderate budget for authenticated auth actions (session lookup, 2FA status/
+// enroll/verify, Google link/unlink). These are legitimate per-page requests
+// and must not exhaust the strict credential budget.
+export const authGeneralLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  message: {
+    success: false,
+    statusCode: 429,
+    message: "Too many requests, please try again later.",
+  },
+});
+
+// Strict limiter applied per-route on credential endpoints inside
+// auth.routes.ts. Skipped under NODE_ENV=test so integration suites can
+// exercise login/2FA flows freely (anti-brute-force budgets are a
+// production control; the factory stays fully testable via
+// createRateLimiter).
+export const credentialLimiter =
+  process.env.NODE_ENV === "test"
+    ? (_req: Request, _res: Response, next: NextFunction) => next()
+    : authLimiter;
+
+// Per-IP budget for email OTP delivery (login 2FA codes + account email
+// verification). Complements the MongoDB-backed per-challenge cooldown and
+// per-account send window, which are the authoritative cross-instance
+// limits. Skipped under NODE_ENV=test for the same reason as above.
+export const otpSendLimiter =
+  process.env.NODE_ENV === "test"
+    ? (_req: Request, _res: Response, next: NextFunction) => next()
+    : createRateLimiter({
+        windowMs: 15 * 60 * 1000,
+        limit: 15,
+        message: {
+          success: false,
+          statusCode: 429,
+          message: "Too many requests, please try again later.",
+        },
+      });

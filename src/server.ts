@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import app from "./app";
 import config from "./config";
 import { seed } from "./app/utils/seeding";
+import { UserServices } from "./app/module/Auth/auth.service";
 import { socketServer } from "./socketIoServer";
 
 let server: Server;
@@ -11,6 +12,13 @@ async function main() {
   try {
     await mongoose.connect(config.database_url as string);
     await seed();
+    // Backfill `twoFactorMethod` for accounts created before the field
+    // existed (enabled ⇒ 'authenticator', otherwise 'none'). Idempotent.
+    try {
+      await UserServices.migrateLegacyTwoFactorMethods();
+    } catch (migrationErr) {
+      console.error("twoFactorMethod migration failed", migrationErr);
+    }
     server = app.listen(config.port, () => {
       console.log("MongoDB connected successfully");
       console.log(`App is listening on port ${config.port}`);

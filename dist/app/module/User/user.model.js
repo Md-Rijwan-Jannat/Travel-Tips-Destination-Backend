@@ -85,9 +85,84 @@ const userSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
+    googleSubject: {
+        type: String,
+        default: null,
+        trim: true,
+    },
+    // Optional TOTP 2FA — OFF by default for every account (existing and new,
+    // including Google-created). Authoritative state lives only here, never
+    // in frontend state.
+    twoFactorEnabled: {
+        type: Boolean,
+        default: false,
+    },
+    // Which second factor is active. Exactly one at a time:
+    //   'none'          — 2FA disabled
+    //   'authenticator' — TOTP (+ recovery codes)
+    //   'email'         — email OTP to the verified account email
+    // NO schema default on purpose: legacy documents predate this field and
+    // must be backfilled (see migrateLegacyTwoFactorMethods), not silently
+    // hydrated as 'none' (which would disable their 2FA). `twoFactorEnabled`
+    // stays in sync as a legacy mirror (true iff method !== 'none').
+    twoFactorMethod: {
+        type: String,
+        enum: ['none', 'authenticator', 'email'],
+    },
+    // AES-256-GCM encrypted TOTP secrets (never plaintext, never logged).
+    twoFactorSecretEncrypted: {
+        type: String,
+        default: null,
+        select: false,
+    },
+    twoFactorPendingSecretEncrypted: {
+        type: String,
+        default: null,
+        select: false,
+    },
+    twoFactorPendingExpiresAt: {
+        type: Date,
+        default: null,
+    },
+    twoFactorEnabledAt: {
+        type: Date,
+        default: null,
+    },
+    // Single-use hashed recovery codes (plaintext shown only once at creation).
+    twoFactorRecoveryCodes: {
+        type: [
+            {
+                hash: { type: String, required: true },
+                used: { type: Boolean, default: false },
+                usedAt: { type: Date, default: null },
+            },
+        ],
+        default: [],
+        select: false,
+    },
+    // Whether the account email has been confirmed as under the user's
+    // control (Google-verified at creation/link, or verified via email OTP
+    // from Settings). Required before email OTP can act as a login second
+    // factor. Distinct from `verified`, which is the premium flag.
+    emailVerified: {
+        type: Boolean,
+        default: false,
+    },
+    // Recent email-OTP send timestamps (login 2FA + email verification),
+    // pruned to the rate-limit window on each send. Pruned server-side only.
+    emailOtpSendLog: {
+        type: [Date],
+        default: [],
+        select: false,
+    },
 }, {
     timestamps: true,
 });
+// Partial-unique so multiple users may have no googleSubject (null/missing)
+// while a given Google subject can only ever map to one account. A sparse
+// index alone would NOT work because the schema default writes an explicit
+// null, which sparse indexes still index.
+userSchema.index({ googleSubject: 1 }, { unique: true, partialFilterExpression: { googleSubject: { $type: 'string' } } });
 exports.default = userSchema;
 // Pre-save hook for password hashing
 userSchema.pre('save', function (next) {

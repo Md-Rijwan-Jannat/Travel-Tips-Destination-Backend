@@ -10,7 +10,11 @@ import router from "./app/routes";
 import notFound from "./app/middlewares/notFound";
 import globalErrorHandler from "./app/middlewares/globalErrorhandler";
 import sanitize from "./app/middlewares/sanitize";
-import { authLimiter, globalLimiter } from "./app/middlewares/rateLimiter";
+import {
+  authGeneralLimiter,
+  authLimiter,
+  globalLimiter,
+} from "./app/middlewares/rateLimiter";
 import config from "./config";
 
 const app: Application = express();
@@ -29,10 +33,11 @@ app.use(cookieParser());
 // before anything downstream sees them.
 app.use(sanitize);
 
-// Rate limiting: blanket cap for everyone, strict budget for credential and
-// payment-initiation endpoints.
+// Rate limiting: blanket cap for everyone; moderate budget for all auth
+// actions; strict budget reserved for credential endpoints (per-route in
+// auth.routes.ts) and payment initiation.
 app.use(globalLimiter);
-app.use("/api/v1/auth", authLimiter);
+app.use("/api/v1/auth", authGeneralLimiter);
 app.use("/api/v1/payment/subscriptions", authLimiter);
 
 app.use(

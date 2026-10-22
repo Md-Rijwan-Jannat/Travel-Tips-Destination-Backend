@@ -16,6 +16,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const app_1 = __importDefault(require("./app"));
 const config_1 = __importDefault(require("./config"));
 const seeding_1 = require("./app/utils/seeding");
+const auth_service_1 = require("./app/module/Auth/auth.service");
 const socketIoServer_1 = require("./socketIoServer");
 let server;
 function main() {
@@ -23,6 +24,14 @@ function main() {
         try {
             yield mongoose_1.default.connect(config_1.default.database_url);
             yield (0, seeding_1.seed)();
+            // Backfill `twoFactorMethod` for accounts created before the field
+            // existed (enabled ⇒ 'authenticator', otherwise 'none'). Idempotent.
+            try {
+                yield auth_service_1.UserServices.migrateLegacyTwoFactorMethods();
+            }
+            catch (migrationErr) {
+                console.error("twoFactorMethod migration failed", migrationErr);
+            }
             server = app_1.default.listen(config_1.default.port, () => {
                 console.log("MongoDB connected successfully");
                 console.log(`App is listening on port ${config_1.default.port}`);

@@ -27,7 +27,7 @@ const seed = () => __awaiter(void 0, void 0, void 0, function* () {
         });
         if (!admin) {
             yield user_model_1.User.create({
-                name: "Md Rijwan",
+                name: "Aura Trip Admin",
                 role: user_constants_1.USER_ROLE.ADMIN,
                 image: config_1.default.admin_image,
                 email: config_1.default.admin_email,

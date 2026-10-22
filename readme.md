@@ -18,13 +18,13 @@ Aura Trip is a platform for users to share their travel experiences, tips, and r
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/Md-Rijwan-Jannat/Travel-Tips-Destination-Backend.git
+   git clone https://github.com/Md-Rijwan-Jannat/Aura-Trip-Backend.git
    ```
 
 2. **Navigate into the project directory**:
 
    ```bash
-   cd Travel-Tips-Destination-Backend
+   cd Aura-Trip-Backend
 
    ```
 
@@ -65,7 +65,7 @@ Aura Trip is a platform for users to share their travel experiences, tips, and r
    SIGNATURE_KEY=****\*\*\*****
    AAMARPAY_URL=https://sandbox.aamarpay.com/jsonpost.php
    PAYMENT_VERIFY_URL=https://sandbox.aamarpay.com/api/v1/trxcheck/request.php
-   BACKEND_LIVE_URL=https://travel-tips-destinationco.vercel.app
+   BACKEND_LIVE_URL=https://Aura-Tripco.vercel.app
    FRONTEND_LIVE_URL=https://traveltipsdestinationcommunity.vercel.app
    FRONTEND_BASE_URL=http://localhost:3000
    ```

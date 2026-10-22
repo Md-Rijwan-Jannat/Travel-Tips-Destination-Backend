@@ -13,7 +13,7 @@ export const seed = async () => {
     });
     if (!admin) {
       await User.create({
-        name: "Md Rijwan",
+        name: "Aura Trip Admin",
         role: USER_ROLE.ADMIN,
         image: config.admin_image,
         email: config.admin_email,

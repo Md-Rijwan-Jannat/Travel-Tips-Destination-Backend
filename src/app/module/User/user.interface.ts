@@ -2,6 +2,12 @@
 import { Model, Types } from 'mongoose';
 import { USER_ROLE, USER_STATUS } from '../User/user.constants';
 
+export interface TRecoveryCode {
+  hash: string;
+  used: boolean;
+  usedAt?: Date | null;
+}
+
 export interface TUser {
   name: string;
   email: string;
@@ -17,6 +23,21 @@ export interface TUser {
   isActive: boolean;
   address?: string;
   isDeleted: boolean;
+  // Google OAuth external identity (stable `sub` claim). Sparse-unique.
+  googleSubject?: string | null;
+  // Optional TOTP 2FA — OFF by default for every account.
+  twoFactorEnabled: boolean;
+  // Active second factor: only one at a time. May be missing on legacy docs
+  // (backfilled lazily / at boot from twoFactorEnabled).
+  twoFactorMethod?: 'none' | 'authenticator' | 'email';
+  twoFactorSecretEncrypted?: string | null;
+  twoFactorPendingSecretEncrypted?: string | null;
+  twoFactorPendingExpiresAt?: Date | null;
+  twoFactorEnabledAt?: Date | null;
+  twoFactorRecoveryCodes: TRecoveryCode[];
+  // Account-email confirmation (required for email OTP as a 2FA factor).
+  emailVerified: boolean;
+  emailOtpSendLog: Date[];
 }
 export interface TLoginUser {
   email: string;
