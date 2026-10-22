@@ -11,4 +11,16 @@ const reactSchema = new Schema<TReact>(
   { timestamps: true },
 );
 
+// Uniqueness: at most one reaction per user per post, and one per user per
+// comment (partial indexes — only rows where the field exists participate,
+// so a react is either post-bound or comment-bound, never colliding).
+reactSchema.index(
+  { user: 1, post: 1 },
+  { unique: true, partialFilterExpression: { post: { $type: "objectId" } } },
+);
+reactSchema.index(
+  { user: 1, comment: 1 },
+  { unique: true, partialFilterExpression: { comment: { $type: "objectId" } } },
+);
+
 export const React = mongoose.model<TReact>("React", reactSchema);

@@ -52,4 +52,7 @@ const commentSchema = new Schema<IComment>(
   },
 );
 
+// Hot-path index: comment lists are always fetched per post.
+commentSchema.index({ post: 1 });
+
 export const Comment = mongoose.model<IComment>("Comment", commentSchema);

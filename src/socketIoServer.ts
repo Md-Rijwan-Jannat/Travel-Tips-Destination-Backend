@@ -1,13 +1,28 @@
 import { Server as HttpServer } from "http";
 import { Server as SocketIoServer, Socket } from "socket.io";
+import { Types } from "mongoose";
+import config from "./config";
+import { verifyToken } from "./app/utils/tokenGenerateFunction";
+import { Chat } from "./app/module/Chat/chat.model";
 
 interface ConnectedUser {
   socketId: string;
   userId: string;
 }
 
-export const socketServer = (server: HttpServer): void => {
-  // Set up the Socket.IO server
+const isValidObjectIdString = (value: unknown): value is string =>
+  typeof value === "string" && Types.ObjectId.isValid(value);
+
+const extractId = (value: unknown): string | undefined => {
+  if (isValidObjectIdString(value)) return value;
+  if (typeof value === "object" && value !== null) {
+    const id = (value as { _id?: unknown })._id;
+    if (isValidObjectIdString(id)) return id;
+  }
+  return undefined;
+};
+
+export const socketServer = (server: HttpServer): SocketIoServer => {
   const io = new SocketIoServer(server, {
     pingTimeout: 60000,
     cors: {
@@ -20,91 +35,159 @@ export const socketServer = (server: HttpServer): void => {
     },
   });
 
+  // Handshake authentication: every socket must present a valid access token.
+  // Identity for every later event comes from this verified token — never
+  // from client-sent payloads (which previously allowed any anonymous
+  // client to `setup` into any user's room and eavesdrop).
+  io.use((socket, next) => {
+    const raw: unknown =
+      socket.handshake.auth?.token ?? socket.handshake.headers?.authorization;
+
+    if (typeof raw !== "string" || raw.length === 0) {
+      return next(new Error("Authentication required"));
+    }
+
+    const token = raw.startsWith("Bearer ") ? raw.slice(7) : raw;
+
+    try {
+      const decoded = verifyToken(token, config.jwt_access_secret as string);
+      const userId = typeof decoded.id === "string" ? decoded.id : undefined;
+
+      if (!userId || !Types.ObjectId.isValid(userId)) {
+        return next(new Error("Authentication failed"));
+      }
+
+      socket.data.userId = userId;
+      return next();
+    } catch {
+      return next(new Error("Authentication failed"));
+    }
+  });
+
   const connectedUsers: ConnectedUser[] = [];
 
-  // Handle new socket connection
+  const broadcastOnlineUsers = (): void => {
+    // Deduplicated: one entry per user id even with multiple sockets.
+    io.emit("online users", [
+      ...new Set(connectedUsers.map((user) => user.userId)),
+    ]);
+  };
+
   io.on("connection", (socket: Socket) => {
-    console.log(`Connected to socket.io: ${socket.id}`);
+    const userId = socket.data.userId as string;
 
-    // Setup user when connected
-    socket.on("setup", (userData: any) => {
-      if (userData && userData._id) {
-        // Add user to the connected list
-        connectedUsers.push({ socketId: socket.id, userId: userData._id });
-        socket.join(userData._id);
+    // Register presence when the client signals readiness. The payload is
+    // intentionally ignored — the room is always the verified identity.
+    socket.on("setup", () => {
+      if (!connectedUsers.some((user) => user.socketId === socket.id)) {
+        connectedUsers.push({ socketId: socket.id, userId });
+      }
 
-        console.log("User ID connected:", userData._id);
-        socket.emit("connected");
+      socket.join(userId);
+      socket.emit("connected");
+      broadcastOnlineUsers();
+    });
 
-        // Notify all users about online users
-        io.emit(
-          "online users",
-          connectedUsers.map((user) => user.userId)
-        );
-      } else {
-        console.log("No user ID provided!");
+    // Allow clients to explicitly ask for the presence list.
+    socket.on("get online users", () => {
+      socket.emit("online users", [
+        ...new Set(connectedUsers.map((user) => user.userId)),
+      ]);
+    });
+
+    // Join a chat room only after verifying membership in the database —
+    // any user can no longer eavesdrop on arbitrary conversations.
+    socket.on("join chat", async (room: unknown) => {
+      if (!isValidObjectIdString(room)) {
+        return;
+      }
+
+      try {
+        const isMember = await Chat.exists({ _id: room, users: userId });
+
+        if (!isMember) {
+          socket.emit("unauthorized", room);
+          return;
+        }
+
+        socket.join(room);
+      } catch {
+        socket.emit("unauthorized", room);
       }
     });
 
-    // Join user to a chat room
-    socket.on("join chat", (room: string) => {
-      socket.join(room);
-      console.log("User Joined Room:", room);
-    });
-
-    // Typing event
-    socket.on("typing", (room: string) => {
+    // Typing indicators may only be broadcast into rooms this socket has
+    // been authorized to join (no DB hit per keystroke).
+    socket.on("typing", (room: unknown) => {
+      if (!isValidObjectIdString(room) || !socket.rooms.has(room)) {
+        return;
+      }
       socket.in(room).emit("typing");
     });
 
-    // Stop typing event
-    socket.on("stop typing", (room: string) => {
+    socket.on("stop typing", (room: unknown) => {
+      if (!isValidObjectIdString(room) || !socket.rooms.has(room)) {
+        return;
+      }
       socket.in(room).emit("stop typing");
     });
 
-    // Handle new message event
-    socket.on("new message", (newMessageReceived: any) => {
-      console.log("newMessageReceived", newMessageReceived);
-      const chat = newMessageReceived.chat;
-
-      if (!chat || !chat.users) {
-        return console.log("chat.users not defined");
+    // Deliver a message notification only to the REAL chat members from the
+    // database, and only when the authenticated sender is that member — the
+    // client-supplied `chat.users` list is never trusted for routing, and the
+    // payload's sender cannot be spoofed.
+    socket.on("new message", async (newMessageReceived: unknown) => {
+      if (typeof newMessageReceived !== "object" || newMessageReceived === null) {
+        return;
       }
 
-      // Broadcast the message to all users in the chat, except the sender
-      chat.users.forEach((user: any) => {
-        if (user._id === newMessageReceived.sender._id) return;
+      const message = newMessageReceived as {
+        chat?: unknown;
+        sender?: unknown;
+      };
 
-        socket.in(user._id).emit("message received", newMessageReceived);
-      });
+      const chatId = extractId(message.chat);
+      const senderId = extractId(message.sender);
+
+      if (!chatId || !senderId || senderId !== userId) {
+        return;
+      }
+
+      try {
+        const chat = await Chat.findById(chatId).select("users").lean();
+
+        if (!chat) {
+          return;
+        }
+
+        const members = (chat.users ?? []).map((member) => String(member));
+
+        if (!members.includes(userId)) {
+          return;
+        }
+
+        for (const member of members) {
+          if (member === userId) {
+            continue;
+          }
+          io.to(member).emit("message received", newMessageReceived);
+        }
+      } catch {
+        // Malformed id or DB error → drop the event.
+      }
     });
 
-    // Handle disconnect
     socket.on("disconnect", () => {
-      console.log("USER DISCONNECTED");
-      // Remove user from the connected list
       const index = connectedUsers.findIndex(
-        (user) => user.socketId === socket.id
+        (user) => user.socketId === socket.id,
       );
 
       if (index !== -1) {
-        const disconnectedUser = connectedUsers[index];
         connectedUsers.splice(index, 1);
-
-        console.log("User disconnected:", disconnectedUser.userId);
-
-        // Notify all users about online users
-        io.emit(
-          "online users",
-          connectedUsers.map((user) => user.userId)
-        );
+        broadcastOnlineUsers();
       }
     });
-
-    // Handle setup cleanup (optional)
-    socket.off("setup", () => {
-      console.log("USER DISCONNECTED");
-      socket.leave([...socket.rooms][0]);
-    });
   });
+
+  return io;
 };

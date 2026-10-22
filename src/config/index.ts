@@ -27,4 +27,8 @@ export default {
   // Premium subscription price (BDT) — server-side price table; client-sent
   // amounts are ignored. Defaults to the amount the frontend displays (1000).
   premium_price: Number(process.env.PREMIUM_PRICE) || 1000,
+  // Number of reverse proxies in front of the app (for correct client IPs in
+  // rate limiting). 0 = off (safe default); set TRUST_PROXY=1 when deployed
+  // behind exactly one trusted proxy.
+  trust_proxy: Number(process.env.TRUST_PROXY) || 0,
 };

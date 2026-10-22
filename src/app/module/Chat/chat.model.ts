@@ -34,4 +34,7 @@ const chatSchema = new Schema<IChat>(
   { timestamps: true },
 );
 
+// Hot-path index: chat lookups by membership (`users` contains the caller).
+chatSchema.index({ users: 1 });
+
 export const Chat = model<IChat>("Chat", chatSchema);

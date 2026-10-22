@@ -5,15 +5,35 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Application, Request, Response } from "express";
+import helmet from "helmet";
 import router from "./app/routes";
 import notFound from "./app/middlewares/notFound";
 import globalErrorHandler from "./app/middlewares/globalErrorhandler";
+import sanitize from "./app/middlewares/sanitize";
+import { authLimiter, globalLimiter } from "./app/middlewares/rateLimiter";
+import config from "./config";
 
 const app: Application = express();
+
+// Correct client IPs for rate limiting when behind (exactly one) proxy.
+app.set("trust proxy", config.trust_proxy);
+
+// Security headers
+app.use(helmet());
 
 // Parsers
 app.use(express.json());
 app.use(cookieParser());
+
+// Strip NoSQL operators / dangerous keys from bodies and query strings
+// before anything downstream sees them.
+app.use(sanitize);
+
+// Rate limiting: blanket cap for everyone, strict budget for credential and
+// payment-initiation endpoints.
+app.use(globalLimiter);
+app.use("/api/v1/auth", authLimiter);
+app.use("/api/v1/payment/subscriptions", authLimiter);
 
 app.use(
   cors({

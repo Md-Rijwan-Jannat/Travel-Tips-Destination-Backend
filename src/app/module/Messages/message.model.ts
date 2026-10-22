@@ -25,4 +25,7 @@ const messageSchema = new Schema<IMessage>(
   { timestamps: true },
 );
 
+// Hot-path index: message history is always fetched per chat.
+messageSchema.index({ chat: 1 });
+
 export const Message = model<IMessage>("Message", messageSchema);

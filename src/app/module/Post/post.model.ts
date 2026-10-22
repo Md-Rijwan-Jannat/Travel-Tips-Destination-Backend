@@ -88,4 +88,9 @@ const postSchema = new Schema<TPost>(
   }
 );
 
+// Hot-path indexes: feed/profile lookups by author and by
+// (status, isDeleted) feed filters.
+postSchema.index({ user: 1 });
+postSchema.index({ status: 1, isDeleted: 1 });
+
 export const Post = mongoose.model<TPost>("Post", postSchema);
