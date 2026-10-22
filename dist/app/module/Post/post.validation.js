@@ -20,18 +20,16 @@ const createPostValidationSchema = zod_1.z.object({
         isDeleted: zod_1.z.boolean().optional().default(false),
     }),
 });
+// Update payload whitelist: content fields only. Ownership and integrity
+// fields (user, reportCount, likes, dislikes, isDeleted) are not client-
+// writable through this endpoint; report/like flows have their own routes.
 const updatePostValidationSchema = zod_1.z.object({
     body: zod_1.z.object({
-        user: zod_1.z.string().optional(),
         images: zod_1.z.array(zod_1.z.string()).optional(),
         title: zod_1.z.string().optional(),
         description: zod_1.z.string().optional(),
         category: zod_1.z.array(zod_1.z.string()).optional(),
         status: zod_1.z.enum([post_constants_1.POST_STATUS.FREE, post_constants_1.POST_STATUS.PREMIUM]).optional(),
-        reportCount: zod_1.z.number().optional(),
-        likes: zod_1.z.array(zod_1.z.string()).optional(),
-        dislikes: zod_1.z.array(zod_1.z.string()).optional(),
-        isDeleted: zod_1.z.boolean().optional(),
     }),
 });
 exports.PostValidation = {

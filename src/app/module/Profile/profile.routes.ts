@@ -26,6 +26,7 @@ router.get(
 router.patch(
   '/:id',
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  validateRequest(ProfileValidation.updateMyProfileValidationSchema),
   ProfileControllers.updateMyProfile
 );
 

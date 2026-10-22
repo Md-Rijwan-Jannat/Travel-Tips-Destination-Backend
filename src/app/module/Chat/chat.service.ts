@@ -54,10 +54,13 @@ const createChatIntoDB = async (
 // Fetch all chats for a user
 const getUserChatsFromDB = async (
   userId: string,
-  query: any,
-): Promise<{ result: IChat[]; meta: any }> => {
-  const limit = parseInt(query.limit) || 10;
-  const page = parseInt(query.page) || 1;
+  query: Record<string, unknown>,
+): Promise<{
+  result: IChat[];
+  meta: { total: number; limit: number; page: number; totalPages: number };
+}> => {
+  const limit = parseInt(String(query.limit)) || 10;
+  const page = parseInt(String(query.page)) || 1;
 
   const user = await User.findById(userId);
 
@@ -115,8 +118,6 @@ const createGroupChatInDB = async (
   payload: Partial<IChat>,
   userId: Types.ObjectId,
 ) => {
-  console.log(userId, payload);
-
   const users = payload.users;
 
   if (!userId) {
@@ -144,11 +145,36 @@ const createGroupChatInDB = async (
 };
 
 // Rename group chat
-const renameGroupChat = async (payload: {
-  chatId: string;
-  chatName: string;
-}) => {
+type TRequester = { id: string; role: string };
+
+const assertChatMembership = (
+  chat: { users?: unknown[] | null },
+  requester: TRequester,
+) => {
+  const isMember = (chat.users ?? []).some((u) => String(u) === requester.id);
+  if (!isMember && requester.role !== "ADMIN") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not a participant of this chat",
+    );
+  }
+};
+
+const renameGroupChat = async (
+  payload: {
+    chatId: string;
+    chatName: string;
+  },
+  requester: TRequester,
+) => {
   const { chatId, chatName } = payload;
+
+  const chat = await Chat.findById(chatId).select("users");
+  if (!chat) {
+    throw new AppError(httpStatus.NOT_FOUND, "Chat Not Found");
+  }
+  assertChatMembership(chat, requester);
+
   const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
     { chatName },
@@ -164,9 +190,19 @@ const renameGroupChat = async (payload: {
   return updatedChat;
 };
 
-// Remove a user from group chat
-const removeFromGroup = async (payload: { chatId: string; userId: string }) => {
+// Remove a user from group chat (requester must be a chat participant)
+const removeFromGroup = async (
+  payload: { chatId: string; userId: string },
+  requester: TRequester,
+) => {
   const { chatId, userId } = payload;
+
+  const chat = await Chat.findById(chatId).select("users");
+  if (!chat) {
+    throw new AppError(httpStatus.NOT_FOUND, "Chat Not Found");
+  }
+  assertChatMembership(chat, requester);
+
   const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
     { $pull: { users: userId } },
@@ -176,15 +212,25 @@ const removeFromGroup = async (payload: { chatId: string; userId: string }) => {
     .populate("groupAdmin", "-password");
 
   if (!updatedChat) {
-    throw new Error("Chat Not Found");
+    throw new AppError(httpStatus.NOT_FOUND, "Chat Not Found");
   }
 
   return updatedChat;
 };
 
-// Add a user to group chat
-const addToGroup = async (payload: { chatId: string; userId: string }) => {
+// Add a user to group chat (requester must be a chat participant)
+const addToGroup = async (
+  payload: { chatId: string; userId: string },
+  requester: TRequester,
+) => {
   const { chatId, userId } = payload;
+
+  const chat = await Chat.findById(chatId).select("users");
+  if (!chat) {
+    throw new AppError(httpStatus.NOT_FOUND, "Chat Not Found");
+  }
+  assertChatMembership(chat, requester);
+
   const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
     { $push: { users: userId } },
@@ -194,7 +240,7 @@ const addToGroup = async (payload: { chatId: string; userId: string }) => {
     .populate("groupAdmin", "-password");
 
   if (!updatedChat) {
-    throw new Error("Chat Not Found");
+    throw new AppError(httpStatus.NOT_FOUND, "Chat Not Found");
   }
 
   return updatedChat;

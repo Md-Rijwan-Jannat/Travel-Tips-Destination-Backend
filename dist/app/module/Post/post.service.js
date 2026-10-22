@@ -83,7 +83,7 @@ const getAllPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, function*
     const { categories } = query;
     let queryObj = { isDeleted: false, status: 'FREE' };
     if (categories) {
-        queryObj = Object.assign(Object.assign({}, queryObj), { category: { $in: categories || '' } });
+        queryObj = Object.assign(Object.assign({}, queryObj), { category: { $in: categories } });
     }
     // Build the post query
     const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find(queryObj)
@@ -113,7 +113,7 @@ const getAllPremiumPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, fu
     const { categories } = query;
     let queryObj = { isDeleted: false, status: 'PREMIUM' };
     if (categories) {
-        queryObj = Object.assign(Object.assign({}, queryObj), { category: { $in: categories || '' } });
+        queryObj = Object.assign(Object.assign({}, queryObj), { category: { $in: categories } });
     }
     // Build the post query
     const postQueryBuilder = new QueryBuilder_1.default(post_model_1.Post.find(queryObj)
@@ -138,16 +138,47 @@ const getAllPremiumPostsFromDB = (query) => __awaiter(void 0, void 0, void 0, fu
     // Return result and meta (meta only if the role is ADMIN)
     return { result, meta };
 });
-// Update a post by ID
-const updatePostIntoDB = (postId, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const post = yield post_model_1.Post.findByIdAndUpdate(postId, payload, { new: true });
-    if (!post || post.isDeleted) {
+// Fields an owner may change through the update endpoint. Ownership/integrity
+// fields (user, reportCount, isDeleted, ...) are never writable by the client.
+const EDITABLE_POST_FIELDS = [
+    'title',
+    'description',
+    'images',
+    'category',
+    'status',
+];
+const assertCanModifyPost = (post, requester) => {
+    const isOwner = String(post.user) === requester.id;
+    if (!isOwner && requester.role !== 'ADMIN') {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'You are not allowed to modify this post');
+    }
+};
+// Update a post by ID (owner or admin only)
+const updatePostIntoDB = (postId, payload, requester) => __awaiter(void 0, void 0, void 0, function* () {
+    const existing = yield post_model_1.Post.findById(postId);
+    if (!existing || existing.isDeleted) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Post not found');
+    }
+    assertCanModifyPost(existing, requester);
+    const allowed = {};
+    for (const field of EDITABLE_POST_FIELDS) {
+        if (payload[field] !== undefined) {
+            allowed[field] = payload[field];
+        }
+    }
+    const post = yield post_model_1.Post.findByIdAndUpdate(postId, allowed, { new: true });
+    if (!post) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Post not found');
     }
     return post;
 });
-// Delete a post by ID (soft delete)
-const deletePostFromDB = (postId) => __awaiter(void 0, void 0, void 0, function* () {
+// Delete a post by ID (soft delete, owner or admin only)
+const deletePostFromDB = (postId, requester) => __awaiter(void 0, void 0, void 0, function* () {
+    const existing = yield post_model_1.Post.findById(postId);
+    if (!existing) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Post not found');
+    }
+    assertCanModifyPost(existing, requester);
     const post = yield post_model_1.Post.findByIdAndUpdate(postId, { isDeleted: true }, { new: true });
     if (!post) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'Post not found');

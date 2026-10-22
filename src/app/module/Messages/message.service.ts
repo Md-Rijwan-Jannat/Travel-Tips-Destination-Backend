@@ -4,40 +4,67 @@ import AppError from "../../errors/AppError";
 import { Message } from "./message.model";
 import { Chat } from "../Chat/chat.model";
 
-// Create a new message
+type TRequester = { id: string; role: string };
+
+const getAccessibleChat = async (
+  chatId: string,
+  requester: TRequester,
+): Promise<{ users?: unknown[] | null } | null> => {
+  const chat = await Chat.findById(chatId).select("users");
+  if (!chat) return null;
+
+  const isMember = (chat.users ?? []).some(
+    (u) => String(u) === requester.id,
+  );
+  // Non-members get the same 404 as a missing chat so the endpoint does not
+  // reveal which chat IDs exist.
+  if (!isMember && requester.role !== "ADMIN") return null;
+
+  return chat;
+};
+
+// Create a new message (requester must be a participant of the target chat)
 const createMessageIntoDB = async (
   payload: Partial<IMessage>,
-  userId: string,
+  requester: TRequester,
 ): Promise<IMessage> => {
-  const message = (
-    await (
-      await Message.create({ ...payload, sender: userId })
-    ).populate("sender", "-password")
-  ).populate({
-    path: "chat",
-    populate: [
-      { path: "users", select: "-password" },
-      {
-        path: "latestMessage",
-        populate: { path: "sender", select: "-password" },
-      },
-    ],
-  });
-
-  const chat = await Chat.findById(payload.chat);
-
+  const chat = await getAccessibleChat(String(payload.chat), requester);
   if (!chat) {
     throw new AppError(httpStatus.NOT_FOUND, "Chat not found");
   }
 
+  const created = await Message.create({ ...payload, sender: requester.id });
+
+  const populated = await created.populate([
+    { path: "sender", select: "-password" },
+    {
+      path: "chat",
+      populate: [
+        { path: "users", select: "-password" },
+        {
+          path: "latestMessage",
+          populate: { path: "sender", select: "-password" },
+        },
+      ],
+    },
+  ]);
+
   await Chat.findByIdAndUpdate(payload.chat, {
-    latestMessage: (await message)._id,
+    latestMessage: populated._id,
   });
-  return message;
+  return populated;
 };
 
-// Get all messages by chat ID
-const getMessagesByChatId = async (chatId: string): Promise<IMessage[]> => {
+// Get all messages by chat ID (requester must be a chat participant)
+const getMessagesByChatId = async (
+  chatId: string,
+  requester: TRequester,
+): Promise<IMessage[]> => {
+  const chat = await getAccessibleChat(chatId, requester);
+  if (!chat) {
+    throw new AppError(httpStatus.NOT_FOUND, "Chat not found");
+  }
+
   const messages = await Message.find({ chat: chatId })
     .populate("sender", "-password")
     .populate({

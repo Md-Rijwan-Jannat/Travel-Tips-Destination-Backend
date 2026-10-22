@@ -60,7 +60,7 @@ const deleteMyProfileFromDB = async (id: string, email: string) => {
 };
 
 // Get my posts
-const getMyPosts = async (id: string, query: Record<string, any>) => {
+const getMyPosts = async (id: string, query: Record<string, unknown>) => {
   const user = await User.findById(id);
 
   if (!user) {
@@ -95,7 +95,7 @@ const getMyPosts = async (id: string, query: Record<string, any>) => {
 };
 
 // Get my premium posts
-const getMyPremiumPosts = async (id: string, query: Record<string, any>) => {
+const getMyPremiumPosts = async (id: string, query: Record<string, unknown>) => {
   const user = await User.findById(id);
 
   if (!user) {

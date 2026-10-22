@@ -50,7 +50,7 @@ const getCommentForPost = (0, catchAsync_1.default)((req, res) => __awaiter(void
 }));
 // Update a comment
 const updateComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const comment = yield comment_service_1.CommentService.updateCommentIntoDB(req.params.id, req.body);
+    const comment = yield comment_service_1.CommentService.updateCommentIntoDB(req.params.id, req.body, { id: req.user.id, role: req.user.role });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -60,7 +60,10 @@ const updateComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
 }));
 // Delete a comment
 const deleteComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const comment = yield comment_service_1.CommentService.deleteCommentFromDB(req.params.id);
+    const comment = yield comment_service_1.CommentService.deleteCommentFromDB(req.params.id, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,

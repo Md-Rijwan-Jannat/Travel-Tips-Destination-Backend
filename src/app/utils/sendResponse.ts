@@ -4,7 +4,10 @@ type TMeta = {
   limit: number;
   page: number;
   total: number;
-  totalPage: number;
+  // QueryBuilder.countTotal returns `totalPage`; the chat list returns
+  // `totalPages`. Both optional so either spelling can be forwarded as-is.
+  totalPage?: number;
+  totalPages?: number;
 };
 
 type TResponse<T> = {

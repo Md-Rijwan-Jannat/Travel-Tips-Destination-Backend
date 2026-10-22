@@ -83,7 +83,10 @@ const getAllPremiumPosts = (0, catchAsync_1.default)((req, res) => __awaiter(voi
 }));
 // Update a post by ID
 const updatePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const post = yield post_service_1.PostService.updatePostIntoDB(req.params.id, req.body);
+    const post = yield post_service_1.PostService.updatePostIntoDB(req.params.id, req.body, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -93,7 +96,10 @@ const updatePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
 }));
 // Delete a post by ID
 const deletePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const post = yield post_service_1.PostService.deletePostFromDB(req.params.id);
+    const post = yield post_service_1.PostService.deletePostFromDB(req.params.id, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,

@@ -5,10 +5,10 @@ import { MessageServices } from "./message.service";
 
 // Create a new message
 const createMessage = catchAsync(async (req, res) => {
-  const message = await MessageServices.createMessageIntoDB(
-    req.body,
-    req.user.id,
-  );
+  const message = await MessageServices.createMessageIntoDB(req.body, {
+    id: req.user.id,
+    role: req.user.role,
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -20,7 +20,10 @@ const createMessage = catchAsync(async (req, res) => {
 
 // Fetch all messages for a chat
 const getMessages = catchAsync(async (req, res) => {
-  const messages = await MessageServices.getMessagesByChatId(req.params.chatId);
+  const messages = await MessageServices.getMessagesByChatId(
+    req.params.chatId,
+    { id: req.user.id, role: req.user.role },
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

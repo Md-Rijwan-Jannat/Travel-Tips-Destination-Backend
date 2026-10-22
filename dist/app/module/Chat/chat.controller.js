@@ -70,7 +70,10 @@ const createGroupChat = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
 }));
 // Rename a group chat
 const renameGroup = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const updatedChat = yield chat_service_1.ChatServices.renameGroupChat(req.body);
+    const updatedChat = yield chat_service_1.ChatServices.renameGroupChat(req.body, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -80,7 +83,10 @@ const renameGroup = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 // Remove a user from the group
 const removeFromGroup = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const updatedChat = yield chat_service_1.ChatServices.removeFromGroup(req.body);
+    const updatedChat = yield chat_service_1.ChatServices.removeFromGroup(req.body, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -90,7 +96,10 @@ const removeFromGroup = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
 }));
 // Add a user to the group
 const addToGroup = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const updatedChat = yield chat_service_1.ChatServices.addToGroup(req.body);
+    const updatedChat = yield chat_service_1.ChatServices.addToGroup(req.body, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,

@@ -2,6 +2,8 @@ import express from "express";
 import { PostControllers } from "./post.controller";
 import Auth from "../../middlewares/auth";
 import { USER_ROLE } from "../User/user.constants";
+import validateRequest from "../../middlewares/validateRequest";
+import { PostValidation } from "./post.validation";
 
 const router = express.Router();
 
@@ -45,8 +47,13 @@ router.post(
   PostControllers.createPost,
 );
 
-// update posts
-router.patch("/:id", Auth(USER_ROLE.USER), PostControllers.updatePost);
+// update posts (owner or admin; ownership enforced in the service)
+router.patch(
+  "/:id",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  validateRequest(PostValidation.updatePostValidationSchema),
+  PostControllers.updatePost,
+);
 
 // delete post
 router.delete(

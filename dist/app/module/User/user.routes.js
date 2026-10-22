@@ -10,10 +10,11 @@ const user_controller_1 = require("./user.controller");
 const auth_1 = __importDefault(require("../../middlewares/auth"));
 const user_constants_1 = require("./user.constants");
 const router = express_1.default.Router();
-// Get all normal users (Admin only)
-router.get("/normal-users", user_controller_1.UserControllers.getAllUser);
+// Get all normal users (authenticated: also powers user discovery
+// such as "add connection"; not public)
+router.get("/normal-users", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.getAllUser);
 // Get all premium users (Admin only)
-router.get("/premium-users", user_controller_1.UserControllers.getAlPremiumUser);
+router.get("/premium-users", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN), user_controller_1.UserControllers.getAlPremiumUser);
 // Get all normal users (Admin only)
 router.get("/normal-users-analytics", (0, auth_1.default)(user_constants_1.USER_ROLE.ADMIN, user_constants_1.USER_ROLE.USER), user_controller_1.UserControllers.getAllUserForAnalytics);
 // Get premium users for analytics (Admin only)

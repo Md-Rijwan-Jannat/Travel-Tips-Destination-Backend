@@ -25,7 +25,7 @@ const getPostByIdFromDB = async (postId: string): Promise<TPost | null> => {
 };
 
 // Get all posts for normal posts
-const getAllPostsNormalForAnalytics = async (query: Record<string, any>) => {
+const getAllPostsNormalForAnalytics = async (query: Record<string, unknown>) => {
   const postQueryBuilder = new QueryBuilder(
     Post.find({ isDeleted: false, status: 'FREE' })
       .populate({
@@ -54,7 +54,7 @@ const getAllPostsNormalForAnalytics = async (query: Record<string, any>) => {
 };
 
 // Get all posts for premium posts
-const getAllPostsPremiumForAnalytics = async (query: Record<string, any>) => {
+const getAllPostsPremiumForAnalytics = async (query: Record<string, unknown>) => {
   const postQueryBuilder = new QueryBuilder(
     Post.find({ isDeleted: false, status: 'PREMIUM' })
       .populate({
@@ -83,7 +83,7 @@ const getAllPostsPremiumForAnalytics = async (query: Record<string, any>) => {
 };
 
 // Get all posts (with optional filters)
-const getAllPostsFromDB = async (query: Record<string, any>) => {
+const getAllPostsFromDB = async (query: Record<string, unknown>) => {
   const { categories } = query;
 
   let queryObj: QueryObj = { isDeleted: false, status: 'FREE' };
@@ -91,7 +91,7 @@ const getAllPostsFromDB = async (query: Record<string, any>) => {
   if (categories) {
     queryObj = {
       ...queryObj,
-      category: { $in: categories || '' },
+      category: { $in: categories as string[] },
     };
   }
 
@@ -125,7 +125,7 @@ const getAllPostsFromDB = async (query: Record<string, any>) => {
 };
 
 // Get all premium posts (with optional filters)
-const getAllPremiumPostsFromDB = async (query: Record<string, any>) => {
+const getAllPremiumPostsFromDB = async (query: Record<string, unknown>) => {
   const { categories } = query;
 
   let queryObj: QueryObj = { isDeleted: false, status: 'PREMIUM' };
@@ -133,7 +133,7 @@ const getAllPremiumPostsFromDB = async (query: Record<string, any>) => {
   if (categories) {
     queryObj = {
       ...queryObj,
-      category: { $in: categories || '' },
+      category: { $in: categories as string[] },
     };
   }
 
@@ -166,20 +166,68 @@ const getAllPremiumPostsFromDB = async (query: Record<string, any>) => {
   return { result, meta };
 };
 
-// Update a post by ID
+// Fields an owner may change through the update endpoint. Ownership/integrity
+// fields (user, reportCount, isDeleted, ...) are never writable by the client.
+const EDITABLE_POST_FIELDS = [
+  'title',
+  'description',
+  'images',
+  'category',
+  'status',
+] as const;
+
+type TRequester = { id: string; role: string };
+
+const assertCanModifyPost = (
+  post: { user: unknown },
+  requester: TRequester,
+) => {
+  const isOwner = String(post.user) === requester.id;
+  if (!isOwner && requester.role !== 'ADMIN') {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'You are not allowed to modify this post',
+    );
+  }
+};
+
+// Update a post by ID (owner or admin only)
 const updatePostIntoDB = async (
   postId: string,
-  payload: Partial<TPost>
+  payload: Partial<TPost>,
+  requester: TRequester,
 ): Promise<TPost | null> => {
-  const post = await Post.findByIdAndUpdate(postId, payload, { new: true });
-  if (!post || post.isDeleted) {
+  const existing = await Post.findById(postId);
+  if (!existing || existing.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+  }
+  assertCanModifyPost(existing, requester);
+
+  const allowed: Record<string, unknown> = {};
+  for (const field of EDITABLE_POST_FIELDS) {
+    if (payload[field] !== undefined) {
+      allowed[field] = payload[field];
+    }
+  }
+
+  const post = await Post.findByIdAndUpdate(postId, allowed, { new: true });
+  if (!post) {
     throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
   }
   return post;
 };
 
-// Delete a post by ID (soft delete)
-const deletePostFromDB = async (postId: string): Promise<TPost | null> => {
+// Delete a post by ID (soft delete, owner or admin only)
+const deletePostFromDB = async (
+  postId: string,
+  requester: TRequester,
+): Promise<TPost | null> => {
+  const existing = await Post.findById(postId);
+  if (!existing) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+  }
+  assertCanModifyPost(existing, requester);
+
   const post = await Post.findByIdAndUpdate(
     postId,
     { isDeleted: true },

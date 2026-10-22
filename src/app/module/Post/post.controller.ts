@@ -81,7 +81,10 @@ const getAllPremiumPosts = catchAsync(async (req, res) => {
 
 // Update a post by ID
 const updatePost = catchAsync(async (req, res) => {
-  const post = await PostService.updatePostIntoDB(req.params.id, req.body);
+  const post = await PostService.updatePostIntoDB(req.params.id, req.body, {
+    id: req.user.id,
+    role: req.user.role,
+  });
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -92,7 +95,10 @@ const updatePost = catchAsync(async (req, res) => {
 
 // Delete a post by ID
 const deletePost = catchAsync(async (req, res) => {
-  const post = await PostService.deletePostFromDB(req.params.id);
+  const post = await PostService.deletePostFromDB(req.params.id, {
+    id: req.user.id,
+    role: req.user.role,
+  });
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

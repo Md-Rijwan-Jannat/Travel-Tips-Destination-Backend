@@ -19,7 +19,10 @@ const http_status_1 = __importDefault(require("http-status"));
 const message_service_1 = require("./message.service");
 // Create a new message
 const createMessage = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const message = yield message_service_1.MessageServices.createMessageIntoDB(req.body, req.user.id);
+    const message = yield message_service_1.MessageServices.createMessageIntoDB(req.body, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.CREATED,
         success: true,
@@ -29,7 +32,7 @@ const createMessage = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
 }));
 // Fetch all messages for a chat
 const getMessages = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const messages = yield message_service_1.MessageServices.getMessagesByChatId(req.params.chatId);
+    const messages = yield message_service_1.MessageServices.getMessagesByChatId(req.params.chatId, { id: req.user.id, role: req.user.role });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,

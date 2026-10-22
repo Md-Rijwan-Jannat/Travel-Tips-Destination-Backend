@@ -64,7 +64,7 @@ const getAllCommentFromDB = async (): Promise<IComment[]> => {
 };
 const getCommentForPostFromDB = async (
   postId: string,
-  query: Record<string, any>,
+  query: Record<string, unknown>,
 ): Promise<IComment[]> => {
   const commentQueryBuilder = new QueryBuilder(
     Comment.find({ post: postId, isDeleted: false })
@@ -85,11 +85,33 @@ const getCommentForPostFromDB = async (
   return comments;
 };
 
-// Update a comment by ID
+type TRequester = { id: string; role: string };
+
+const assertCanModifyComment = (
+  comment: { user: unknown },
+  requester: TRequester,
+) => {
+  const isOwner = String(comment.user) === requester.id;
+  if (!isOwner && requester.role !== "ADMIN") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not allowed to modify this comment",
+    );
+  }
+};
+
+// Update a comment by ID (owner or admin only)
 const updateCommentIntoDB = async (
   commentId: string,
   updateData: Partial<IComment>,
+  requester: TRequester,
 ): Promise<IComment | null> => {
+  const existing = await Comment.findById(commentId);
+  if (!existing || existing.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
+  }
+  assertCanModifyComment(existing, requester);
+
   const comment = await Comment.findByIdAndUpdate(commentId, updateData, {
     new: true,
   });
@@ -99,10 +121,17 @@ const updateCommentIntoDB = async (
   return comment;
 };
 
-// Soft delete a comment by ID
+// Delete a comment by ID (owner or admin only)
 const deleteCommentFromDB = async (
   commentId: string,
+  requester: TRequester,
 ): Promise<IComment | null> => {
+  const existing = await Comment.findById(commentId);
+  if (!existing) {
+    throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
+  }
+  assertCanModifyComment(existing, requester);
+
   const comment = await Comment.findByIdAndDelete(commentId);
   if (!comment) {
     throw new AppError(httpStatus.NOT_FOUND, "Comment not found");

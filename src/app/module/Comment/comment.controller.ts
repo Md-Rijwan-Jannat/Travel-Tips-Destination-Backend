@@ -46,6 +46,7 @@ const updateComment = catchAsync(async (req: Request, res: Response) => {
   const comment = await CommentService.updateCommentIntoDB(
     req.params.id,
     req.body,
+    { id: req.user.id, role: req.user.role },
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -57,7 +58,10 @@ const updateComment = catchAsync(async (req: Request, res: Response) => {
 
 // Delete a comment
 const deleteComment = catchAsync(async (req: Request, res: Response) => {
-  const comment = await CommentService.deleteCommentFromDB(req.params.id);
+  const comment = await CommentService.deleteCommentFromDB(req.params.id, {
+    id: req.user.id,
+    role: req.user.role,
+  });
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

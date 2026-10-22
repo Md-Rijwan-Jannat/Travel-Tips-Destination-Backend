@@ -77,8 +77,19 @@ const getCommentForPostFromDB = (postId, query) => __awaiter(void 0, void 0, voi
     const comments = yield commentQueryBuilder.modelQuery;
     return comments;
 });
-// Update a comment by ID
-const updateCommentIntoDB = (commentId, updateData) => __awaiter(void 0, void 0, void 0, function* () {
+const assertCanModifyComment = (comment, requester) => {
+    const isOwner = String(comment.user) === requester.id;
+    if (!isOwner && requester.role !== "ADMIN") {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "You are not allowed to modify this comment");
+    }
+};
+// Update a comment by ID (owner or admin only)
+const updateCommentIntoDB = (commentId, updateData, requester) => __awaiter(void 0, void 0, void 0, function* () {
+    const existing = yield comment_model_1.Comment.findById(commentId);
+    if (!existing || existing.isDeleted) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Comment not found");
+    }
+    assertCanModifyComment(existing, requester);
     const comment = yield comment_model_1.Comment.findByIdAndUpdate(commentId, updateData, {
         new: true,
     });
@@ -87,8 +98,13 @@ const updateCommentIntoDB = (commentId, updateData) => __awaiter(void 0, void 0,
     }
     return comment;
 });
-// Soft delete a comment by ID
-const deleteCommentFromDB = (commentId) => __awaiter(void 0, void 0, void 0, function* () {
+// Delete a comment by ID (owner or admin only)
+const deleteCommentFromDB = (commentId, requester) => __awaiter(void 0, void 0, void 0, function* () {
+    const existing = yield comment_model_1.Comment.findById(commentId);
+    if (!existing) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Comment not found");
+    }
+    assertCanModifyComment(existing, requester);
     const comment = yield comment_model_1.Comment.findByIdAndDelete(commentId);
     if (!comment) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Comment not found");

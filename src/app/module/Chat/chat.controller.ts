@@ -70,7 +70,10 @@ const createGroupChat = catchAsync(async (req, res) => {
 
 // Rename a group chat
 const renameGroup = catchAsync(async (req, res) => {
-  const updatedChat = await ChatServices.renameGroupChat(req.body);
+  const updatedChat = await ChatServices.renameGroupChat(req.body, {
+    id: req.user.id,
+    role: req.user.role,
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -82,7 +85,10 @@ const renameGroup = catchAsync(async (req, res) => {
 
 // Remove a user from the group
 const removeFromGroup = catchAsync(async (req, res) => {
-  const updatedChat = await ChatServices.removeFromGroup(req.body);
+  const updatedChat = await ChatServices.removeFromGroup(req.body, {
+    id: req.user.id,
+    role: req.user.role,
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -94,7 +100,10 @@ const removeFromGroup = catchAsync(async (req, res) => {
 
 // Add a user to the group
 const addToGroup = catchAsync(async (req, res) => {
-  const updatedChat = await ChatServices.addToGroup(req.body);
+  const updatedChat = await ChatServices.addToGroup(req.body, {
+    id: req.user.id,
+    role: req.user.role,
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

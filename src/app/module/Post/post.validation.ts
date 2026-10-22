@@ -19,18 +19,16 @@ const createPostValidationSchema = z.object({
   }),
 });
 
+// Update payload whitelist: content fields only. Ownership and integrity
+// fields (user, reportCount, likes, dislikes, isDeleted) are not client-
+// writable through this endpoint; report/like flows have their own routes.
 const updatePostValidationSchema = z.object({
   body: z.object({
-    user: z.string().optional(),
     images: z.array(z.string()).optional(),
     title: z.string().optional(),
     description: z.string().optional(),
     category: z.array(z.string()).optional(),
     status: z.enum([POST_STATUS.FREE, POST_STATUS.PREMIUM]).optional(),
-    reportCount: z.number().optional(),
-    likes: z.array(z.string()).optional(),
-    dislikes: z.array(z.string()).optional(),
-    isDeleted: z.boolean().optional(),
   }),
 });
 

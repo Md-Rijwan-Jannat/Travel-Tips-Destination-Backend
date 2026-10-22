@@ -54,8 +54,8 @@ const createChatIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, 
 });
 // Fetch all chats for a user
 const getUserChatsFromDB = (userId, query) => __awaiter(void 0, void 0, void 0, function* () {
-    const limit = parseInt(query.limit) || 10;
-    const page = parseInt(query.page) || 1;
+    const limit = parseInt(String(query.limit)) || 10;
+    const page = parseInt(String(query.page)) || 1;
     const user = yield user_model_1.User.findById(userId);
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user is not found");
@@ -94,7 +94,6 @@ const getSingleChatFromDB = (chatId, userId) => __awaiter(void 0, void 0, void 0
 });
 // Create a new group chat
 const createGroupChatInDB = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(userId, payload);
     const users = payload.users;
     if (!userId) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "User ID is not provided");
@@ -115,9 +114,20 @@ const createGroupChatInDB = (payload, userId) => __awaiter(void 0, void 0, void 
         .populate("users", "-password")
         .populate("groupAdmin", "-password");
 });
-// Rename group chat
-const renameGroupChat = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+const assertChatMembership = (chat, requester) => {
+    var _a;
+    const isMember = ((_a = chat.users) !== null && _a !== void 0 ? _a : []).some((u) => String(u) === requester.id);
+    if (!isMember && requester.role !== "ADMIN") {
+        throw new AppError_1.default(http_status_1.default.FORBIDDEN, "You are not a participant of this chat");
+    }
+};
+const renameGroupChat = (payload, requester) => __awaiter(void 0, void 0, void 0, function* () {
     const { chatId, chatName } = payload;
+    const chat = yield chat_model_1.Chat.findById(chatId).select("users");
+    if (!chat) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat Not Found");
+    }
+    assertChatMembership(chat, requester);
     const updatedChat = yield chat_model_1.Chat.findByIdAndUpdate(chatId, { chatName }, { new: true })
         .populate("users", "-password")
         .populate("groupAdmin", "-password");
@@ -126,25 +136,35 @@ const renameGroupChat = (payload) => __awaiter(void 0, void 0, void 0, function*
     }
     return updatedChat;
 });
-// Remove a user from group chat
-const removeFromGroup = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+// Remove a user from group chat (requester must be a chat participant)
+const removeFromGroup = (payload, requester) => __awaiter(void 0, void 0, void 0, function* () {
     const { chatId, userId } = payload;
+    const chat = yield chat_model_1.Chat.findById(chatId).select("users");
+    if (!chat) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat Not Found");
+    }
+    assertChatMembership(chat, requester);
     const updatedChat = yield chat_model_1.Chat.findByIdAndUpdate(chatId, { $pull: { users: userId } }, { new: true })
         .populate("users", "-password")
         .populate("groupAdmin", "-password");
     if (!updatedChat) {
-        throw new Error("Chat Not Found");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat Not Found");
     }
     return updatedChat;
 });
-// Add a user to group chat
-const addToGroup = (payload) => __awaiter(void 0, void 0, void 0, function* () {
+// Add a user to group chat (requester must be a chat participant)
+const addToGroup = (payload, requester) => __awaiter(void 0, void 0, void 0, function* () {
     const { chatId, userId } = payload;
+    const chat = yield chat_model_1.Chat.findById(chatId).select("users");
+    if (!chat) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat Not Found");
+    }
+    assertChatMembership(chat, requester);
     const updatedChat = yield chat_model_1.Chat.findByIdAndUpdate(chatId, { $push: { users: userId } }, { new: true })
         .populate("users", "-password")
         .populate("groupAdmin", "-password");
     if (!updatedChat) {
-        throw new Error("Chat Not Found");
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat Not Found");
     }
     return updatedChat;
 });
