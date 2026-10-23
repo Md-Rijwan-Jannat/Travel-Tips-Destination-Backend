@@ -36,7 +36,7 @@ const createChatIntoDB = async (
       select: "-password",
     });
 
-    return sanitizeChatLatestMessage(existingChat[0]);
+    return sanitizeChatLatestMessage(existingChat[0], userId);
   }
 
   const chatData: Partial<IChat> = {
@@ -52,7 +52,7 @@ const createChatIntoDB = async (
     .populate("latestMessage");
 
   return fullChat
-    ? (sanitizeChatLatestMessage(fullChat) as unknown as IChat)
+    ? (sanitizeChatLatestMessage(fullChat, userId) as unknown as IChat)
     : (null as unknown as IChat);
 };
 
@@ -99,7 +99,7 @@ const getUserChatsFromDB = async (
       ...(chat.toObject() as unknown as Record<string, unknown>),
       unreadCount: unreadMap.get(String(chat._id)) ?? 0,
     };
-    return sanitizeChatLatestMessage(plain as unknown as IChat);
+    return sanitizeChatLatestMessage(plain as unknown as IChat, userId);
   });
 
   const meta = {
@@ -132,7 +132,7 @@ const getSingleChatFromDB = async (
     );
   }
 
-  return sanitizeChatLatestMessage(chat);
+  return sanitizeChatLatestMessage(chat, userId);
 };
 
 // Create a new group chat

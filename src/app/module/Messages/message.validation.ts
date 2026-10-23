@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Types } from "mongoose";
 import { MESSAGE_TYPE_VALUES } from "./message.interface";
+import { REACTION_TYPES } from "../Reacts/react.interface";
 
 const objectId = z
   .string()
@@ -50,7 +51,19 @@ const editMessageValidationSchema = z.object({
   }),
 });
 
+// Body for POST /messages/:id/react — mirrors the post reaction contract.
+const reactToMessageValidationSchema = z.object({
+  body: z.object({
+    type: z.enum(REACTION_TYPES, {
+      errorMap: () => ({
+        message: `Reaction type must be one of: ${REACTION_TYPES.join(", ")}`,
+      }),
+    }),
+  }),
+});
+
 export const MessageValidation = {
   createMessageValidationSchema,
   editMessageValidationSchema,
+  reactToMessageValidationSchema,
 };

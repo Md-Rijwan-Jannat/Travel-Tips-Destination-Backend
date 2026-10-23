@@ -37,6 +37,22 @@ router.post(
   MessageController.consumeViewOnceMedia,
 );
 
+// Emoji reactions (paths are two segments, so they never shadow /:chatId or /:id)
+router.post(
+  "/:id/react",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  messageActionLimiter,
+  validateRequest(MessageValidation.reactToMessageValidationSchema),
+  MessageController.reactToMessage,
+);
+
+router.delete(
+  "/:id/react",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  messageActionLimiter,
+  MessageController.removeReaction,
+);
+
 router.patch(
   "/:id",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),

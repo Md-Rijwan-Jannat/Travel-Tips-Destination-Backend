@@ -580,6 +580,7 @@ const deleteMessageIntoDB = async (
   message.mediaMeta = null;
   message.location = null;
   message.liveLocation = null;
+  message.reactions = [];
   await message.save();
 
   await Chat.updateOne(

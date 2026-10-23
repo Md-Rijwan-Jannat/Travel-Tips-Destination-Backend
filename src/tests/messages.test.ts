@@ -617,3 +617,128 @@ describe("History and read receipts", () => {
     ).toBe(0);
   });
 });
+
+describe("Message reactions", () => {
+  const react = (
+    messageId: string,
+    type: string,
+    token = aliceToken,
+  ) =>
+    request(app)
+      .post(`/messages/${messageId}/react`)
+      .set("authorization", token)
+      .send({ type });
+
+  const unreact = (messageId: string, token = aliceToken) =>
+    request(app)
+      .delete(`/messages/${messageId}/react`)
+      .set("authorization", token);
+
+  const historyFor = async (token: string) => {
+    const res = await request(app)
+      .get(`/messages/${dm._id}`)
+      .set("authorization", token)
+      .expect(200);
+    return res.body.data;
+  };
+
+  it("returns a per-viewer summary and stores the reaction", async () => {
+    const created = await send({ chat: String(dm._id), content: "react me" });
+    const id = created.body.data._id;
+
+    const res = await react(id, "love");
+    expect(res.status).toBe(200);
+    expect(res.body.data.reactions).toEqual({
+      counts: { love: 1 },
+      total: 1,
+      myReaction: "love",
+    });
+
+    const [forAlice, forBob] = await Promise.all([
+      historyFor(aliceToken),
+      historyFor(bobToken),
+    ]);
+    expect(forAlice[0].reactions.myReaction).toBe("love");
+    expect(forBob[0].reactions.myReaction).toBeNull();
+    expect(forBob[0].reactions.counts.love).toBe(1);
+    // The raw user list must never appear in read responses.
+    expect(Array.isArray(forAlice[0].reactions)).toBe(false);
+  });
+
+  it("switching type replaces the previous reaction (never stacks)", async () => {
+    const created = await send({ chat: String(dm._id), content: "switch" });
+    const id = created.body.data._id;
+
+    await react(id, "like");
+    const res = await react(id, "haha");
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.reactions.counts).toEqual({ haha: 1 });
+    expect(res.body.data.reactions.total).toBe(1);
+    expect(res.body.data.reactions.myReaction).toBe("haha");
+
+    const stored = await Message.findById(id).lean();
+    expect(stored?.reactions).toHaveLength(1);
+    expect(String(stored?.reactions?.[0]?.user)).toBe(String(alice._id));
+  });
+
+  it("aggregates multiple members with each viewer's own myReaction", async () => {
+    const created = await send({ chat: String(dm._id), content: "group" });
+    const id = created.body.data._id;
+
+    await react(id, "love", aliceToken);
+    await react(id, "haha", bobToken);
+
+    const [forAlice, forBob] = await Promise.all([
+      historyFor(aliceToken),
+      historyFor(bobToken),
+    ]);
+    expect(forAlice[0].reactions.total).toBe(2);
+    expect(forAlice[0].reactions.counts).toEqual({ love: 1, haha: 1 });
+    expect(forAlice[0].reactions.myReaction).toBe("love");
+    expect(forBob[0].reactions.myReaction).toBe("haha");
+  });
+
+  it("removes the caller's reaction (idempotent)", async () => {
+    const created = await send({ chat: String(dm._id), content: "unreact" });
+    const id = created.body.data._id;
+
+    await react(id, "sad");
+    const removed = await unreact(id);
+    expect(removed.status).toBe(200);
+    expect(removed.body.data.reactions.total).toBe(0);
+    expect(removed.body.data.reactions.myReaction).toBeNull();
+
+    const again = await unreact(id);
+    expect(again.status).toBe(200);
+    expect(again.body.data.reactions.total).toBe(0);
+
+    const stored = await Message.findById(id).lean();
+    expect(stored?.reactions).toHaveLength(0);
+  });
+
+  it("rejects an unsupported reaction type with 400", async () => {
+    const created = await send({ chat: String(dm._id), content: "bad type" });
+    const res = await react(created.body.data._id, "shrug");
+    expect(res.status).toBe(400);
+  });
+
+  it("hides messages from non-members (404, not 403)", async () => {
+    const created = await send({ chat: String(dm._id), content: "private" });
+    const res = await react(created.body.data._id, "love", malloryToken);
+    expect(res.status).toBe(404);
+  });
+
+  it("refuses to react to a soft-deleted message", async () => {
+    const created = await send({ chat: String(dm._id), content: "bye" });
+    const id = created.body.data._id;
+
+    await request(app)
+      .delete(`/messages/${id}`)
+      .set("authorization", aliceToken)
+      .expect(200);
+
+    const res = await react(id, "love");
+    expect(res.status).toBe(404);
+  });
+});

@@ -110,6 +110,37 @@ const consumeViewOnceMedia = catchAsync(async (req, res) => {
   });
 });
 
+// Set/switch the caller's emoji reaction on a message
+const reactToMessage = catchAsync(async (req, res) => {
+  const data = await MessageServices.reactToMessageIntoDB(
+    req.params.id,
+    req.body.type,
+    { id: req.user.id, role: req.user.role },
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Reaction saved",
+    data,
+  });
+});
+
+// Remove the caller's emoji reaction (idempotent)
+const removeReaction = catchAsync(async (req, res) => {
+  const data = await MessageServices.removeReactionFromMessageIntoDB(
+    req.params.id,
+    { id: req.user.id, role: req.user.role },
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Reaction removed",
+    data,
+  });
+});
+
 export const MessageController = {
   createMessage,
   getMessages,
@@ -118,4 +149,6 @@ export const MessageController = {
   editMessage,
   deleteMessage,
   consumeViewOnceMedia,
+  reactToMessage,
+  removeReaction,
 };
