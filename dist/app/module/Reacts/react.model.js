@@ -35,15 +35,23 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.React = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+const react_interface_1 = require("./react.interface");
 const reactSchema = new mongoose_1.Schema({
     user: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User", required: true },
     post: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Post" },
     comment: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Comment" },
-    type: { type: String, enum: ["like", "dislike"], required: true },
+    short: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Short" },
+    type: { type: String, enum: react_interface_1.REACT_STORE_TYPES, required: true },
 }, { timestamps: true });
-// Uniqueness: at most one reaction per user per post, and one per user per
-// comment (partial indexes — only rows where the field exists participate,
-// so a react is either post-bound or comment-bound, never colliding).
+// Uniqueness: at most one reaction per user per target (partial indexes —
+// only rows where the field exists participate, so a react is bound to
+// exactly one target kind). These constraints make concurrent duplicate
+// reactions impossible at the database level.
 reactSchema.index({ user: 1, post: 1 }, { unique: true, partialFilterExpression: { post: { $type: "objectId" } } });
 reactSchema.index({ user: 1, comment: 1 }, { unique: true, partialFilterExpression: { comment: { $type: "objectId" } } });
+reactSchema.index({ user: 1, short: 1 }, { unique: true, partialFilterExpression: { short: { $type: "objectId" } } });
+// Summary aggregation hot path: counts by type for one target.
+reactSchema.index({ post: 1, type: 1 });
+reactSchema.index({ comment: 1, type: 1 });
+reactSchema.index({ short: 1, type: 1 });
 exports.React = mongoose_1.default.model("React", reactSchema);

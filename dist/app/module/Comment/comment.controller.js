@@ -20,7 +20,10 @@ const http_status_1 = __importDefault(require("http-status"));
 // Add a new comment
 const addComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.user;
-    const comment = yield comment_service_1.CommentService.addCommentIntoDB(req.body, id);
+    const comment = yield comment_service_1.CommentService.addCommentIntoDB(req.body, id, {
+        id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.CREATED,
         success: true,
@@ -38,14 +41,15 @@ const getAllComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         data: comment,
     });
 }));
-// Get all comments for a post
+// Get all comments for a post (sorted; resolves the featured comment)
 const getCommentForPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const comments = yield comment_service_1.CommentService.getCommentForPostFromDB(req.params.postId, req.query);
+    const { comments, sortMode, featuredCommentId, featuredMode } = yield comment_service_1.CommentService.getCommentForPostFromDB(req.params.postId, req.query, { id: req.user.id, role: req.user.role });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Comments retrieved successfully",
         data: comments,
+        meta: { sortMode, featuredCommentId, featuredMode },
     });
 }));
 // Update a comment
@@ -58,9 +62,9 @@ const updateComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         data: comment,
     });
 }));
-// Delete a comment
+// Delete a comment (soft delete; owner or authorized moderator)
 const deleteComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const comment = yield comment_service_1.CommentService.deleteCommentFromDB(req.params.id, {
+    yield comment_service_1.CommentService.deleteCommentFromDB(req.params.id, {
         id: req.user.id,
         role: req.user.role,
     });
@@ -68,12 +72,12 @@ const deleteComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
         statusCode: http_status_1.default.OK,
         success: true,
         message: "Comment deleted successfully",
-        data: comment,
+        data: "",
     });
 }));
 // Reply to a comment
 const replyToComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const reply = yield comment_service_1.CommentService.replyToCommentFromDB(req.params.id, req.body, req.user.id);
+    const reply = yield comment_service_1.CommentService.replyToCommentFromDB(req.params.id, req.body, req.user.id, { id: req.user.id, role: req.user.role });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.CREATED,
         success: true,
@@ -81,10 +85,22 @@ const replyToComment = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
         data: reply,
     });
 }));
+// Get all comments for a short (audience + group membership enforced)
+const getCommentsForShort = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { comments, sortMode, featuredCommentId, featuredMode } = yield comment_service_1.CommentService.getCommentsForShortFromDB(req.params.shortId, req.query, { id: req.user.id, role: req.user.role });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Comments retrieved successfully",
+        data: comments,
+        meta: { sortMode, featuredCommentId, featuredMode },
+    });
+}));
 exports.CommentControllers = {
     addComment,
     getAllComment,
     getCommentForPost,
+    getCommentsForShort,
     updateComment,
     deleteComment,
     replyToComment,

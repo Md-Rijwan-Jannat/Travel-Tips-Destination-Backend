@@ -41,10 +41,17 @@ const commentSchema = new mongoose_1.Schema({
         ref: "User",
         required: true,
     },
+    // Either a post OR a short (shorts reuse the comment/reply system so
+    // comment logic is not duplicated).
     post: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "Post",
-        required: true,
+        default: null,
+    },
+    short: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "Short",
+        default: null,
     },
     text: {
         type: String,
@@ -79,9 +86,16 @@ const commentSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false,
     },
+    editedAt: {
+        type: Date,
+        default: null,
+    },
 }, {
     timestamps: true,
 });
-// Hot-path index: comment lists are always fetched per post.
+// Hot-path index: comment lists are always fetched per post / per short.
 commentSchema.index({ post: 1 });
+commentSchema.index({ short: 1 });
+// Thread lookups: children of a (possibly soft-deleted) parent comment.
+commentSchema.index({ parentComment: 1 });
 exports.Comment = mongoose_1.default.model("Comment", commentSchema);

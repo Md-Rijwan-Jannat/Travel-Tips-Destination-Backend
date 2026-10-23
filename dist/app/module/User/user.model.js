@@ -42,6 +42,12 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         trim: true,
     },
+    // Profile cover/banner photo (independent from `image` avatar).
+    coverImage: {
+        type: String,
+        trim: true,
+        default: null,
+    },
     role: {
         type: String,
         enum: ['ADMIN', 'USER'],

@@ -12,9 +12,13 @@ const comment_routes_1 = require("../module/Comment/comment.routes");
 const react_routes_1 = require("../module/Reacts/react.routes");
 const message_routes_1 = require("../module/Messages/message.routes");
 const chat_routes_1 = require("../module/Chat/chat.routes");
+const call_routes_1 = require("../module/Call/call.routes");
 const payment_routes_1 = require("../module/payment/payment.routes");
 const story_routes_1 = require("../module/Story/story.routes");
 const review_routes_1 = require("../module/Review/review.routes");
+const group_routes_1 = require("../module/Group/group.routes");
+const notification_routes_1 = require("../module/Notification/notification.routes");
+const short_routes_1 = require("../module/Short/short.routes");
 const router = express_1.default.Router();
 const moduleRoutes = [
     {
@@ -54,12 +58,28 @@ const moduleRoutes = [
         route: message_routes_1.MessageRoutes,
     },
     {
+        path: "/calls",
+        route: call_routes_1.CallRoutes,
+    },
+    {
         path: "/stories",
         route: story_routes_1.StoryRoutes,
     },
     {
         path: "/reviews",
         route: review_routes_1.ReviewRoutes,
+    },
+    {
+        path: "/groups",
+        route: group_routes_1.GroupRoutes,
+    },
+    {
+        path: "/notifications",
+        route: notification_routes_1.NotificationRoutes,
+    },
+    {
+        path: "/shorts",
+        route: short_routes_1.ShortRoutes,
     },
 ];
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

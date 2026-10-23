@@ -19,7 +19,10 @@ const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const http_status_1 = __importDefault(require("http-status"));
 // Create a new post
 const createPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const post = yield post_service_1.PostService.createPostIntoDB(req.body, req.user.id);
+    const post = yield post_service_1.PostService.createPostIntoDB(req.body, req.user.id, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.CREATED,
         success: true,
@@ -29,7 +32,10 @@ const createPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
 }));
 // Get a post by ID
 const getPostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const post = yield post_service_1.PostService.getPostByIdFromDB(req.params.id);
+    const post = yield post_service_1.PostService.getPostByIdFromDB(req.params.id, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -39,7 +45,10 @@ const getPostById = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 // Get all posts
 const getAllPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { result, meta } = yield post_service_1.PostService.getAllPostsFromDB(req.query);
+    const { result, meta } = yield post_service_1.PostService.getAllPostsFromDB(req.query, {
+        id: req.user.id,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -72,13 +81,79 @@ const getAllPostsPremiumForAnalytics = (0, catchAsync_1.default)((req, res) => _
 }));
 // Get all  premium posts
 const getAllPremiumPosts = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { result, meta } = yield post_service_1.PostService.getAllPremiumPostsFromDB(req.query);
+    const { result, meta } = yield post_service_1.PostService.getAllPremiumPostsFromDB(req.query, { id: req.user.id, role: req.user.role });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
         message: 'Premium posts retrieved successfully',
         meta: meta,
         data: result,
+    });
+}));
+// Pin/unpin a post to the owner's profile (owner or admin only)
+const setPin = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const pinned = req.body.pinned === true;
+    const post = yield post_service_1.PostService.setProfilePinFromDB(req.params.id, pinned, {
+        id: req.user.id,
+        role: req.user.role,
+    });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: pinned ? 'Post pinned' : 'Post unpinned',
+        data: post,
+    });
+}));
+// Feature/unfeature a post on the owner's profile (owner or admin only)
+const setFeature = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const featured = req.body.featured === true;
+    const post = yield post_service_1.PostService.setProfileFeatureFromDB(req.params.id, featured, { id: req.user.id, role: req.user.role });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: featured ? 'Post featured' : 'Post unfeatured',
+        data: post,
+    });
+}));
+// Pin/unpin a post inside its community group (group staff only)
+const setGroupPin = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const post = yield post_service_1.PostService.setGroupPinFromDB(req.params.id, req.body.pinned === true, { id: req.user.id, role: req.user.role });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'Group pin updated',
+        data: post,
+    });
+}));
+// Hide a post from the caller's own feed (never affects other viewers)
+const hidePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield post_service_1.PostService.hidePostForUserFromDB(req.params.id, req.user.id, { id: req.user.id, role: req.user.role });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'Post hidden from your feed',
+        data: result,
+    });
+}));
+// Undo a per-user hide
+const unhidePost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield post_service_1.PostService.unhidePostForUserFromDB(req.params.id, req.user.id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'Post restored to your feed',
+        data: result,
+    });
+}));
+// Persist the post owner's comment ordering + featured-comment policy
+const updateCommentSettings = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const post = yield post_service_1.PostService.updateCommentSettingsFromDB(req.params.id, req.body, { id: req.user.id, role: req.user.role });
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: 'Comment settings updated',
+        data: (_a = post.commentSettings) !== null && _a !== void 0 ? _a : null,
     });
 }));
 // Update a post by ID
@@ -119,7 +194,7 @@ const recoverPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
 }));
 // Report a post by ID
 const reportPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const post = yield post_service_1.PostService.reportPostFromDB(req.params.id, req.body, req.user.id);
+    const post = yield post_service_1.PostService.reportPostFromDB(req.params.id, req.body, req.user.id, { id: req.user.id, role: req.user.role });
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
@@ -138,4 +213,10 @@ exports.PostControllers = {
     deletePost,
     recoverPost,
     reportPost,
+    setPin,
+    setFeature,
+    setGroupPin,
+    hidePost,
+    unhidePost,
+    updateCommentSettings,
 };

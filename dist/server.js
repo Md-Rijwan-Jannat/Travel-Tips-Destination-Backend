@@ -18,6 +18,8 @@ const config_1 = __importDefault(require("./config"));
 const seeding_1 = require("./app/utils/seeding");
 const auth_service_1 = require("./app/module/Auth/auth.service");
 const socketIoServer_1 = require("./socketIoServer");
+const socketRegistry_1 = require("./app/utils/socketRegistry");
+const migrations_1 = require("./app/utils/migrations");
 let server;
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -32,11 +34,17 @@ function main() {
             catch (migrationErr) {
                 console.error("twoFactorMethod migration failed", migrationErr);
             }
+            try {
+                yield (0, migrations_1.runCommunityMigrations)();
+            }
+            catch (migrationErr) {
+                console.error("community migrations failed", migrationErr);
+            }
             server = app_1.default.listen(config_1.default.port, () => {
                 console.log("MongoDB connected successfully");
                 console.log(`App is listening on port ${config_1.default.port}`);
             });
-            (0, socketIoServer_1.socketServer)(server);
+            (0, socketRegistry_1.registerSocketServer)((0, socketIoServer_1.socketServer)(server));
         }
         catch (err) {
             console.log(err);

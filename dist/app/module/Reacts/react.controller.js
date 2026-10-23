@@ -40,7 +40,7 @@ const getAllDislikes = (0, catchAsync_1.default)((req, res) => __awaiter(void 0,
 const like = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { targetId, type } = req.params;
     const userId = req.user.id;
-    const react = yield react_service_1.ReactService.likeFromDB(userId, targetId, type);
+    const react = yield react_service_1.ReactService.likeFromDB(userId, targetId, type, { id: userId, role: req.user.role });
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
@@ -52,7 +52,10 @@ const like = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, v
 const unlike = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { targetId, type } = req.params;
     const userId = req.user.id;
-    yield react_service_1.ReactService.unlikeFromDB(userId, targetId, type);
+    yield react_service_1.ReactService.unlikeFromDB(userId, targetId, type, {
+        id: userId,
+        role: req.user.role,
+    });
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
@@ -64,7 +67,7 @@ const unlike = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0,
 const dislike = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { targetId, type } = req.params;
     const userId = req.user.id;
-    const react = yield react_service_1.ReactService.dislikeFromDB(userId, targetId, type);
+    const react = yield react_service_1.ReactService.dislikeFromDB(userId, targetId, type, { id: userId, role: req.user.role });
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
@@ -76,12 +79,75 @@ const dislike = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0
 const undislike = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { targetId, type } = req.params;
     const userId = req.user.id;
-    yield react_service_1.ReactService.undislikeFromDB(userId, targetId, type);
+    yield react_service_1.ReactService.undislikeFromDB(userId, targetId, type, { id: userId, role: req.user.role });
     (0, sendResponse_1.default)(res, {
         statusCode: 200,
         success: true,
         message: `You undisliked the ${type} successfully.`,
         data: "",
+    });
+}));
+// Unified: set (create or change) one of the seven reactions.
+const setReaction = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { targetType, targetId } = req.params;
+    const userId = req.user.id;
+    if (!react_service_1.ReactService.isTargetType(targetType)) {
+        (0, sendResponse_1.default)(res, {
+            statusCode: 400,
+            success: false,
+            message: "Invalid target type. Use post, comment or short.",
+            data: "",
+        });
+        return;
+    }
+    const summary = yield react_service_1.ReactService.setReactionFromDB(userId, targetType, targetId, req.body.type, { id: userId, role: req.user.role });
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Reaction updated successfully.",
+        data: summary,
+    });
+}));
+// Unified: remove the caller's reaction from a target.
+const removeReaction = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { targetType, targetId } = req.params;
+    const userId = req.user.id;
+    if (!react_service_1.ReactService.isTargetType(targetType)) {
+        (0, sendResponse_1.default)(res, {
+            statusCode: 400,
+            success: false,
+            message: "Invalid target type. Use post, comment or short.",
+            data: "",
+        });
+        return;
+    }
+    const summary = yield react_service_1.ReactService.removeReactionFromDB(userId, targetType, targetId, { id: userId, role: req.user.role });
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Reaction removed successfully.",
+        data: summary,
+    });
+}));
+// Aggregated counts per type + the caller's own reaction.
+const getReactionSummary = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { targetType, targetId } = req.params;
+    const userId = req.user.id;
+    if (!react_service_1.ReactService.isTargetType(targetType)) {
+        (0, sendResponse_1.default)(res, {
+            statusCode: 400,
+            success: false,
+            message: "Invalid target type. Use post, comment or short.",
+            data: "",
+        });
+        return;
+    }
+    const summary = yield react_service_1.ReactService.getReactionSummary(userId, targetType, targetId, { requester: { id: userId, role: req.user.role } });
+    (0, sendResponse_1.default)(res, {
+        statusCode: 200,
+        success: true,
+        message: "Reaction summary retrieved successfully",
+        data: summary,
     });
 }));
 exports.ReactController = {
@@ -91,4 +157,7 @@ exports.ReactController = {
     unlike,
     dislike,
     undislike,
+    setReaction,
+    removeReaction,
+    getReactionSummary,
 };

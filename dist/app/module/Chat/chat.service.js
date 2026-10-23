@@ -15,9 +15,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatServices = void 0;
 const mongoose_1 = require("mongoose");
 const chat_model_1 = require("./chat.model");
+const message_model_1 = require("../Messages/message.model");
+const message_service_1 = require("../Messages/message.service");
 const user_model_1 = require("../User/user.model");
 const AppError_1 = __importDefault(require("../../errors/AppError"));
 const http_status_1 = __importDefault(require("http-status"));
+const socketRegistry_1 = require("../../utils/socketRegistry");
 // Create chart service
 const createChatIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_model_1.User.findById(payload.user);
@@ -39,7 +42,7 @@ const createChatIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, 
             path: "latestMessage.sender",
             select: "-password",
         });
-        return existingChat[0];
+        return (0, message_service_1.sanitizeChatLatestMessage)(existingChat[0], userId);
     }
     const chatData = {
         chatName: "sender",
@@ -50,7 +53,9 @@ const createChatIntoDB = (payload, userId) => __awaiter(void 0, void 0, void 0, 
     const fullChat = yield chat_model_1.Chat.findOne({ _id: newChat._id })
         .populate("users", "-password")
         .populate("latestMessage");
-    return fullChat;
+    return fullChat
+        ? (0, message_service_1.sanitizeChatLatestMessage)(fullChat, userId)
+        : null;
 });
 // Fetch all chats for a user
 const getUserChatsFromDB = (userId, query) => __awaiter(void 0, void 0, void 0, function* () {
@@ -70,13 +75,26 @@ const getUserChatsFromDB = (userId, query) => __awaiter(void 0, void 0, void 0, 
         .skip((page - 1) * limit)
         .limit(limit);
     const total = yield chat_model_1.Chat.countDocuments({ users: userId });
+    // Unread counts: messages in these chats the current user has not read
+    // (readBy is maintained by the message fetch/mark-read flows).
+    const chatIds = chats.map((c) => c._id);
+    const unread = yield message_model_1.Message.aggregate([
+        { $match: { chat: { $in: chatIds }, readBy: { $ne: new mongoose_1.Types.ObjectId(userId) } } },
+        { $group: { _id: "$chat", count: { $sum: 1 } } },
+    ]);
+    const unreadMap = new Map(unread.map((u) => [String(u._id), u.count]));
+    const result = chats.map((chat) => {
+        var _a;
+        const plain = Object.assign(Object.assign({}, chat.toObject()), { unreadCount: (_a = unreadMap.get(String(chat._id))) !== null && _a !== void 0 ? _a : 0 });
+        return (0, message_service_1.sanitizeChatLatestMessage)(plain, userId);
+    });
     const meta = {
         total,
         limit,
         page,
         totalPages: Math.ceil(total / limit),
     };
-    return { result: chats, meta };
+    return { result: result, meta };
 });
 // Fetch a single chat by chatId
 const getSingleChatFromDB = (chatId, userId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -90,7 +108,7 @@ const getSingleChatFromDB = (chatId, userId) => __awaiter(void 0, void 0, void 0
     if (!chat) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat not found or user is not a participant");
     }
-    return chat;
+    return (0, message_service_1.sanitizeChatLatestMessage)(chat, userId);
 });
 // Create a new group chat
 const createGroupChatInDB = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
@@ -150,17 +168,31 @@ const removeFromGroup = (payload, requester) => __awaiter(void 0, void 0, void 0
     if (!updatedChat) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat Not Found");
     }
+    // Drop any live socket room subscription the removed user still holds.
+    (0, socketRegistry_1.removeUserFromRoom)(userId, chatId);
     return updatedChat;
 });
 // Add a user to group chat (requester must be a chat participant)
 const addToGroup = (payload, requester) => __awaiter(void 0, void 0, void 0, function* () {
     const { chatId, userId } = payload;
-    const chat = yield chat_model_1.Chat.findById(chatId).select("users");
+    const chat = yield chat_model_1.Chat.findById(chatId).select("users isGroupChat");
     if (!chat) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Chat Not Found");
     }
     assertChatMembership(chat, requester);
-    const updatedChat = yield chat_model_1.Chat.findByIdAndUpdate(chatId, { $push: { users: userId } }, { new: true })
+    // Only group conversations accept extra members — a DM can never grow a
+    // third participant, and only real users can be added.
+    if (!chat.isGroupChat) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Only group chats can add members");
+    }
+    if (!mongoose_1.Types.ObjectId.isValid(userId)) {
+        throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid user id");
+    }
+    const user = yield user_model_1.User.findById(userId).select("_id");
+    if (!user) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "This user not found");
+    }
+    const updatedChat = yield chat_model_1.Chat.findByIdAndUpdate(chatId, { $addToSet: { users: userId } }, { new: true })
         .populate("users", "-password")
         .populate("groupAdmin", "-password");
     if (!updatedChat) {

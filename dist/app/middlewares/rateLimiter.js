@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.otpSendLimiter = exports.credentialLimiter = exports.authGeneralLimiter = exports.authLimiter = exports.globalLimiter = exports.createRateLimiter = void 0;
+exports.callActionLimiter = exports.messageActionLimiter = exports.commentActionLimiter = exports.socialActionLimiter = exports.inviteFlowLimiter = exports.groupActionLimiter = exports.otpSendLimiter = exports.credentialLimiter = exports.authGeneralLimiter = exports.authLimiter = exports.globalLimiter = exports.createRateLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const tooManyRequestsMessage = {
     success: false,
@@ -71,5 +71,83 @@ exports.otpSendLimiter = process.env.NODE_ENV === "test"
             success: false,
             statusCode: 429,
             message: "Too many requests, please try again later.",
+        },
+    });
+// Group/community write actions (create group, join, post). Generous so
+// normal usage never trips it; still caps automation and spam runs.
+exports.groupActionLimiter = process.env.NODE_ENV === "test"
+    ? (_req, _res, next) => next()
+    : (0, exports.createRateLimiter)({
+        windowMs: 15 * 60 * 1000,
+        limit: 60,
+        message: {
+            success: false,
+            statusCode: 429,
+            message: "Too many requests, please try again later.",
+        },
+    });
+// Invite preview/redemption: strict because these endpoints are guessable
+// by token and public previews must not be scraped at scale.
+exports.inviteFlowLimiter = process.env.NODE_ENV === "test"
+    ? (_req, _res, next) => next()
+    : (0, exports.createRateLimiter)({
+        windowMs: 15 * 60 * 1000,
+        limit: 40,
+        message: {
+            success: false,
+            statusCode: 429,
+            message: "Too many requests, please try again later.",
+        },
+    });
+// Social interaction actions (reactions, comments, reports). Generous for
+// humans — including long-press reaction-picker drags — while capping
+// automation and count-inflation runs. Skipped under NODE_ENV=test.
+exports.socialActionLimiter = process.env.NODE_ENV === "test"
+    ? (_req, _res, next) => next()
+    : (0, exports.createRateLimiter)({
+        windowMs: 15 * 60 * 1000,
+        limit: 240,
+        message: {
+            success: false,
+            statusCode: 429,
+            message: "Too many requests, please try again later.",
+        },
+    });
+// Comment submissions specifically (spam/rapid-fire protection). Tighter
+// than the general social budget. Skipped under NODE_ENV=test.
+exports.commentActionLimiter = process.env.NODE_ENV === "test"
+    ? (_req, _res, next) => next()
+    : (0, exports.createRateLimiter)({
+        windowMs: 15 * 60 * 1000,
+        limit: 60,
+        message: {
+            success: false,
+            statusCode: 429,
+            message: "Too many comments, please slow down.",
+        },
+    });
+// Message send + edit/delete budget (per IP; per-socket budgets also exist
+// on the realtime channel). Skipped under NODE_ENV=test.
+exports.messageActionLimiter = process.env.NODE_ENV === "test"
+    ? (_req, _res, next) => next()
+    : (0, exports.createRateLimiter)({
+        windowMs: 60 * 1000,
+        limit: 60,
+        message: {
+            success: false,
+            statusCode: 429,
+            message: "Too many messages, please slow down.",
+        },
+    });
+// Call invitation budget (prevents call-spam). Skipped under NODE_ENV=test.
+exports.callActionLimiter = process.env.NODE_ENV === "test"
+    ? (_req, _res, next) => next()
+    : (0, exports.createRateLimiter)({
+        windowMs: 15 * 60 * 1000,
+        limit: 30,
+        message: {
+            success: false,
+            statusCode: 429,
+            message: "Too many call attempts, please try again later.",
         },
     });

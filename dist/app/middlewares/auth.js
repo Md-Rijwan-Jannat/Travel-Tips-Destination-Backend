@@ -41,7 +41,7 @@ const Auth = (...requiredRoles) => {
         if (requiredRoles && !requiredRoles.includes(role)) {
             throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "You are not authorized");
         }
-        req.user = decoded;
+        req.user = Object.assign(Object.assign({}, decoded), { id: String((decoded === null || decoded === void 0 ? void 0 : decoded.id) || (decoded === null || decoded === void 0 ? void 0 : decoded._id) || user._id), _id: String(user._id) });
         next();
     }));
 };

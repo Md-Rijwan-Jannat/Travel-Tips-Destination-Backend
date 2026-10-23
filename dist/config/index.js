@@ -53,4 +53,16 @@ exports.default = {
     totp_encryption_key: process.env.TOTP_ENCRYPTION_KEY || "",
     // Issuer label shown in authenticator apps.
     totp_issuer: process.env.TOTP_ISSUER || "Aura Trip",
+    // ---- Aura Trip Shorts ----
+    // Maximum allowed video duration in seconds (validated from the declared
+    // duration; enforced at the origin too when remote verification is on).
+    short_max_duration_seconds: Number(process.env.SHORT_MAX_DURATION_SECONDS) || 180,
+    // Maximum allowed video size in megabytes.
+    short_max_size_mb: Number(process.env.SHORT_MAX_SIZE_MB) || 100,
+    // When "true", every uploaded Short is HEAD-verified at the origin
+    // (status 200 + video/* content-type + content-length within limits)
+    // before it can leave PROCESSING. Requires outbound network access.
+    short_remote_verify: process.env.SHORT_REMOTE_VERIFY === "true",
+    // Comma-separated allow-list of hosts a Short video URL may live on.
+    short_allowed_media_hosts: process.env.SHORT_ALLOWED_MEDIA_HOSTS || "res.cloudinary.com",
 };

@@ -676,6 +676,9 @@ const getReactableMessage = async (
   chatId: string;
   members: string[];
 }> => {
+  if (!Types.ObjectId.isValid(messageId)) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid message id");
+  }
   const message = await Message.findById(messageId).select("chat isDeleted");
   if (!message || message.isDeleted) {
     throw new AppError(httpStatus.NOT_FOUND, "Message not found");
@@ -684,9 +687,12 @@ const getReactableMessage = async (
   if (!chat) {
     throw new AppError(httpStatus.NOT_FOUND, "Message not found");
   }
-  const members = (chat.users ?? []).map((u) => String(u));
-  if (!members.includes(requester.id) && requester.role !== "ADMIN") {
-    throw new AppError(httpStatus.NOT_FOUND, "Message not found");
+  const members = (chat.users ?? []).map((u) =>
+    String((u as { _id?: unknown })?._id ?? u),
+  );
+  const reqUserId = String(requester.id ?? "");
+  if (!members.includes(reqUserId) && requester.role !== "ADMIN") {
+    throw new AppError(httpStatus.FORBIDDEN, "You are not a member of this chat");
   }
   return {
     messageId: message._id as Types.ObjectId,
@@ -775,9 +781,10 @@ const removeReactionFromMessageIntoDB = async (
 ): Promise<TMessageReactionUpdate> => {
   const target = await getReactableMessage(messageId, requester);
 
+  const userObjectId = new Types.ObjectId(requester.id);
   const updated = await Message.findOneAndUpdate(
     { _id: target.messageId },
-    { $pull: { reactions: { user: new Types.ObjectId(requester.id) } } },
+    { $pull: { reactions: { user: userObjectId } } },
     { new: true },
   ).select("reactions");
 
