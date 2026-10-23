@@ -3,7 +3,7 @@ import sendResponse from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import { MessageServices } from "./message.service";
 
-// Create a new message
+// Create a new message (typed: TEXT / IMAGE / VOICE / LOCATION / EMOJI / VIEW_ONCE_IMAGE)
 const createMessage = catchAsync(async (req, res) => {
   const message = await MessageServices.createMessageIntoDB(req.body, {
     id: req.user.id,
@@ -64,9 +64,58 @@ const getUnreadCount = catchAsync(async (req, res) => {
   });
 });
 
+// Edit a message (sender-only; text/caption or location coordinates)
+const editMessage = catchAsync(async (req, res) => {
+  const message = await MessageServices.editMessageIntoDB(
+    req.params.id,
+    req.body,
+    { id: req.user.id, role: req.user.role },
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Message updated successfully",
+    data: message,
+  });
+});
+
+// Soft-delete a message (sender-only)
+const deleteMessage = catchAsync(async (req, res) => {
+  await MessageServices.deleteMessageIntoDB(req.params.id, {
+    id: req.user.id,
+    role: req.user.role,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Message deleted successfully",
+    data: "",
+  });
+});
+
+// Consume view-once media: returns the URL exactly once, then 410 forever
+const consumeViewOnceMedia = catchAsync(async (req, res) => {
+  const data = await MessageServices.consumeViewOnceMediaFromDB(
+    req.params.id,
+    { id: req.user.id, role: req.user.role },
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "View-once media opened",
+    data,
+  });
+});
+
 export const MessageController = {
   createMessage,
   getMessages,
   markChatRead,
   getUnreadCount,
+  editMessage,
+  deleteMessage,
+  consumeViewOnceMedia,
 };

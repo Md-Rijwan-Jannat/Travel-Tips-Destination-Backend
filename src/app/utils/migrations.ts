@@ -2,6 +2,7 @@ import { Post } from "../module/Post/post.model";
 import { Short } from "../module/Short/short.model";
 import { Group } from "../module/Group/group.model";
 import { GroupMembership } from "../module/Group/groupMembership.model";
+import { Message } from "../module/Messages/message.model";
 
 /**
  * Idempotent, backward-compatible backfills for the community upgrade.
@@ -41,5 +42,56 @@ export const runCommunityMigrations = async (): Promise<void> => {
   await Short.updateMany(
     { status: { $exists: false } },
     { $set: { status: "PUBLISHED" } },
+  );
+
+  // 5) Social-feed upgrade: normalize new post fields for pre-existing
+  //    documents (reads tolerate missing fields too — this just makes the
+  //    data explicit). Idempotent and non-destructive.
+  await Post.updateMany(
+    { mediaLayout: { $exists: false } },
+    { $set: { mediaLayout: "AUTO" } },
+  );
+  await Post.updateMany(
+    { pinned: { $exists: false } },
+    { $set: { pinned: false, pinnedAt: null } },
+  );
+  await Post.updateMany(
+    { featured: { $exists: false } },
+    { $set: { featured: false, featuredAt: null } },
+  );
+  await Post.updateMany(
+    { groupPinnedAt: { $exists: false } },
+    { $set: { groupPinnedAt: null } },
+  );
+  await Post.updateMany(
+    { isEdited: { $exists: false } },
+    { $set: { isEdited: false, editedAt: null } },
+  );
+  await Post.updateMany(
+    { "commentSettings.sortMode": { $exists: false } },
+    {
+      $set: {
+        "commentSettings.sortMode": "TOP",
+        "commentSettings.highlightMode": "AUTO",
+        "commentSettings.highlightedComment": null,
+      },
+    },
+  );
+
+  // 6) Rich-message upgrade: pre-existing messages are plain text and carry
+  //    no edit/delete/view-once state. Idempotent, non-destructive.
+  await Message.updateMany(
+    { messageType: { $exists: false } },
+    {
+      $set: {
+        messageType: "TEXT",
+        isEdited: false,
+        editedAt: null,
+        isDeleted: false,
+        deletedAt: null,
+        viewOnceConsumedAt: null,
+        viewOnceConsumedBy: null,
+      },
+    },
   );
 };

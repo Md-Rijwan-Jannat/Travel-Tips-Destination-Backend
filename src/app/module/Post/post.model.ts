@@ -1,6 +1,13 @@
 import mongoose, { Schema } from "mongoose";
 import { TPost } from "./post.interface";
-import { CategoryEnum, POST_STATUS } from "./post.constants";
+import {
+  CategoryEnum,
+  COMMENT_HIGHLIGHT_MODES,
+  COMMENT_SORT_MODES,
+  MEDIA_LAYOUT,
+  MEDIA_LAYOUT_LIST,
+  POST_STATUS,
+} from "./post.constants";
 
 // Report Schema
 const reportSchema = new Schema(
@@ -35,7 +42,7 @@ const postSchema = new Schema<TPost>(
     },
     images: {
       type: [String],
-      required: true,
+      default: [],
     },
     title: {
       type: String,
@@ -121,6 +128,66 @@ const postSchema = new Schema<TPost>(
       type: Date,
       default: null,
     },
+    // Author-selected multi-image grid layout. AUTO lets readers pick the
+    // automatic layout for the image count (back-compat for old documents).
+    mediaLayout: {
+      type: String,
+      enum: [...MEDIA_LAYOUT_LIST],
+      default: MEDIA_LAYOUT.AUTO,
+    },
+    // Edited marker shown beside the post once the owner changes it.
+    isEdited: {
+      type: Boolean,
+      default: false,
+    },
+    editedAt: {
+      type: Date,
+      default: null,
+    },
+    // Profile pin — at most ONE pinned post per author (partial unique
+    // index below). Only ever set by the owner (or a platform admin).
+    pinned: {
+      type: Boolean,
+      default: false,
+    },
+    pinnedAt: {
+      type: Date,
+      default: null,
+    },
+    // Profile highlight/feature — at most ONE featured post per author.
+    featured: {
+      type: Boolean,
+      default: false,
+    },
+    featuredAt: {
+      type: Date,
+      default: null,
+    },
+    // Group pin — a separate concept scoped to a community group (set by
+    // group staff). Never touches the author's profile pin slot.
+    groupPinnedAt: {
+      type: Date,
+      default: null,
+    },
+    // Comment ordering + featured-comment policy. Stored on the post so it
+    // survives reloads and applies to every viewer of this post's comments.
+    commentSettings: {
+      sortMode: {
+        type: String,
+        enum: COMMENT_SORT_MODES,
+        default: "TOP",
+      },
+      highlightMode: {
+        type: String,
+        enum: COMMENT_HIGHLIGHT_MODES,
+        default: "AUTO",
+      },
+      highlightedComment: {
+        type: Schema.Types.ObjectId,
+        ref: "Comment",
+        default: null,
+      },
+    },
   },
   {
     timestamps: true,
@@ -135,5 +202,29 @@ postSchema.index({ status: 1, isDeleted: 1 });
 postSchema.index({ group: 1, moderationStatus: 1, createdAt: -1 });
 postSchema.index({ group: 1, reportCount: -1 });
 postSchema.index({ groupVisibility: 1, moderationStatus: 1 });
+// Profile ordering: pinned/featured posts sort to the top of the author's
+// profile; group pins sort inside their group feed.
+postSchema.index({ user: 1, pinnedAt: -1 });
+postSchema.index({ user: 1, featuredAt: -1 });
+postSchema.index({ group: 1, groupPinnedAt: -1 });
+// One pinned post per author / one featured post per author — enforced at
+// the database level so concurrent requests cannot both win. Explicit names
+// avoid colliding with the plain `{ user: 1 }` index above.
+postSchema.index(
+  { user: 1 },
+  {
+    name: "user_pin_unique",
+    unique: true,
+    partialFilterExpression: { pinned: true },
+  },
+);
+postSchema.index(
+  { user: 1 },
+  {
+    name: "user_feature_unique",
+    unique: true,
+    partialFilterExpression: { featured: true },
+  },
+);
 
 export const Post = mongoose.model<TPost>("Post", postSchema);

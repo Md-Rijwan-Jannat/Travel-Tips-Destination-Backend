@@ -1,6 +1,5 @@
 import AppError from "../../errors/AppError";
 import {
-  REACTION_TYPES,
   REACT_STORE_TYPES,
   TReact,
   TReactTargetType,
@@ -14,7 +13,7 @@ import { Post } from "../Post/post.model";
 import { Comment } from "../Comment/comment.model";
 import { Short } from "../Short/short.model";
 import { ShortService } from "../Short/short.service";
-import { assertCanInteractWithPost, assertCanViewPost } from "../Post/postAccess";
+import { assertCanInteractWithPost } from "../Post/postAccess";
 import mongoose from "mongoose";
 
 type TRequester = { id: string; role: string };
@@ -25,7 +24,7 @@ const isTargetType = (value: unknown): value is TReactTargetType =>
   typeof value === "string" && (TARGET_TYPES as string[]).includes(value);
 
 const isStoreType = (value: unknown): value is TReactStoreType =>
-  typeof value === "string" && (REACT_STORE_TYPES as string[]).includes(value);
+  typeof value === "string" && (REACT_STORE_TYPES as readonly string[]).includes(value);
 
 const targetFilter = (
   targetType: TReactTargetType,
@@ -109,10 +108,12 @@ const syncLegacyLikeArray = async (
   userId: string,
   isLike: boolean,
 ): Promise<void> => {
-  const model = targetType === "post" ? Post : Comment;
-  await model.findByIdAndUpdate(targetId, {
-    [isLike ? "$addToSet" : "$pull"]: { likes: userId },
-  });
+  const op = isLike ? "$addToSet" : "$pull";
+  if (targetType === "post") {
+    await Post.findByIdAndUpdate(targetId, { [op]: { likes: userId } });
+  } else {
+    await Comment.findByIdAndUpdate(targetId, { [op]: { likes: userId } });
+  }
 };
 
 // Like a post or comment
@@ -397,7 +398,13 @@ const getReactionSummary = async (
   }
 
   const rows = await React.aggregate<{ _id: TReactStoreType; count: number }>([
-    { $match: targetFilter(targetType, targetId) as unknown as Record<string, unknown> },
+    // Mongoose does not cast aggregate $match values — build the filter with
+    // a real ObjectId so the match actually hits the collection.
+    {
+      $match: {
+        [targetType]: new mongoose.Types.ObjectId(targetId),
+      } as unknown as Record<string, unknown>,
+    },
     { $group: { _id: "$type", count: { $sum: 1 } } },
   ]);
 

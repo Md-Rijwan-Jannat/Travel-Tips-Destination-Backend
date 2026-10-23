@@ -1,5 +1,10 @@
 import { Document, Types } from "mongoose";
-import { POST_STATUS } from "./post.constants";
+import {
+  POST_STATUS,
+  TCommentHighlightMode,
+  TCommentSortMode,
+  TMediaLayout,
+} from "./post.constants";
 
 export type TCategoryType =
   | "Adventure"
@@ -14,6 +19,15 @@ export type TCategoryType =
   | "Road Trip"
   | "City Tours"
   | "Photography";
+
+export interface TCommentSettings {
+  /** Owner's default ordering for the comment list. */
+  sortMode: TCommentSortMode;
+  /** How the featured comment is chosen. */
+  highlightMode: TCommentHighlightMode;
+  /** Owner's manual featured comment (null in AUTO mode). */
+  highlightedComment: Types.ObjectId | null;
+}
 
 export interface TPost extends Document {
   user: Types.ObjectId;
@@ -36,6 +50,21 @@ export interface TPost extends Document {
   moderationReason?: string | null;
   moderatedBy?: Types.ObjectId | null;
   moderatedAt?: Date | null;
+  /** Author-selected multi-image grid layout (AUTO = renderer decides). */
+  mediaLayout?: TMediaLayout;
+  /** Edited marker for the caption/media. */
+  isEdited?: boolean;
+  editedAt?: Date | null;
+  /** Pinned to the author's profile — at most ONE per author. */
+  pinned?: boolean;
+  pinnedAt?: Date | null;
+  /** Featured on the author's profile — at most ONE per author. */
+  featured?: boolean;
+  featuredAt?: Date | null;
+  /** Pinned inside its community group (group staff action). */
+  groupPinnedAt?: Date | null;
+  /** Comment ordering + featured-comment settings owned by the author. */
+  commentSettings?: TCommentSettings;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -54,6 +83,7 @@ export interface QueryObj {
   $or?: unknown;
   $and?: unknown;
   moderationStatus?: unknown;
+  _id?: { $nin: Types.ObjectId[] };
 }
 
 export type TPostStatus = keyof typeof POST_STATUS;

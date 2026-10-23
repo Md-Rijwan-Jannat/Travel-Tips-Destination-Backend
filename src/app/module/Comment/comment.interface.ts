@@ -11,6 +11,8 @@ export interface IComment extends Document {
   replies: Types.ObjectId[];
   parentComment?: Types.ObjectId;
   isDeleted: boolean;
+  /** Set when the author edits their comment (shown as "Edited"). */
+  editedAt?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { IChat } from "./chat.interface";
 import { Chat } from "./chat.model";
 import { Message } from "../Messages/message.model";
+import { sanitizeChatLatestMessage } from "../Messages/message.service";
 import { User } from "../User/user.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
@@ -35,7 +36,7 @@ const createChatIntoDB = async (
       select: "-password",
     });
 
-    return existingChat[0];
+    return sanitizeChatLatestMessage(existingChat[0]);
   }
 
   const chatData: Partial<IChat> = {
@@ -50,7 +51,9 @@ const createChatIntoDB = async (
     .populate("users", "-password")
     .populate("latestMessage");
 
-  return fullChat as IChat;
+  return fullChat
+    ? (sanitizeChatLatestMessage(fullChat) as unknown as IChat)
+    : (null as unknown as IChat);
 };
 
 // Fetch all chats for a user
@@ -91,10 +94,13 @@ const getUserChatsFromDB = async (
   ]);
   const unreadMap = new Map(unread.map((u) => [String(u._id), u.count]));
 
-  const result = chats.map((chat) => ({
-    ...(chat.toObject() as unknown as Record<string, unknown>),
-    unreadCount: unreadMap.get(String(chat._id)) ?? 0,
-  }));
+  const result = chats.map((chat) => {
+    const plain = {
+      ...(chat.toObject() as unknown as Record<string, unknown>),
+      unreadCount: unreadMap.get(String(chat._id)) ?? 0,
+    };
+    return sanitizeChatLatestMessage(plain as unknown as IChat);
+  });
 
   const meta = {
     total,
@@ -126,7 +132,7 @@ const getSingleChatFromDB = async (
     );
   }
 
-  return chat;
+  return sanitizeChatLatestMessage(chat);
 };
 
 // Create a new group chat
@@ -244,15 +250,31 @@ const addToGroup = async (
 ) => {
   const { chatId, userId } = payload;
 
-  const chat = await Chat.findById(chatId).select("users");
+  const chat = await Chat.findById(chatId).select("users isGroupChat");
   if (!chat) {
     throw new AppError(httpStatus.NOT_FOUND, "Chat Not Found");
   }
   assertChatMembership(chat, requester);
 
+  // Only group conversations accept extra members — a DM can never grow a
+  // third participant, and only real users can be added.
+  if (!chat.isGroupChat) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Only group chats can add members",
+    );
+  }
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid user id");
+  }
+  const user = await User.findById(userId).select("_id");
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user not found");
+  }
+
   const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
-    { $push: { users: userId } },
+    { $addToSet: { users: userId } },
     { new: true },
   )
     .populate("users", "-password")

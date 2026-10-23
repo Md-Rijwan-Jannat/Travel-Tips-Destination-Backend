@@ -44,6 +44,7 @@ router.get(
 router.post(
   "/",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  validateRequest(PostValidation.createPostValidationSchema),
   PostControllers.createPost,
 );
 
@@ -67,6 +68,49 @@ router.put(
   "/report/:id/",
   Auth(USER_ROLE.ADMIN, USER_ROLE.USER),
   PostControllers.reportPost,
+);
+
+// Profile pin / highlight (owner or admin; enforced in the service)
+router.post(
+  "/:id/pin",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  validateRequest(PostValidation.setFlagValidationSchema),
+  PostControllers.setPin,
+);
+
+router.post(
+  "/:id/feature",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  validateRequest(PostValidation.setFeatureFlagValidationSchema),
+  PostControllers.setFeature,
+);
+
+// Group pin (group staff with `group:moderatePost`)
+router.post(
+  "/:id/group-pin",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  validateRequest(PostValidation.setFlagValidationSchema),
+  PostControllers.setGroupPin,
+);
+
+// Per-user hide from my feed (idempotent)
+router.post(
+  "/:id/hide",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  PostControllers.hidePost,
+);
+router.delete(
+  "/:id/hide",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  PostControllers.unhidePost,
+);
+
+// Post owner's comment ordering + featured-comment policy
+router.patch(
+  "/:id/comment-settings",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  validateRequest(PostValidation.commentSettingsValidationSchema),
+  PostControllers.updateCommentSettings,
 );
 
 export const PostRoutes = router;

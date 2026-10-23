@@ -33,7 +33,10 @@ const getPostById = catchAsync(async (req, res) => {
 
 // Get all posts
 const getAllPosts = catchAsync(async (req, res) => {
-  const { result, meta } = await PostService.getAllPostsFromDB(req.query);
+  const { result, meta } = await PostService.getAllPostsFromDB(req.query, {
+    id: req.user.id,
+    role: req.user.role,
+  });
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -74,7 +77,8 @@ const getAllPostsPremiumForAnalytics = catchAsync(async (req, res) => {
 // Get all  premium posts
 const getAllPremiumPosts = catchAsync(async (req, res) => {
   const { result, meta } = await PostService.getAllPremiumPostsFromDB(
-    req.query
+    req.query,
+    { id: req.user.id, role: req.user.role }
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -82,6 +86,96 @@ const getAllPremiumPosts = catchAsync(async (req, res) => {
     message: 'Premium posts retrieved successfully',
     meta: meta,
     data: result,
+  });
+});
+
+// Pin/unpin a post to the owner's profile (owner or admin only)
+const setPin = catchAsync(async (req, res) => {
+  const pinned = req.body.pinned === true;
+  const post = await PostService.setProfilePinFromDB(req.params.id, pinned, {
+    id: req.user.id,
+    role: req.user.role,
+  });
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: pinned ? 'Post pinned' : 'Post unpinned',
+    data: post,
+  });
+});
+
+// Feature/unfeature a post on the owner's profile (owner or admin only)
+const setFeature = catchAsync(async (req, res) => {
+  const featured = req.body.featured === true;
+  const post = await PostService.setProfileFeatureFromDB(
+    req.params.id,
+    featured,
+    { id: req.user.id, role: req.user.role }
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: featured ? 'Post featured' : 'Post unfeatured',
+    data: post,
+  });
+});
+
+// Pin/unpin a post inside its community group (group staff only)
+const setGroupPin = catchAsync(async (req, res) => {
+  const post = await PostService.setGroupPinFromDB(
+    req.params.id,
+    req.body.pinned === true,
+    { id: req.user.id, role: req.user.role }
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Group pin updated',
+    data: post,
+  });
+});
+
+// Hide a post from the caller's own feed (never affects other viewers)
+const hidePost = catchAsync(async (req, res) => {
+  const result = await PostService.hidePostForUserFromDB(
+    req.params.id,
+    req.user.id,
+    { id: req.user.id, role: req.user.role }
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Post hidden from your feed',
+    data: result,
+  });
+});
+
+// Undo a per-user hide
+const unhidePost = catchAsync(async (req, res) => {
+  const result = await PostService.unhidePostForUserFromDB(
+    req.params.id,
+    req.user.id
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Post restored to your feed',
+    data: result,
+  });
+});
+
+// Persist the post owner's comment ordering + featured-comment policy
+const updateCommentSettings = catchAsync(async (req, res) => {
+  const post = await PostService.updateCommentSettingsFromDB(
+    req.params.id,
+    req.body,
+    { id: req.user.id, role: req.user.role }
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Comment settings updated',
+    data: post.commentSettings ?? null,
   });
 });
 
@@ -151,4 +245,10 @@ export const PostControllers = {
   deletePost,
   recoverPost,
   reportPost,
+  setPin,
+  setFeature,
+  setGroupPin,
+  hidePost,
+  unhidePost,
+  updateCommentSettings,
 };

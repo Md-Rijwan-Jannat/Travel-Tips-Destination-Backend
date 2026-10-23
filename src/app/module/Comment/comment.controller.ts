@@ -30,18 +30,20 @@ const getAllComment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Get all comments for a post
+// Get all comments for a post (sorted; resolves the featured comment)
 const getCommentForPost = catchAsync(async (req: Request, res: Response) => {
-  const comments = await CommentService.getCommentForPostFromDB(
-    req.params.postId,
-    req.query,
-    { id: req.user.id, role: req.user.role },
-  );
+  const { comments, sortMode, featuredCommentId, featuredMode } =
+    await CommentService.getCommentForPostFromDB(
+      req.params.postId,
+      req.query,
+      { id: req.user.id, role: req.user.role },
+    );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Comments retrieved successfully",
     data: comments,
+    meta: { sortMode, featuredCommentId, featuredMode },
   });
 });
 
@@ -60,9 +62,9 @@ const updateComment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// Delete a comment
+// Delete a comment (soft delete; owner or authorized moderator)
 const deleteComment = catchAsync(async (req: Request, res: Response) => {
-  const comment = await CommentService.deleteCommentFromDB(req.params.id, {
+  await CommentService.deleteCommentFromDB(req.params.id, {
     id: req.user.id,
     role: req.user.role,
   });
@@ -70,7 +72,7 @@ const deleteComment = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Comment deleted successfully",
-    data: comment,
+    data: "",
   });
 });
 
@@ -92,16 +94,18 @@ const replyToComment = catchAsync(async (req: Request, res: Response) => {
 
 // Get all comments for a short (audience + group membership enforced)
 const getCommentsForShort = catchAsync(async (req: Request, res: Response) => {
-  const comments = await CommentService.getCommentsForShortFromDB(
-    req.params.shortId,
-    req.query,
-    { id: req.user.id, role: req.user.role },
-  );
+  const { comments, sortMode, featuredCommentId, featuredMode } =
+    await CommentService.getCommentsForShortFromDB(
+      req.params.shortId,
+      req.query,
+      { id: req.user.id, role: req.user.role },
+    );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Comments retrieved successfully",
     data: comments,
+    meta: { sortMode, featuredCommentId, featuredMode },
   });
 });
 

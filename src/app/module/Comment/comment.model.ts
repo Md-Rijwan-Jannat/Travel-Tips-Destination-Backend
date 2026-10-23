@@ -53,6 +53,10 @@ const commentSchema = new Schema<IComment>(
       type: Boolean,
       default: false,
     },
+    editedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -62,5 +66,7 @@ const commentSchema = new Schema<IComment>(
 // Hot-path index: comment lists are always fetched per post / per short.
 commentSchema.index({ post: 1 });
 commentSchema.index({ short: 1 });
+// Thread lookups: children of a (possibly soft-deleted) parent comment.
+commentSchema.index({ parentComment: 1 });
 
 export const Comment = mongoose.model<IComment>("Comment", commentSchema);

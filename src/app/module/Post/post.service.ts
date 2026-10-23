@@ -1,9 +1,13 @@
 import { QueryObj, TPost, TReport } from './post.interface';
 import { Post } from './post.model';
+import { PostHidden } from './postHidden.model';
 import AppError from '../../errors/AppError';
 import httpStatus from 'http-status';
 import QueryBuilder from '../../builder/QueryBuilder';
-import { postSearchFields } from './post.constants';
+import {
+  GROUP_PIN_LIMIT,
+  postSearchFields,
+} from './post.constants';
 import mongoose from 'mongoose';
 import { Group } from '../Group/group.model';
 import { GroupPermissionService as GPerm } from '../Group/group.permissions';
@@ -11,8 +15,22 @@ import { GROUP_MODERATION_STATUS, GROUP_ROLE } from '../Group/group.constants';
 import { isStaffRole } from '../Group/group.permissions';
 import { isGloballyVisibleFilter, assertCanViewPost } from './postAccess';
 import { NotificationService } from '../Notification/notification.service';
+import { Comment } from '../Comment/comment.model';
 
 type TRequesterShape = { id: string; role: string };
+
+/**
+ * Post ids the caller hid from their OWN feed. Hiding is scoped to the user
+ * and never modifies the original post for anyone else.
+ */
+const getHiddenPostIds = async (
+  userId: string,
+): Promise<mongoose.Types.ObjectId[]> => {
+  const rows = await PostHidden.find({ user: userId })
+    .select('post')
+    .lean();
+  return rows.map((row) => row.post as mongoose.Types.ObjectId);
+};
 
 // Create a new post. When `group` is present the request is authorized
 // against the community permission layer: membership, role, posting
@@ -196,8 +214,13 @@ const getAllPostsPremiumForAnalytics = async (query: Record<string, unknown>) =>
   return { result: result, meta: meta };
 };
 
-// Get all posts (with optional filters)
-const getAllPostsFromDB = async (query: Record<string, unknown>) => {
+// Get all posts (with optional filters). `requester` scopes the feed so
+// posts the caller hid from their own feed are excluded (the original post
+// stays visible to everyone else).
+const getAllPostsFromDB = async (
+  query: Record<string, unknown>,
+  requester?: TRequesterShape,
+) => {
   const { categories } = query;
 
   // Global feed never exposes private-group posts or unapproved group posts.
@@ -212,6 +235,11 @@ const getAllPostsFromDB = async (query: Record<string, unknown>) => {
       ...queryObj,
       category: { $in: categories as string[] },
     };
+  }
+
+  const hiddenIds = requester ? await getHiddenPostIds(requester.id) : [];
+  if (hiddenIds.length > 0) {
+    queryObj._id = { $nin: hiddenIds } as unknown as QueryObj['_id'];
   }
 
   // Build the post query
@@ -244,7 +272,10 @@ const getAllPostsFromDB = async (query: Record<string, unknown>) => {
 };
 
 // Get all premium posts (with optional filters)
-const getAllPremiumPostsFromDB = async (query: Record<string, unknown>) => {
+const getAllPremiumPostsFromDB = async (
+  query: Record<string, unknown>,
+  requester?: TRequesterShape,
+) => {
   const { categories } = query;
 
   let queryObj = {
@@ -258,6 +289,11 @@ const getAllPremiumPostsFromDB = async (query: Record<string, unknown>) => {
       ...queryObj,
       category: { $in: categories as string[] },
     };
+  }
+
+  const hiddenIds = requester ? await getHiddenPostIds(requester.id) : [];
+  if (hiddenIds.length > 0) {
+    queryObj._id = { $nin: hiddenIds } as unknown as QueryObj['_id'];
   }
 
   // Build the post query
@@ -297,6 +333,19 @@ const EDITABLE_POST_FIELDS = [
   'images',
   'category',
   'status',
+  'location',
+  'tags',
+  'mediaLayout',
+] as const;
+
+// Content fields whose change marks the post as edited.
+const EDIT_MARKER_FIELDS = [
+  'title',
+  'description',
+  'images',
+  'location',
+  'tags',
+  'mediaLayout',
 ] as const;
 
 type TRequester = { id: string; role: string };
@@ -348,6 +397,17 @@ const updatePostIntoDB = async (
     if (payload[field] !== undefined) {
       allowed[field] = payload[field];
     }
+  }
+
+  // Content changes are marked as edited (caption/media/layout) so readers
+  // see an honest "Edited" indicator. Pure metadata (category/status) is not
+  // an edit of the visible content.
+  const contentChanged = EDIT_MARKER_FIELDS.some(
+    (field) => payload[field] !== undefined,
+  );
+  if (contentChanged) {
+    allowed.isEdited = true;
+    allowed.editedAt = new Date();
   }
 
   const post = await Post.findByIdAndUpdate(postId, allowed, { new: true });
@@ -444,6 +504,274 @@ const reportPostFromDB = async (
 
 export { notifyGroupOfNewPost };
 
+/* ------------------------------------------------------------------ */
+/* Profile pin / highlight / hide / comment settings                   */
+/* ------------------------------------------------------------------ */
+
+/** Profile pin & feature are owner-scoped (or platform admin) only. */
+const assertIsOwnerOrAdmin = (post: { user: unknown }, requester: TRequesterShape): void => {
+  const isOwner = String(post.user) === requester.id;
+  if (!isOwner && requester.role !== 'ADMIN') {
+    throw new AppError(httpStatus.FORBIDDEN, 'Only the post owner can do this');
+  }
+};
+
+const loadExistingPost = async (postId: string): Promise<TPost> => {
+  const post = await Post.findById(postId);
+  if (!post || post.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+  }
+  return post;
+};
+
+/**
+ * Atomically move the author's single profile pin to `postId` (or remove it).
+ * The partial unique index guarantees one pinned post per author; the E11000
+ * retry makes concurrent pin requests resolve to a consistent single winner.
+ */
+const setProfilePinFromDB = async (
+  postId: string,
+  pinned: boolean,
+  requester: TRequesterShape,
+): Promise<TPost> => {
+  const post = await loadExistingPost(postId);
+  assertIsOwnerOrAdmin(post, requester);
+
+  if (!pinned) {
+    const updated = await Post.findByIdAndUpdate(
+      postId,
+      { $set: { pinned: false, pinnedAt: null } },
+      { new: true },
+    );
+    return updated as TPost;
+  }
+
+  // Release any other pin held by this author first (sequential correctness
+  // even if indexes have not been built yet), then set this one.
+  await Post.updateMany(
+    { user: post.user, pinned: true, _id: { $ne: postId } },
+    { $set: { pinned: false, pinnedAt: null } },
+  );
+
+  const attempt = () =>
+    Post.findOneAndUpdate(
+      { _id: postId },
+      { $set: { pinned: true, pinnedAt: new Date() } },
+      { new: true },
+    );
+
+  try {
+    const updated = await attempt();
+    if (!updated) throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+    return updated;
+  } catch (error) {
+    const isDuplicate =
+      error instanceof Error &&
+      'code' in error &&
+      (error as { code?: number }).code === 11000;
+    if (!isDuplicate) throw error;
+    // Another post of this author currently holds the pin slot — release it
+    // and retry once (the latest writer wins).
+    await Post.updateMany(
+      { user: post.user, pinned: true, _id: { $ne: postId } },
+      { $set: { pinned: false, pinnedAt: null } },
+    );
+    const updated = await attempt();
+    if (!updated) throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+    return updated;
+  }
+};
+
+/** Move the author's single profile highlight/feature to `postId` (or clear). */
+const setProfileFeatureFromDB = async (
+  postId: string,
+  featured: boolean,
+  requester: TRequesterShape,
+): Promise<TPost> => {
+  const post = await loadExistingPost(postId);
+  assertIsOwnerOrAdmin(post, requester);
+
+  if (!featured) {
+    const updated = await Post.findByIdAndUpdate(
+      postId,
+      { $set: { featured: false, featuredAt: null } },
+      { new: true },
+    );
+    return updated as TPost;
+  }
+
+  // Same release-then-set pattern as profile pinning.
+  await Post.updateMany(
+    { user: post.user, featured: true, _id: { $ne: postId } },
+    { $set: { featured: false, featuredAt: null } },
+  );
+
+  const attempt = () =>
+    Post.findOneAndUpdate(
+      { _id: postId },
+      { $set: { featured: true, featuredAt: new Date() } },
+      { new: true },
+    );
+
+  try {
+    const updated = await attempt();
+    if (!updated) throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+    return updated;
+  } catch (error) {
+    const isDuplicate =
+      error instanceof Error &&
+      'code' in error &&
+      (error as { code?: number }).code === 11000;
+    if (!isDuplicate) throw error;
+    await Post.updateMany(
+      { user: post.user, featured: true, _id: { $ne: postId } },
+      { $set: { featured: false, featuredAt: null } },
+    );
+    const updated = await attempt();
+    if (!updated) throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+    return updated;
+  }
+};
+
+/**
+ * Group pin — separate from profile pinning: requires the `group:moderatePost`
+ * permission in the post's community group and is limited to
+ * GROUP_PIN_LIMIT simultaneously pinned posts per group.
+ */
+const setGroupPinFromDB = async (
+  postId: string,
+  pinned: boolean,
+  requester: TRequesterShape,
+): Promise<TPost> => {
+  const post = await loadExistingPost(postId);
+  if (!post.group) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Only group posts can be pinned here');
+  }
+
+  const { group } = await GPerm.authorize(
+    String(post.group),
+    requester,
+    'group:moderatePost',
+  );
+
+  if (!pinned) {
+    const updated = await Post.findByIdAndUpdate(
+      postId,
+      { $set: { groupPinnedAt: null } },
+      { new: true },
+    );
+    return updated as TPost;
+  }
+
+  const existingPinned = await Post.countDocuments({
+    group: group._id,
+    groupPinnedAt: { $ne: null },
+    isDeleted: false,
+    _id: { $ne: postId },
+  });
+  if (existingPinned >= GROUP_PIN_LIMIT) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `A group can pin at most ${GROUP_PIN_LIMIT} posts`,
+    );
+  }
+
+  const updated = await Post.findByIdAndUpdate(
+    postId,
+    { $set: { groupPinnedAt: new Date() } },
+    { new: true },
+  );
+  if (!updated) throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+  return updated;
+};
+
+/** Hide a post from the caller's own feed (idempotent, scoped to the user). */
+const hidePostForUserFromDB = async (
+  postId: string,
+  userId: string,
+  requester: TRequesterShape,
+): Promise<{ hidden: true }> => {
+  const post = await Post.findById(postId);
+  if (!post || post.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+  }
+  // Hiding requires read access (never confirm private group content).
+  await assertCanViewPost(post, requester);
+
+  await PostHidden.updateOne(
+    { user: userId, post: postId },
+    { $setOnInsert: { user: userId, post: postId } },
+    { upsert: true },
+  );
+  return { hidden: true };
+};
+
+/** Undo a per-user hide. */
+const unhidePostForUserFromDB = async (
+  postId: string,
+  userId: string,
+): Promise<{ hidden: false }> => {
+  await PostHidden.deleteOne({ user: userId, post: postId });
+  return { hidden: false };
+};
+
+/** Persist the post owner's comment ordering + featured-comment policy. */
+const updateCommentSettingsFromDB = async (
+  postId: string,
+  payload: {
+    sortMode?: 'TOP' | 'NEWEST' | 'OLDEST';
+    highlightMode?: 'AUTO' | 'MANUAL';
+    highlightedComment?: string | null;
+  },
+  requester: TRequesterShape,
+): Promise<TPost> => {
+  const post = await loadExistingPost(postId);
+  // Group moderation staff may sort, but only the OWNER picks the featured
+  // comment (moderators never override the owner's highlight preference).
+  assertIsOwnerOrAdmin(post, requester);
+
+  const update: Record<string, unknown> = {};
+
+  if (payload.sortMode !== undefined) {
+    update['commentSettings.sortMode'] = payload.sortMode;
+  }
+
+  if (payload.highlightMode !== undefined) {
+    update['commentSettings.highlightMode'] = payload.highlightMode;
+    if (payload.highlightMode === 'AUTO') {
+      update['commentSettings.highlightedComment'] = null;
+    }
+  }
+
+  if (payload.highlightedComment !== undefined) {
+    if (payload.highlightedComment === null) {
+      update['commentSettings.highlightMode'] = 'AUTO';
+      update['commentSettings.highlightedComment'] = null;
+    } else {
+      if (!mongoose.Types.ObjectId.isValid(payload.highlightedComment)) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Invalid comment id');
+      }
+      const comment = await Comment.findById(payload.highlightedComment);
+      if (
+        !comment ||
+        comment.isDeleted ||
+        String(comment.post ?? '') !== postId
+      ) {
+        throw new AppError(
+          httpStatus.BAD_REQUEST,
+          'The featured comment must be a visible comment on this post',
+        );
+      }
+      update['commentSettings.highlightMode'] = 'MANUAL';
+      update['commentSettings.highlightedComment'] = comment._id;
+    }
+  }
+
+  const updated = await Post.findByIdAndUpdate(postId, update, { new: true });
+  if (!updated) throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
+  return updated;
+};
+
 export const PostService = {
   createPostIntoDB,
   getPostByIdFromDB,
@@ -455,4 +783,11 @@ export const PostService = {
   deletePostFromDB,
   recoverPostFromDB,
   reportPostFromDB,
+  setProfilePinFromDB,
+  setProfileFeatureFromDB,
+  setGroupPinFromDB,
+  hidePostForUserFromDB,
+  unhidePostForUserFromDB,
+  updateCommentSettingsFromDB,
+  getHiddenPostIds,
 };

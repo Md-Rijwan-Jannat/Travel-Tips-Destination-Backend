@@ -1,13 +1,18 @@
 import { Response } from 'express';
 
 type TMeta = {
-  limit: number;
-  page: number;
-  total: number;
+  // Pagination fields (optional — some endpoints only carry domain extras).
+  limit?: number;
+  page?: number;
+  total?: number;
   // QueryBuilder.countTotal returns `totalPage`; the chat list returns
   // `totalPages`. Both optional so either spelling can be forwarded as-is.
   totalPage?: number;
   totalPages?: number;
+  // Comment-list extras: ordering + resolved featured comment.
+  sortMode?: 'TOP' | 'NEWEST' | 'OLDEST';
+  featuredCommentId?: string | null;
+  featuredMode?: 'manual' | 'automatic' | 'none';
 };
 
 type TResponse<T> = {

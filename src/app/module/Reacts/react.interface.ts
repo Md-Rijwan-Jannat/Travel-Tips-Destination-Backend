@@ -42,5 +42,5 @@ export interface TReactionSummary {
   /** Sum of every reaction count (all stored types). */
   total: number;
   /** The requesting user's current reaction, or null. */
-  myReaction: TReactionStoreType | null;
+  myReaction: TReactStoreType | null;
 }

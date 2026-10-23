@@ -7,6 +7,7 @@ import { CommentRoutes } from "../module/Comment/comment.routes";
 import { ReactRoutes } from "../module/Reacts/react.routes";
 import { MessageRoutes } from "../module/Messages/message.routes";
 import { ChatRoutes } from "../module/Chat/chat.routes";
+import { CallRoutes } from "../module/Call/call.routes";
 import { PaymentRoutes } from "../module/payment/payment.routes";
 import { StoryRoutes } from "../module/Story/story.routes";
 import { ReviewRoutes } from "../module/Review/review.routes";
@@ -52,6 +53,10 @@ const moduleRoutes = [
   {
     path: "/messages",
     route: MessageRoutes,
+  },
+  {
+    path: "/calls",
+    route: CallRoutes,
   },
   {
     path: "/stories",

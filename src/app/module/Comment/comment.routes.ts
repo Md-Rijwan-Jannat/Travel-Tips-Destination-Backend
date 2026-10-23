@@ -3,14 +3,16 @@ import { CommentControllers } from "./comment.controller";
 import { CommentValidation } from "./comment.validation";
 import validateRequest from "../../middlewares/validateRequest";
 import Auth from "../../middlewares/auth";
+import { commentActionLimiter } from "../../middlewares/rateLimiter";
 import { USER_ROLE } from "../User/user.constants";
 
 const router = express.Router();
 
-// Add a comment
+// Add a comment (spam/rapid-fire protected)
 router.post(
   "/",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  commentActionLimiter,
   validateRequest(CommentValidation.createCommentValidationSchema),
   CommentControllers.addComment,
 );
@@ -55,6 +57,7 @@ router.delete(
 router.post(
   "/:id/reply",
   Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  commentActionLimiter,
   validateRequest(CommentValidation.replyValidationSchema),
   CommentControllers.replyToComment,
 );
