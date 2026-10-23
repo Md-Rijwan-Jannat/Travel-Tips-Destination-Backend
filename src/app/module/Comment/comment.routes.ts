@@ -22,6 +22,13 @@ router.get(
   CommentControllers.getAllComment,
 );
 
+// Get comments for a short
+router.get(
+  "/short/:shortId",
+  Auth(USER_ROLE.USER, USER_ROLE.ADMIN),
+  CommentControllers.getCommentsForShort,
+);
+
 // Get comments for a post
 router.get(
   "/:postId",

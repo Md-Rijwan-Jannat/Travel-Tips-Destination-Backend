@@ -34,6 +34,7 @@ const like = catchAsync(async (req, res) => {
     userId,
     targetId,
     type as "post" | "comment",
+    { id: userId, role: req.user.role },
   );
 
   sendResponse(res, {
@@ -49,7 +50,10 @@ const unlike = catchAsync(async (req, res) => {
   const { targetId, type } = req.params;
   const userId = req.user.id;
 
-  await ReactService.unlikeFromDB(userId, targetId, type as "post" | "comment");
+  await ReactService.unlikeFromDB(userId, targetId, type as "post" | "comment", {
+    id: userId,
+    role: req.user.role,
+  });
 
   sendResponse(res, {
     statusCode: 200,
@@ -68,6 +72,7 @@ const dislike = catchAsync(async (req, res) => {
     userId,
     targetId,
     type as "post" | "comment",
+    { id: userId, role: req.user.role },
   );
 
   sendResponse(res, {
@@ -87,6 +92,7 @@ const undislike = catchAsync(async (req, res) => {
     userId,
     targetId,
     type as "post" | "comment",
+    { id: userId, role: req.user.role },
   );
 
   sendResponse(res, {

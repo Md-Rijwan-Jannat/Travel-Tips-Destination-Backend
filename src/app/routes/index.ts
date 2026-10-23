@@ -10,6 +10,9 @@ import { ChatRoutes } from "../module/Chat/chat.routes";
 import { PaymentRoutes } from "../module/payment/payment.routes";
 import { StoryRoutes } from "../module/Story/story.routes";
 import { ReviewRoutes } from "../module/Review/review.routes";
+import { GroupRoutes } from "../module/Group/group.routes";
+import { NotificationRoutes } from "../module/Notification/notification.routes";
+import { ShortRoutes } from "../module/Short/short.routes";
 
 const router = express.Router();
 
@@ -57,6 +60,18 @@ const moduleRoutes = [
   {
     path: "/reviews",
     route: ReviewRoutes,
+  },
+  {
+    path: "/groups",
+    route: GroupRoutes,
+  },
+  {
+    path: "/notifications",
+    route: NotificationRoutes,
+  },
+  {
+    path: "/shorts",
+    route: ShortRoutes,
   },
 ];
 

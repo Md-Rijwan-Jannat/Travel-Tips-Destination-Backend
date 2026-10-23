@@ -4,6 +4,49 @@ import httpStatus from "http-status";
 import { React } from "./react.model";
 import { Post } from "../Post/post.model";
 import { Comment } from "../Comment/comment.model";
+import { Short } from "../Short/short.model";
+import { ShortService } from "../Short/short.service";
+import { assertCanInteractWithPost } from "../Post/postAccess";
+
+type TRequester = { id: string; role: string };
+
+/**
+ * Target access gate: reacting requires being able to READ the target and,
+ * for group content, active (unbanned/unmuted) membership in that group.
+ * Missing/invisible targets surface as 404 (no existence probing).
+ */
+const assertReactTargetAccess = async (
+  userId: string,
+  targetId: string,
+  type: "post" | "comment",
+  requester?: TRequester,
+): Promise<void> => {
+  const req: TRequester = requester ?? { id: userId, role: "USER" };
+
+  if (type === "post") {
+    const post = await Post.findById(targetId);
+    if (!post || post.isDeleted) {
+      throw new AppError(httpStatus.NOT_FOUND, "Post not found");
+    }
+    await assertCanInteractWithPost(post, req);
+    return;
+  }
+
+  const comment = await Comment.findById(targetId);
+  if (!comment || comment.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
+  }
+  if (comment.short) {
+    const short = await Short.findById(String(comment.short));
+    if (!short) throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
+    await ShortService.assertCanInteractWithShort(short, req);
+    return;
+  }
+  if (comment.post) {
+    const post = await Post.findById(String(comment.post));
+    if (post) await assertCanInteractWithPost(post, req);
+  }
+};
 
 // Get all likes
 const getAllLikes = async () => {
@@ -24,7 +67,10 @@ const likeFromDB = async (
   userId: string,
   targetId: string,
   type: "post" | "comment",
+  requester?: TRequester,
 ): Promise<TReact> => {
+  await assertReactTargetAccess(userId, targetId, type, requester);
+
   const existingLikeReact = await React.findOne({
     user: userId,
     [type]: targetId,
@@ -81,7 +127,10 @@ const unlikeFromDB = async (
   userId: string,
   targetId: string,
   type: "post" | "comment",
+  requester?: TRequester,
 ): Promise<void> => {
+  await assertReactTargetAccess(userId, targetId, type, requester);
+
   const existingReact = await React.findOneAndDelete({
     user: userId,
     [type]: targetId,
@@ -109,7 +158,10 @@ const dislikeFromDB = async (
   userId: string,
   targetId: string,
   type: "post" | "comment",
+  requester?: TRequester,
 ): Promise<TReact> => {
+  await assertReactTargetAccess(userId, targetId, type, requester);
+
   const existingDislikeReact = await React.findOne({
     user: userId,
     [type]: targetId,
@@ -166,7 +218,10 @@ const undislikeFromDB = async (
   userId: string,
   targetId: string,
   type: "post" | "comment",
+  requester?: TRequester,
 ): Promise<void> => {
+  await assertReactTargetAccess(userId, targetId, type, requester);
+
   const existingReact = await React.findOneAndDelete({
     user: userId,
     [type]: targetId,
@@ -192,6 +247,7 @@ const undislikeFromDB = async (
 };
 
 export const ReactService = {
+  assertReactTargetAccess,
   getAllLikes,
   getAllDisLikes,
   likeFromDB,

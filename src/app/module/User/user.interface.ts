@@ -13,6 +13,7 @@ export interface TUser {
   email: string;
   password?: string;
   image?: string;
+  coverImage?: string | null;
   role: TUserRole;
   bio: string;
   status: TUserStatus;
@@ -48,6 +49,7 @@ export interface TGetUserOnDataBase {
   name: string;
   email: string;
   image?: string;
+  coverImage?: string | null;
   password: string;
   role: string;
   bio: string;

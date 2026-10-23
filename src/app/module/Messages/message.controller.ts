@@ -18,22 +18,55 @@ const createMessage = catchAsync(async (req, res) => {
   });
 });
 
-// Fetch all messages for a chat
+// Fetch messages for a chat (optional ?page=&limit= pagination)
 const getMessages = catchAsync(async (req, res) => {
-  const messages = await MessageServices.getMessagesByChatId(
+  const { messages, meta } = await MessageServices.getMessagesByChatId(
     req.params.chatId,
     { id: req.user.id, role: req.user.role },
+    req.query as Record<string, unknown>,
   );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Messages retrieved successfully",
+    meta,
     data: messages,
+  });
+});
+
+// Mark every message in a chat as read for the current user
+const markChatRead = catchAsync(async (req, res) => {
+  const result = await MessageServices.markChatReadIntoDB(req.params.chatId, {
+    id: req.user.id,
+    role: req.user.role,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Chat marked as read",
+    data: result,
+  });
+});
+
+// Unread message count for a chat
+const getUnreadCount = catchAsync(async (req, res) => {
+  const count = await MessageServices.getUnreadCountForChat(req.params.chatId, {
+    id: req.user.id,
+    role: req.user.role,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    data: { count },
   });
 });
 
 export const MessageController = {
   createMessage,
   getMessages,
+  markChatRead,
+  getUnreadCount,
 };

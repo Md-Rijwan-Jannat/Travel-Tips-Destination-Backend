@@ -5,6 +5,8 @@ import config from "./config";
 import { seed } from "./app/utils/seeding";
 import { UserServices } from "./app/module/Auth/auth.service";
 import { socketServer } from "./socketIoServer";
+import { registerSocketServer } from "./app/utils/socketRegistry";
+import { runCommunityMigrations } from "./app/utils/migrations";
 
 let server: Server;
 
@@ -19,12 +21,18 @@ async function main() {
     } catch (migrationErr) {
       console.error("twoFactorMethod migration failed", migrationErr);
     }
+    try {
+      await runCommunityMigrations();
+    } catch (migrationErr) {
+      console.error("community migrations failed", migrationErr);
+    }
+
     server = app.listen(config.port, () => {
       console.log("MongoDB connected successfully");
       console.log(`App is listening on port ${config.port}`);
     });
 
-    socketServer(server);
+    registerSocketServer(socketServer(server));
   } catch (err) {
     console.log(err);
   }

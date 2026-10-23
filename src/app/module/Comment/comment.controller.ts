@@ -7,7 +7,10 @@ import httpStatus from "http-status";
 // Add a new comment
 const addComment = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.user;
-  const comment = await CommentService.addCommentIntoDB(req.body, id);
+  const comment = await CommentService.addCommentIntoDB(req.body, id, {
+    id,
+    role: req.user.role,
+  });
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -32,6 +35,7 @@ const getCommentForPost = catchAsync(async (req: Request, res: Response) => {
   const comments = await CommentService.getCommentForPostFromDB(
     req.params.postId,
     req.query,
+    { id: req.user.id, role: req.user.role },
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -76,6 +80,7 @@ const replyToComment = catchAsync(async (req: Request, res: Response) => {
     req.params.id,
     req.body,
     req.user.id,
+    { id: req.user.id, role: req.user.role },
   );
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -85,10 +90,26 @@ const replyToComment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// Get all comments for a short (audience + group membership enforced)
+const getCommentsForShort = catchAsync(async (req: Request, res: Response) => {
+  const comments = await CommentService.getCommentsForShortFromDB(
+    req.params.shortId,
+    req.query,
+    { id: req.user.id, role: req.user.role },
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Comments retrieved successfully",
+    data: comments,
+  });
+});
+
 export const CommentControllers = {
   addComment,
   getAllComment,
   getCommentForPost,
+  getCommentsForShort,
   updateComment,
   deleteComment,
   replyToComment,

@@ -28,6 +28,14 @@ export interface TPost extends Document {
   likes: Types.ObjectId[];
   dislikes: Types.ObjectId[];
   isDeleted: boolean;
+  location?: string | null;
+  tags?: string[];
+  group?: Types.ObjectId | null;
+  groupVisibility?: "PUBLIC" | "PRIVATE" | null;
+  moderationStatus?: "PENDING" | "APPROVED" | "REJECTED" | "REMOVED";
+  moderationReason?: string | null;
+  moderatedBy?: Types.ObjectId | null;
+  moderatedAt?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -42,6 +50,10 @@ export interface QueryObj {
   isDeleted: boolean;
   status: string;
   category?: { $in: string[] };
+  group?: unknown;
+  $or?: unknown;
+  $and?: unknown;
+  moderationStatus?: unknown;
 }
 
 export type TPostStatus = keyof typeof POST_STATUS;

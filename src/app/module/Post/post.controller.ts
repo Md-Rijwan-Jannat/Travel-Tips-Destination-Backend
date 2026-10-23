@@ -5,7 +5,10 @@ import httpStatus from 'http-status';
 
 // Create a new post
 const createPost = catchAsync(async (req, res) => {
-  const post = await PostService.createPostIntoDB(req.body, req.user.id);
+  const post = await PostService.createPostIntoDB(req.body, req.user.id, {
+    id: req.user.id,
+    role: req.user.role,
+  });
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -16,7 +19,10 @@ const createPost = catchAsync(async (req, res) => {
 
 // Get a post by ID
 const getPostById = catchAsync(async (req, res) => {
-  const post = await PostService.getPostByIdFromDB(req.params.id);
+  const post = await PostService.getPostByIdFromDB(req.params.id, {
+    id: req.user.id,
+    role: req.user.role,
+  });
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -123,7 +129,8 @@ const reportPost = catchAsync(async (req, res) => {
   const post = await PostService.reportPostFromDB(
     req.params.id,
     req.body,
-    req.user.id
+    req.user.id,
+    { id: req.user.id, role: req.user.role }
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,

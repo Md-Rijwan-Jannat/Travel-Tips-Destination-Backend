@@ -42,11 +42,16 @@ class QueryBuilder<T> {
 
     if (searchTerm && typeof searchTerm === 'string') {
       const safeTerm = escapeRegex(searchTerm);
-      this.modelQuery = this.modelQuery.find({
-        $or: searchingFields.map((field) => ({
-          [field]: { $regex: safeTerm, $options: 'i' },
-        })),
-      } as FilterQuery<T>);
+      // Applied via `.and()` (never a top-level `.find({$or})`) so the search
+      // term composes with any `$or` already in the filter — e.g. the
+      // privacy filter of the global feed — instead of clobbering it.
+      this.modelQuery = this.modelQuery.and([
+        {
+          $or: searchingFields.map((field) => ({
+            [field]: { $regex: safeTerm, $options: 'i' },
+          })),
+        },
+      ] as FilterQuery<T>[]);
     }
 
     return this;

@@ -82,6 +82,45 @@ const postSchema = new Schema<TPost>(
       type: Boolean,
       default: false,
     },
+    location: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    group: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+    },
+    groupVisibility: {
+      type: String,
+      enum: ["PUBLIC", "PRIVATE", null],
+      default: null,
+    },
+    moderationStatus: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "REJECTED", "REMOVED"],
+      default: "APPROVED",
+    },
+    moderationReason: {
+      type: String,
+      default: null,
+    },
+    moderatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    moderatedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -92,5 +131,9 @@ const postSchema = new Schema<TPost>(
 // (status, isDeleted) feed filters.
 postSchema.index({ user: 1 });
 postSchema.index({ status: 1, isDeleted: 1 });
+// Community: group feed + moderation queue + global-feed privacy filter.
+postSchema.index({ group: 1, moderationStatus: 1, createdAt: -1 });
+postSchema.index({ group: 1, reportCount: -1 });
+postSchema.index({ groupVisibility: 1, moderationStatus: 1 });
 
 export const Post = mongoose.model<TPost>("Post", postSchema);

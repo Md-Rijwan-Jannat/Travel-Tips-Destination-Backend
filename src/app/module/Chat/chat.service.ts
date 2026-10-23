@@ -1,9 +1,11 @@
 import { Types } from "mongoose";
 import { IChat } from "./chat.interface";
 import { Chat } from "./chat.model";
+import { Message } from "../Messages/message.model";
 import { User } from "../User/user.model";
 import AppError from "../../errors/AppError";
 import httpStatus from "http-status";
+import { removeUserFromRoom } from "../../utils/socketRegistry";
 
 // Create chart service
 const createChatIntoDB = async (
@@ -80,6 +82,20 @@ const getUserChatsFromDB = async (
 
   const total = await Chat.countDocuments({ users: userId });
 
+  // Unread counts: messages in these chats the current user has not read
+  // (readBy is maintained by the message fetch/mark-read flows).
+  const chatIds = chats.map((c) => c._id);
+  const unread = await Message.aggregate<{ _id: Types.ObjectId; count: number }>([
+    { $match: { chat: { $in: chatIds }, readBy: { $ne: new Types.ObjectId(userId) } } },
+    { $group: { _id: "$chat", count: { $sum: 1 } } },
+  ]);
+  const unreadMap = new Map(unread.map((u) => [String(u._id), u.count]));
+
+  const result = chats.map((chat) => ({
+    ...(chat.toObject() as unknown as Record<string, unknown>),
+    unreadCount: unreadMap.get(String(chat._id)) ?? 0,
+  }));
+
   const meta = {
     total,
     limit,
@@ -87,7 +103,7 @@ const getUserChatsFromDB = async (
     totalPages: Math.ceil(total / limit),
   };
 
-  return { result: chats, meta };
+  return { result: result as unknown as IChat[], meta };
 };
 
 // Fetch a single chat by chatId
@@ -214,6 +230,9 @@ const removeFromGroup = async (
   if (!updatedChat) {
     throw new AppError(httpStatus.NOT_FOUND, "Chat Not Found");
   }
+
+  // Drop any live socket room subscription the removed user still holds.
+  removeUserFromRoom(userId, chatId);
 
   return updatedChat;
 };

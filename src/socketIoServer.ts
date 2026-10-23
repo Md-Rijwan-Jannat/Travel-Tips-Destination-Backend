@@ -132,6 +132,18 @@ export const socketServer = (server: HttpServer): SocketIoServer => {
       socket.in(room).emit("stop typing");
     });
 
+    // Per-socket message rate limit (abuse/spam protection on the
+    // real-time channel). Sliding 60s window, generous for humans.
+    let messageTimestamps: number[] = [];
+
+    const withinMessageBudget = (): boolean => {
+      const now = Date.now();
+      messageTimestamps = messageTimestamps.filter((t) => now - t < 60_000);
+      if (messageTimestamps.length >= 60) return false;
+      messageTimestamps.push(now);
+      return true;
+    };
+
     // Deliver a message notification only to the REAL chat members from the
     // database, and only when the authenticated sender is that member — the
     // client-supplied `chat.users` list is never trusted for routing, and the
@@ -144,12 +156,27 @@ export const socketServer = (server: HttpServer): SocketIoServer => {
       const message = newMessageReceived as {
         chat?: unknown;
         sender?: unknown;
+        content?: unknown;
       };
 
       const chatId = extractId(message.chat);
       const senderId = extractId(message.sender);
 
       if (!chatId || !senderId || senderId !== userId) {
+        return;
+      }
+
+      // Validate payload: content must be a non-empty, bounded string.
+      if (
+        typeof message.content !== "string" ||
+        message.content.trim().length === 0 ||
+        message.content.length > 5000
+      ) {
+        return;
+      }
+
+      if (!withinMessageBudget()) {
+        socket.emit("rate limited", { chat: chatId });
         return;
       }
 

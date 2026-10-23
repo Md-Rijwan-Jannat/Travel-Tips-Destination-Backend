@@ -10,6 +10,7 @@ const messageSchema = new Schema<IMessage>(
     content: {
       type: String,
       trim: true,
+      maxlength: 5000,
     },
     chat: {
       type: Schema.Types.ObjectId,

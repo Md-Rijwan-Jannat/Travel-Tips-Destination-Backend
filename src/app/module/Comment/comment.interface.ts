@@ -2,7 +2,8 @@ import { Document, Types } from "mongoose";
 
 export interface IComment extends Document {
   user: Types.ObjectId;
-  post: Types.ObjectId;
+  post?: Types.ObjectId | null;
+  short?: Types.ObjectId | null;
   text: string;
   images?: string[];
   likes: Types.ObjectId[];

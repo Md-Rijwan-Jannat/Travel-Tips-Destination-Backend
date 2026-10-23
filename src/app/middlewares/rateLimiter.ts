@@ -78,3 +78,33 @@ export const otpSendLimiter =
           message: "Too many requests, please try again later.",
         },
       });
+
+// Group/community write actions (create group, join, post). Generous so
+// normal usage never trips it; still caps automation and spam runs.
+export const groupActionLimiter =
+  process.env.NODE_ENV === "test"
+    ? (_req: Request, _res: Response, next: NextFunction) => next()
+    : createRateLimiter({
+        windowMs: 15 * 60 * 1000,
+        limit: 60,
+        message: {
+          success: false,
+          statusCode: 429,
+          message: "Too many requests, please try again later.",
+        },
+      });
+
+// Invite preview/redemption: strict because these endpoints are guessable
+// by token and public previews must not be scraped at scale.
+export const inviteFlowLimiter =
+  process.env.NODE_ENV === "test"
+    ? (_req: Request, _res: Response, next: NextFunction) => next()
+    : createRateLimiter({
+        windowMs: 15 * 60 * 1000,
+        limit: 40,
+        message: {
+          success: false,
+          statusCode: 429,
+          message: "Too many requests, please try again later.",
+        },
+      });

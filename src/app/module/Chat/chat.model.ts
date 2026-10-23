@@ -30,11 +30,25 @@ const chatSchema = new Schema<IChat>(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+    // Link to the community Group this conversation belongs to (null/absent
+    // for classic DMs and user-created Messenger group chats). The unique
+    // sparse index guarantees exactly ONE conversation per community group.
+    groupCommunity: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+    },
   },
   { timestamps: true },
 );
 
 // Hot-path index: chat lookups by membership (`users` contains the caller).
 chatSchema.index({ users: 1 });
+// Uniqueness: one Messenger conversation per community group, even under
+// concurrent "open chat" requests. Sparse so DMs are unaffected.
+chatSchema.index(
+  { groupCommunity: 1 },
+  { unique: true, sparse: true, partialFilterExpression: { groupCommunity: { $type: "objectId" } } },
+);
 
 export const Chat = model<IChat>("Chat", chatSchema);

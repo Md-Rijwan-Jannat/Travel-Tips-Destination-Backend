@@ -3,6 +3,7 @@ import QueryBuilder from "../app/builder/QueryBuilder";
 
 type MockQuery = {
   find: ReturnType<typeof vi.fn>;
+  and: ReturnType<typeof vi.fn>;
   sort: ReturnType<typeof vi.fn>;
   skip: ReturnType<typeof vi.fn>;
   limit: ReturnType<typeof vi.fn>;
@@ -14,6 +15,7 @@ type MockQuery = {
 const makeQuery = (): MockQuery => {
   const q: MockQuery = {
     find: vi.fn(() => q),
+    and: vi.fn(() => q),
     sort: vi.fn(() => q),
     skip: vi.fn(() => q),
     limit: vi.fn(() => q),
@@ -83,8 +85,9 @@ describe("QueryBuilder.search — regex injection", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     new QueryBuilder(q as any, { searchTerm: "a+.*b" }).search(["title"]);
 
-    expect(q.find).toHaveBeenCalledWith({
-      $or: [{ title: { $regex: "a\\+\\.\\*b", $options: "i" } }],
-    });
+    // Search composes via $and so it can never clobber a privacy $or.
+    expect(q.and).toHaveBeenCalledWith([
+      { $or: [{ title: { $regex: "a\\+\\.\\*b", $options: "i" } }] },
+    ]);
   });
 });

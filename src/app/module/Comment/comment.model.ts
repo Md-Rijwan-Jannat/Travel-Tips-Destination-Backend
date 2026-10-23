@@ -8,10 +8,17 @@ const commentSchema = new Schema<IComment>(
       ref: "User",
       required: true,
     },
+    // Either a post OR a short (shorts reuse the comment/reply system so
+    // comment logic is not duplicated).
     post: {
       type: Schema.Types.ObjectId,
       ref: "Post",
-      required: true,
+      default: null,
+    },
+    short: {
+      type: Schema.Types.ObjectId,
+      ref: "Short",
+      default: null,
     },
     text: {
       type: String,
@@ -52,7 +59,8 @@ const commentSchema = new Schema<IComment>(
   },
 );
 
-// Hot-path index: comment lists are always fetched per post.
+// Hot-path index: comment lists are always fetched per post / per short.
 commentSchema.index({ post: 1 });
+commentSchema.index({ short: 1 });
 
 export const Comment = mongoose.model<IComment>("Comment", commentSchema);
