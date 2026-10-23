@@ -103,6 +103,97 @@ const undislike = catchAsync(async (req, res) => {
   });
 });
 
+// Unified: set (create or change) one of the seven reactions.
+const setReaction = catchAsync(async (req, res) => {
+  const { targetType, targetId } = req.params;
+  const userId = req.user.id;
+
+  if (!ReactService.isTargetType(targetType)) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: "Invalid target type. Use post, comment or short.",
+      data: "",
+    });
+    return;
+  }
+
+  const summary = await ReactService.setReactionFromDB(
+    userId,
+    targetType,
+    targetId,
+    req.body.type,
+    { id: userId, role: req.user.role },
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Reaction updated successfully.",
+    data: summary,
+  });
+});
+
+// Unified: remove the caller's reaction from a target.
+const removeReaction = catchAsync(async (req, res) => {
+  const { targetType, targetId } = req.params;
+  const userId = req.user.id;
+
+  if (!ReactService.isTargetType(targetType)) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: "Invalid target type. Use post, comment or short.",
+      data: "",
+    });
+    return;
+  }
+
+  const summary = await ReactService.removeReactionFromDB(
+    userId,
+    targetType,
+    targetId,
+    { id: userId, role: req.user.role },
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Reaction removed successfully.",
+    data: summary,
+  });
+});
+
+// Aggregated counts per type + the caller's own reaction.
+const getReactionSummary = catchAsync(async (req, res) => {
+  const { targetType, targetId } = req.params;
+  const userId = req.user.id;
+
+  if (!ReactService.isTargetType(targetType)) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: "Invalid target type. Use post, comment or short.",
+      data: "",
+    });
+    return;
+  }
+
+  const summary = await ReactService.getReactionSummary(
+    userId,
+    targetType,
+    targetId,
+    { requester: { id: userId, role: req.user.role } },
+  );
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Reaction summary retrieved successfully",
+    data: summary,
+  });
+});
+
 export const ReactController = {
   getAllLikes,
   getAllDislikes,
@@ -110,4 +201,7 @@ export const ReactController = {
   unlike,
   dislike,
   undislike,
+  setReaction,
+  removeReaction,
+  getReactionSummary,
 };

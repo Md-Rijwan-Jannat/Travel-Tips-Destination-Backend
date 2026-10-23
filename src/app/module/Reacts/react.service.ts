@@ -1,14 +1,36 @@
 import AppError from "../../errors/AppError";
-import { TReact } from "./react.interface";
+import {
+  REACTION_TYPES,
+  REACT_STORE_TYPES,
+  TReact,
+  TReactTargetType,
+  TReactionSummary,
+  TReactionType,
+  TReactStoreType,
+} from "./react.interface";
 import httpStatus from "http-status";
 import { React } from "./react.model";
 import { Post } from "../Post/post.model";
 import { Comment } from "../Comment/comment.model";
 import { Short } from "../Short/short.model";
 import { ShortService } from "../Short/short.service";
-import { assertCanInteractWithPost } from "../Post/postAccess";
+import { assertCanInteractWithPost, assertCanViewPost } from "../Post/postAccess";
+import mongoose from "mongoose";
 
 type TRequester = { id: string; role: string };
+
+const TARGET_TYPES: TReactTargetType[] = ["post", "comment", "short"];
+
+const isTargetType = (value: unknown): value is TReactTargetType =>
+  typeof value === "string" && (TARGET_TYPES as string[]).includes(value);
+
+const isStoreType = (value: unknown): value is TReactStoreType =>
+  typeof value === "string" && (REACT_STORE_TYPES as string[]).includes(value);
+
+const targetFilter = (
+  targetType: TReactTargetType,
+  targetId: string,
+): Record<string, string> => ({ [targetType]: targetId });
 
 /**
  * Target access gate: reacting requires being able to READ the target and,
@@ -18,10 +40,14 @@ type TRequester = { id: string; role: string };
 const assertReactTargetAccess = async (
   userId: string,
   targetId: string,
-  type: "post" | "comment",
+  type: "post" | "comment" | "short",
   requester?: TRequester,
 ): Promise<void> => {
   const req: TRequester = requester ?? { id: userId, role: "USER" };
+
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    throw new AppError(httpStatus.NOT_FOUND, "Target not found");
+  }
 
   if (type === "post") {
     const post = await Post.findById(targetId);
@@ -29,6 +55,15 @@ const assertReactTargetAccess = async (
       throw new AppError(httpStatus.NOT_FOUND, "Post not found");
     }
     await assertCanInteractWithPost(post, req);
+    return;
+  }
+
+  if (type === "short") {
+    const short = await Short.findById(targetId);
+    if (!short || short.isDeleted) {
+      throw new AppError(httpStatus.NOT_FOUND, "Short not found");
+    }
+    await ShortService.assertCanInteractWithShort(short, req);
     return;
   }
 
@@ -60,6 +95,24 @@ const getAllDisLikes = async () => {
   const result = await React.find({ type: "dislike" });
 
   return result;
+};
+
+/**
+ * Legacy denormalization: posts and comments keep a `likes` user-id array
+ * that older clients read for counts. The new reaction flows keep it in sync
+ * when the reaction is (or becomes / stops being) a `like`. Shorts have their
+ * own separate legacy like endpoint and are intentionally not synced here.
+ */
+const syncLegacyLikeArray = async (
+  targetType: "post" | "comment",
+  targetId: string,
+  userId: string,
+  isLike: boolean,
+): Promise<void> => {
+  const model = targetType === "post" ? Post : Comment;
+  await model.findByIdAndUpdate(targetId, {
+    [isLike ? "$addToSet" : "$pull"]: { likes: userId },
+  });
 };
 
 // Like a post or comment
@@ -229,10 +282,7 @@ const undislikeFromDB = async (
   });
 
   if (!existingReact) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "You haven't disliked this item.",
-    );
+    throw new AppError(httpStatus.BAD_REQUEST, "You haven't disliked this item.");
   }
 
   if (type === "post") {
@@ -246,6 +296,134 @@ const undislikeFromDB = async (
   }
 };
 
+/* ------------------------------------------------------------------ */
+/* Unified 7-type reaction API                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Atomically set (create or change) the caller's single reaction on a
+ * post / comment / short. One reaction per user per target is enforced by a
+ * unique partial index; a concurrent upsert race surfaces as a duplicate-key
+ * error and is retried once as an in-place update.
+ */
+const setReactionFromDB = async (
+  userId: string,
+  targetType: TReactTargetType,
+  targetId: string,
+  reaction: TReactionType,
+  requester?: TRequester,
+): Promise<TReactionSummary> => {
+  await assertReactTargetAccess(userId, targetId, targetType, requester);
+
+  const filter = { user: userId, ...targetFilter(targetType, targetId) };
+  const update = { $set: { type: reaction } };
+
+  let doc: TReact | null;
+  try {
+    doc = await React.findOneAndUpdate(filter, update, {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    });
+  } catch (error) {
+    // Concurrent upsert on the same (user, target) — the loser retries as a
+    // plain update of the winner's document.
+    const isDuplicate =
+      error instanceof Error &&
+      "code" in error &&
+      (error as { code?: number }).code === 11000;
+    if (!isDuplicate) throw error;
+    doc = await React.findOneAndUpdate(filter, update, { new: true });
+    if (!doc) throw error;
+  }
+
+  // Legacy `likes[]` denormalization for post/comment targets.
+  if (targetType !== "short") {
+    await syncLegacyLikeArray(targetType, targetId, userId, reaction === "like");
+  }
+
+  return getReactionSummary(
+    userId,
+    targetType,
+    targetId,
+    { skipAccessCheck: true },
+  );
+};
+
+/** Remove the caller's reaction from a target (idempotent-friendly). */
+const removeReactionFromDB = async (
+  userId: string,
+  targetType: TReactTargetType,
+  targetId: string,
+  requester?: TRequester,
+): Promise<TReactionSummary> => {
+  await assertReactTargetAccess(userId, targetId, targetType, requester);
+
+  const deleted = await React.findOneAndDelete({
+    user: userId,
+    ...targetFilter(targetType, targetId),
+  });
+
+  if (deleted && targetType !== "short") {
+    await syncLegacyLikeArray(
+      targetType,
+      targetId,
+      userId,
+      false,
+    );
+  }
+
+  return getReactionSummary(userId, targetType, targetId, {
+    skipAccessCheck: true,
+  });
+};
+
+/**
+ * Aggregated counts per reaction type plus the caller's own reaction.
+ * Counts are computed server-side from indexed documents — clients can never
+ * supply or trust counts.
+ */
+const getReactionSummary = async (
+  userId: string,
+  targetType: TReactTargetType,
+  targetId: string,
+  options?: { skipAccessCheck?: boolean; requester?: TRequester },
+): Promise<TReactionSummary> => {
+  if (!mongoose.Types.ObjectId.isValid(targetId)) {
+    throw new AppError(httpStatus.NOT_FOUND, "Target not found");
+  }
+  if (!options?.skipAccessCheck) {
+    await assertReactTargetAccess(userId, targetId, targetType, options?.requester);
+  }
+
+  const rows = await React.aggregate<{ _id: TReactStoreType; count: number }>([
+    { $match: targetFilter(targetType, targetId) as unknown as Record<string, unknown> },
+    { $group: { _id: "$type", count: { $sum: 1 } } },
+  ]);
+
+  const counts: Record<string, number> = {};
+  let total = 0;
+  for (const row of rows) {
+    counts[row._id] = row.count;
+    total += row.count;
+  }
+
+  const mine = await React.findOne({
+    user: userId,
+    ...targetFilter(targetType, targetId),
+  })
+    .select("type")
+    .lean();
+
+  return {
+    targetType,
+    targetId,
+    counts,
+    total,
+    myReaction: (mine?.type as TReactStoreType | undefined) ?? null,
+  };
+};
+
 export const ReactService = {
   assertReactTargetAccess,
   getAllLikes,
@@ -254,4 +432,9 @@ export const ReactService = {
   unlikeFromDB,
   dislikeFromDB,
   undislikeFromDB,
+  setReactionFromDB,
+  removeReactionFromDB,
+  getReactionSummary,
+  isTargetType,
+  isStoreType,
 };

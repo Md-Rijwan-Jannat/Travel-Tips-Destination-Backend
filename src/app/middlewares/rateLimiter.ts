@@ -108,3 +108,63 @@ export const inviteFlowLimiter =
           message: "Too many requests, please try again later.",
         },
       });
+
+// Social interaction actions (reactions, comments, reports). Generous for
+// humans — including long-press reaction-picker drags — while capping
+// automation and count-inflation runs. Skipped under NODE_ENV=test.
+export const socialActionLimiter =
+  process.env.NODE_ENV === "test"
+    ? (_req: Request, _res: Response, next: NextFunction) => next()
+    : createRateLimiter({
+        windowMs: 15 * 60 * 1000,
+        limit: 240,
+        message: {
+          success: false,
+          statusCode: 429,
+          message: "Too many requests, please try again later.",
+        },
+      });
+
+// Comment submissions specifically (spam/rapid-fire protection). Tighter
+// than the general social budget. Skipped under NODE_ENV=test.
+export const commentActionLimiter =
+  process.env.NODE_ENV === "test"
+    ? (_req: Request, _res: Response, next: NextFunction) => next()
+    : createRateLimiter({
+        windowMs: 15 * 60 * 1000,
+        limit: 60,
+        message: {
+          success: false,
+          statusCode: 429,
+          message: "Too many comments, please slow down.",
+        },
+      });
+
+// Message send + edit/delete budget (per IP; per-socket budgets also exist
+// on the realtime channel). Skipped under NODE_ENV=test.
+export const messageActionLimiter =
+  process.env.NODE_ENV === "test"
+    ? (_req: Request, _res: Response, next: NextFunction) => next()
+    : createRateLimiter({
+        windowMs: 60 * 1000,
+        limit: 60,
+        message: {
+          success: false,
+          statusCode: 429,
+          message: "Too many messages, please slow down.",
+        },
+      });
+
+// Call invitation budget (prevents call-spam). Skipped under NODE_ENV=test.
+export const callActionLimiter =
+  process.env.NODE_ENV === "test"
+    ? (_req: Request, _res: Response, next: NextFunction) => next()
+    : createRateLimiter({
+        windowMs: 15 * 60 * 1000,
+        limit: 30,
+        message: {
+          success: false,
+          statusCode: 429,
+          message: "Too many call attempts, please try again later.",
+        },
+      });
