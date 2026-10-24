@@ -4,6 +4,7 @@
 import httpStatus from "http-status";
 import QueryBuilder from "../../builder/QueryBuilder";
 import AppError from "../../errors/AppError";
+import { NotificationService } from "../Notification/notification.service";
 import { User } from "./user.model";
 import { UserSearchableFields } from "./user.utils";
 import mongoose, { Types } from "mongoose";
@@ -12,10 +13,7 @@ import { Post } from "../Post/post.model";
 import { postSearchFields } from "../Post/post.constants";
 
 const getAllUserFromDB = async (query: Record<string, any>) => {
-  const usersQueryBuilder = new QueryBuilder(
-    User.find({ verified: false }),
-    query,
-  )
+  const usersQueryBuilder = new QueryBuilder(User.find({ verified: false }), query)
     .fields()
     .paginate()
     .sort()
@@ -32,10 +30,7 @@ const getAllUserFromDB = async (query: Record<string, any>) => {
 };
 
 const getAllPremiumUserFromDB = async (query: Record<string, any>) => {
-  const usersQueryBuilder = new QueryBuilder(
-    User.find({ verified: true }),
-    query,
-  )
+  const usersQueryBuilder = new QueryBuilder(User.find({ verified: true }), query)
     .fields()
     .paginate()
     .sort()
@@ -52,9 +47,7 @@ const getAllPremiumUserFromDB = async (query: Record<string, any>) => {
 };
 
 const getAllUserForAnalytics = async (query: Record<string, any>) => {
-  const usersQueryBuilder = new QueryBuilder(User.find(), query).search(
-    UserSearchableFields,
-  );
+  const usersQueryBuilder = new QueryBuilder(User.find(), query).search(UserSearchableFields);
 
   const result = await usersQueryBuilder.modelQuery;
 
@@ -67,11 +60,7 @@ const getAlPremiumUserForAnalytics = async () => {
 };
 
 const updateUserStatus = async (id: string, payload: { status: string }) => {
-  const result = await User.findByIdAndUpdate(
-    id,
-    { status: payload.status },
-    { new: true },
-  );
+  const result = await User.findByIdAndUpdate(id, { status: payload.status }, { new: true });
 
   if (!result) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
@@ -81,11 +70,7 @@ const updateUserStatus = async (id: string, payload: { status: string }) => {
 };
 
 const updateUserRole = async (id: string, payload: { role: string }) => {
-  const result = await User.findByIdAndUpdate(
-    id,
-    { role: payload.role },
-    { new: true },
-  );
+  const result = await User.findByIdAndUpdate(id, { role: payload.role }, { new: true });
 
   if (!result) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
@@ -105,10 +90,7 @@ const getUserFromDB = async (id: string) => {
 };
 
 // Follow a user with transaction
-const followUser = async (
-  userId: Types.ObjectId,
-  followedUserId: Types.ObjectId,
-) => {
+const followUser = async (userId: Types.ObjectId, followedUserId: Types.ObjectId) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -146,6 +128,24 @@ const followUser = async (
     await session.commitTransaction();
     session.endSession();
 
+    // Notify the followed user (fire-and-forget after transaction committed).
+    void (async () => {
+      try {
+        await NotificationService.createNotificationIntoDB({
+          recipient: String(followedUser._id),
+          actor: String(user._id),
+          type: "user.followed",
+          title: "Someone started following you",
+          body: `${user.name} started following you.`,
+          link: `/users/${String(followedUser._id)}`,
+          entityType: "user",
+          entityId: String(followedUser._id),
+        });
+      } catch {
+        /* never block */
+      }
+    })();
+
     return {
       message: `You are now following ${followedUser.name}`,
     };
@@ -158,23 +158,16 @@ const followUser = async (
 };
 
 // Unfollow a user with transaction
-const unFollowUser = async (
-  userId: Types.ObjectId,
-  unFollowedUserId: Types.ObjectId,
-) => {
+const unFollowUser = async (userId: Types.ObjectId, unFollowedUserId: Types.ObjectId) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     const userObjectId = new mongoose.Types.ObjectId(userId);
-    const unFollowedUserObjectId = new mongoose.Types.ObjectId(
-      unFollowedUserId,
-    );
+    const unFollowedUserObjectId = new mongoose.Types.ObjectId(unFollowedUserId);
 
     const user = await User.findById(userObjectId).session(session);
-    const unFollowedUser = await User.findById(unFollowedUserObjectId).session(
-      session,
-    );
+    const unFollowedUser = await User.findById(unFollowedUserObjectId).session(session);
 
     if (!user || !unFollowedUser) {
       throw new AppError(httpStatus.NOT_FOUND, "User not found");
@@ -186,16 +179,9 @@ const unFollowUser = async (
       { session },
     );
 
-    const updateFollowerResult = await User.updateOne(
-      { _id: unFollowedUserObjectId },
-      { $pull: { follower: userObjectId } },
-      { session },
-    );
+    const updateFollowerResult = await User.updateOne({ _id: unFollowedUserObjectId }, { $pull: { follower: userObjectId } }, { session });
 
-    if (
-      updateFollowingResult.modifiedCount === 0 ||
-      updateFollowerResult.modifiedCount === 0
-    ) {
+    if (updateFollowingResult.modifiedCount === 0 || updateFollowerResult.modifiedCount === 0) {
       throw new AppError(httpStatus.BAD_REQUEST, "Unfollow action failed");
     }
 
@@ -215,10 +201,7 @@ const unFollowUser = async (
 };
 
 // Get my posts
-const getSingleUserAllPostsFromDB = async (
-  id: string,
-  query: Record<string, any>,
-) => {
+const getSingleUserAllPostsFromDB = async (id: string, query: Record<string, any>) => {
   const user = await User.findById(id);
 
   if (!user) {

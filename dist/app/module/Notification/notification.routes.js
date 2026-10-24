@@ -13,4 +13,5 @@ router.get("/", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_consta
 router.get("/unread-count", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), notification_controller_1.NotificationControllers.getUnreadCount);
 router.patch("/read-all", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), notification_controller_1.NotificationControllers.markAllRead);
 router.patch("/:id/read", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), notification_controller_1.NotificationControllers.markRead);
+router.delete("/:id", (0, auth_1.default)(user_constants_1.USER_ROLE.USER, user_constants_1.USER_ROLE.ADMIN), notification_controller_1.NotificationControllers.deleteNotification);
 exports.NotificationRoutes = router;

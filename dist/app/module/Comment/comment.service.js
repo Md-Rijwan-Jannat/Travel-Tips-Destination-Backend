@@ -23,6 +23,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const postAccess_1 = require("../Post/postAccess");
 const short_model_1 = require("../Short/short.model");
 const short_service_1 = require("../Short/short.service");
+const notification_service_1 = require("../Notification/notification.service");
 const transactionsSupported = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const db = mongoose_1.default.connection.db;
@@ -75,6 +76,27 @@ const addCommentIntoDB = (payload, userId, requester) => __awaiter(void 0, void 
             yield post_model_1.Post.findByIdAndUpdate(payload.post, { $push: { comments: comment[0]._id } }, { session });
             yield session.commitTransaction();
             session.endSession();
+            // Notify post author (fire-and-forget after transaction committed).
+            void (() => __awaiter(void 0, void 0, void 0, function* () {
+                try {
+                    const postDoc = yield post_model_1.Post.findById(payload.post).select("user title").lean();
+                    if (postDoc) {
+                        yield notification_service_1.NotificationService.createNotificationIntoDB({
+                            recipient: String(postDoc.user),
+                            actor: userId,
+                            type: "post.commented",
+                            title: "Someone commented on your post",
+                            body: typeof payload.text === "string" ? payload.text.slice(0, 120) : undefined,
+                            link: `/posts/${String(payload.post)}`,
+                            entityType: "post",
+                            entityId: String(payload.post),
+                        });
+                    }
+                }
+                catch (_a) {
+                    /* never block */
+                }
+            }))();
             return comment[0];
         }
         catch (error) {
@@ -91,6 +113,27 @@ const addCommentIntoDB = (payload, userId, requester) => __awaiter(void 0, void 
     }
     const comment = yield comment_model_1.Comment.create(Object.assign(Object.assign({}, payload), { user: userId, short: null }));
     yield post_model_1.Post.findByIdAndUpdate(payload.post, { $push: { comments: comment._id } });
+    // Notify post author (standalone path).
+    void (() => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const postDoc = yield post_model_1.Post.findById(payload.post).select("user title").lean();
+            if (postDoc) {
+                yield notification_service_1.NotificationService.createNotificationIntoDB({
+                    recipient: String(postDoc.user),
+                    actor: userId,
+                    type: "post.commented",
+                    title: "Someone commented on your post",
+                    body: typeof payload.text === "string" ? payload.text.slice(0, 120) : undefined,
+                    link: `/posts/${String(payload.post)}`,
+                    entityType: "post",
+                    entityId: String(payload.post),
+                });
+            }
+        }
+        catch (_a) {
+            /* never block */
+        }
+    }))();
     return comment;
 });
 const getAllCommentFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -126,9 +169,7 @@ const STRONG_ENGAGEMENT_MIN = 2;
 const engagementScore = (entry, now) => {
     const ageMs = now - entry.createdAt.getTime();
     const ageDays = Math.max(0, ageMs / 86400000);
-    const recency = ageDays >= RECENCY_WINDOW_DAYS
-        ? 0
-        : 3 * (1 - ageDays / RECENCY_WINDOW_DAYS);
+    const recency = ageDays >= RECENCY_WINDOW_DAYS ? 0 : 3 * (1 - ageDays / RECENCY_WINDOW_DAYS);
     return entry.reactions * 3 + entry.replies * 2 + recency;
 };
 const resolveSortMode = (raw, fallback) => {
@@ -272,10 +313,7 @@ const getCommentForPostFromDB = (postId, query, requester) => __awaiter(void 0, 
             let winnerScore = engagementScore(rankables.get(String(winner._id)), now);
             for (const candidate of strong.slice(1)) {
                 const score = engagementScore(rankables.get(String(candidate._id)), now);
-                if (score > winnerScore ||
-                    (score === winnerScore &&
-                        ((_g = (_f = candidate.createdAt) === null || _f === void 0 ? void 0 : _f.getTime()) !== null && _g !== void 0 ? _g : 0) <
-                            ((_j = (_h = winner.createdAt) === null || _h === void 0 ? void 0 : _h.getTime()) !== null && _j !== void 0 ? _j : 0))) {
+                if (score > winnerScore || (score === winnerScore && ((_g = (_f = candidate.createdAt) === null || _f === void 0 ? void 0 : _f.getTime()) !== null && _g !== void 0 ? _g : 0) < ((_j = (_h = winner.createdAt) === null || _h === void 0 ? void 0 : _h.getTime()) !== null && _j !== void 0 ? _j : 0))) {
                     winner = candidate;
                     winnerScore = score;
                 }
@@ -285,7 +323,7 @@ const getCommentForPostFromDB = (postId, query, requester) => __awaiter(void 0, 
         }
         else {
             // No meaningful engagement yet → the most recent eligible comment.
-            const mostRecent = eligible.reduce((best, c) => { var _a, _b, _c, _d; return ((_b = (_a = c.createdAt) === null || _a === void 0 ? void 0 : _a.getTime()) !== null && _b !== void 0 ? _b : 0) > ((_d = (_c = best.createdAt) === null || _c === void 0 ? void 0 : _c.getTime()) !== null && _d !== void 0 ? _d : 0) ? c : best; });
+            const mostRecent = eligible.reduce((best, c) => { var _a, _b, _c, _d; return (((_b = (_a = c.createdAt) === null || _a === void 0 ? void 0 : _a.getTime()) !== null && _b !== void 0 ? _b : 0) > ((_d = (_c = best.createdAt) === null || _c === void 0 ? void 0 : _c.getTime()) !== null && _d !== void 0 ? _d : 0) ? c : best); });
             featuredCommentId = String(mostRecent._id);
             featuredMode = "automatic";
         }
@@ -316,7 +354,7 @@ const getCommentsForShortFromDB = (shortId, query, requester) => __awaiter(void 
         return sortMode === "OLDEST"
             ? ((_b = (_a = a.createdAt) === null || _a === void 0 ? void 0 : _a.getTime()) !== null && _b !== void 0 ? _b : 0) - ((_d = (_c = b.createdAt) === null || _c === void 0 ? void 0 : _c.getTime()) !== null && _d !== void 0 ? _d : 0)
             : sortMode === "TOP"
-                ? (((_f = (_e = b.createdAt) === null || _e === void 0 ? void 0 : _e.getTime()) !== null && _f !== void 0 ? _f : 0) - ((_h = (_g = a.createdAt) === null || _g === void 0 ? void 0 : _g.getTime()) !== null && _h !== void 0 ? _h : 0))
+                ? ((_f = (_e = b.createdAt) === null || _e === void 0 ? void 0 : _e.getTime()) !== null && _f !== void 0 ? _f : 0) - ((_h = (_g = a.createdAt) === null || _g === void 0 ? void 0 : _g.getTime()) !== null && _h !== void 0 ? _h : 0)
                 : ((_k = (_j = b.createdAt) === null || _j === void 0 ? void 0 : _j.getTime()) !== null && _k !== void 0 ? _k : 0) - ((_m = (_l = a.createdAt) === null || _l === void 0 ? void 0 : _l.getTime()) !== null && _m !== void 0 ? _m : 0);
     });
     const sortedReplies = [...replies].sort((a, b) => { var _a, _b, _c, _d; return ((_b = (_a = a.createdAt) === null || _a === void 0 ? void 0 : _a.getTime()) !== null && _b !== void 0 ? _b : 0) - ((_d = (_c = b.createdAt) === null || _c === void 0 ? void 0 : _c.getTime()) !== null && _d !== void 0 ? _d : 0); });
@@ -438,6 +476,24 @@ const replyToCommentFromDB = (commentId, replyData, id, requester) => __awaiter(
     }
     const reply = yield comment_model_1.Comment.create(Object.assign(Object.assign({}, replyData), { user: id, short: null, post: (_b = comment.post) !== null && _b !== void 0 ? _b : replyData.post, parentComment: comment._id }));
     yield comment_model_1.Comment.findByIdAndUpdate(commentId, { $push: { replies: reply._id } });
+    // Notify the parent comment author about the reply (fire-and-forget).
+    void (() => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            yield notification_service_1.NotificationService.createNotificationIntoDB({
+                recipient: String(comment.user),
+                actor: id,
+                type: "comment.replied",
+                title: "Someone replied to your comment",
+                body: typeof replyData.text === "string" ? replyData.text.slice(0, 120) : undefined,
+                link: comment.post ? `/posts/${String(comment.post)}` : null,
+                entityType: "comment",
+                entityId: String(comment._id),
+            });
+        }
+        catch (_a) {
+            /* never block */
+        }
+    }))();
     return reply;
 });
 exports.CommentService = {

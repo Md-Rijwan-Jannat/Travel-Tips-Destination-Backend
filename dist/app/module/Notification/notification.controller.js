@@ -51,9 +51,18 @@ const markAllRead = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, vo
         message: "All notifications marked as read",
     });
 }));
+const deleteNotification = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield notification_service_1.NotificationService.deleteNotificationFromDB(req.user.id, req.params.id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Notification deleted",
+    });
+}));
 exports.NotificationControllers = {
     getMyNotifications,
     getUnreadCount,
     markRead,
     markAllRead,
+    deleteNotification,
 };

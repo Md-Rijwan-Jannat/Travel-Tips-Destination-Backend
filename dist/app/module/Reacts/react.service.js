@@ -23,6 +23,7 @@ const short_model_1 = require("../Short/short.model");
 const short_service_1 = require("../Short/short.service");
 const postAccess_1 = require("../Post/postAccess");
 const mongoose_1 = __importDefault(require("mongoose"));
+const notification_service_1 = require("../Notification/notification.service");
 const TARGET_TYPES = ["post", "comment", "short"];
 const isTargetType = (value) => typeof value === "string" && TARGET_TYPES.includes(value);
 const isStoreType = (value) => typeof value === "string" && react_interface_1.REACT_STORE_TYPES.includes(value);
@@ -97,6 +98,7 @@ const syncLegacyLikeArray = (targetType, targetId, userId, isLike) => __awaiter(
 });
 // Like a post or comment
 const likeFromDB = (userId, targetId, type, requester) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     yield assertReactTargetAccess(userId, targetId, type, requester);
     const existingLikeReact = yield react_model_1.React.findOne({
         user: userId,
@@ -133,11 +135,40 @@ const likeFromDB = (userId, targetId, type, requester) => __awaiter(void 0, void
         yield post_model_1.Post.findByIdAndUpdate(targetId, {
             $push: { likes: userId },
         });
+        // Notify the post author (deduped: only once per unread cycle).
+        const post = yield post_model_1.Post.findById(targetId).select("user title").lean();
+        if (post) {
+            yield notification_service_1.NotificationService.createNotificationIntoDB({
+                recipient: String(post.user),
+                actor: userId,
+                type: "post.liked",
+                title: "Someone liked your post",
+                body: (_a = post.title) !== null && _a !== void 0 ? _a : undefined,
+                link: `/posts/${targetId}`,
+                entityType: "post",
+                entityId: targetId,
+                dedupe: true,
+            });
+        }
     }
     else if (type === "comment") {
         yield comment_model_1.Comment.findByIdAndUpdate(targetId, {
             $push: { likes: userId },
         });
+        // Notify the comment author.
+        const comment = yield comment_model_1.Comment.findById(targetId).select("user post").lean();
+        if (comment) {
+            yield notification_service_1.NotificationService.createNotificationIntoDB({
+                recipient: String(comment.user),
+                actor: userId,
+                type: "comment.liked",
+                title: "Someone liked your comment",
+                link: comment.post ? `/posts/${String(comment.post)}` : null,
+                entityType: "comment",
+                entityId: targetId,
+                dedupe: true,
+            });
+        }
     }
     return newReact;
 });
@@ -256,9 +287,7 @@ const setReactionFromDB = (userId, targetType, targetId, reaction, requester) =>
     catch (error) {
         // Concurrent upsert on the same (user, target) — the loser retries as a
         // plain update of the winner's document.
-        const isDuplicate = error instanceof Error &&
-            "code" in error &&
-            error.code === 11000;
+        const isDuplicate = error instanceof Error && "code" in error && error.code === 11000;
         if (!isDuplicate)
             throw error;
         doc = yield react_model_1.React.findOneAndUpdate(filter, update, { new: true });
@@ -269,6 +298,61 @@ const setReactionFromDB = (userId, targetType, targetId, reaction, requester) =>
     if (targetType !== "short") {
         yield syncLegacyLikeArray(targetType, targetId, userId, reaction === "like");
     }
+    // Fire-and-forget notification (never throws — reaction still succeeds).
+    void (() => __awaiter(void 0, void 0, void 0, function* () {
+        var _a;
+        try {
+            if (targetType === "post") {
+                const post = yield post_model_1.Post.findById(targetId).select("user title").lean();
+                if (post) {
+                    yield notification_service_1.NotificationService.createNotificationIntoDB({
+                        recipient: String(post.user),
+                        actor: userId,
+                        type: "post.reacted",
+                        title: "Someone reacted to your post",
+                        body: (_a = post.title) !== null && _a !== void 0 ? _a : undefined,
+                        link: `/posts/${targetId}`,
+                        entityType: "post",
+                        entityId: targetId,
+                        dedupe: true,
+                    });
+                }
+            }
+            else if (targetType === "comment") {
+                const comment = yield comment_model_1.Comment.findById(targetId).select("user post").lean();
+                if (comment) {
+                    yield notification_service_1.NotificationService.createNotificationIntoDB({
+                        recipient: String(comment.user),
+                        actor: userId,
+                        type: "comment.reacted",
+                        title: "Someone reacted to your comment",
+                        link: comment.post ? `/posts/${String(comment.post)}` : null,
+                        entityType: "comment",
+                        entityId: targetId,
+                        dedupe: true,
+                    });
+                }
+            }
+            else if (targetType === "short") {
+                const short = yield short_model_1.Short.findById(targetId).select("user").lean();
+                if (short) {
+                    yield notification_service_1.NotificationService.createNotificationIntoDB({
+                        recipient: String(short.user),
+                        actor: userId,
+                        type: "short.reacted",
+                        title: "Someone reacted to your Short",
+                        link: `/shorts/${targetId}`,
+                        entityType: "short",
+                        entityId: targetId,
+                        dedupe: true,
+                    });
+                }
+            }
+        }
+        catch (_b) {
+            // Notification failure must never block the reaction response.
+        }
+    }))();
     return getReactionSummary(userId, targetType, targetId, { skipAccessCheck: true });
 });
 /** Remove the caller's reaction from a target (idempotent-friendly). */

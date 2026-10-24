@@ -4,10 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import { NotificationService } from "./notification.service";
 
 const getMyNotifications = catchAsync(async (req, res) => {
-  const { result, meta } = await NotificationService.getMyNotificationsFromDB(
-    req.user.id,
-    req.query as Record<string, unknown>,
-  );
+  const { result, meta } = await NotificationService.getMyNotificationsFromDB(req.user.id, req.query as Record<string, unknown>);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -44,9 +41,19 @@ const markAllRead = catchAsync(async (req, res) => {
   });
 });
 
+const deleteNotification = catchAsync(async (req, res) => {
+  await NotificationService.deleteNotificationFromDB(req.user.id, req.params.id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Notification deleted",
+  });
+});
+
 export const NotificationControllers = {
   getMyNotifications,
   getUnreadCount,
   markRead,
   markAllRead,
+  deleteNotification,
 };

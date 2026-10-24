@@ -98,10 +98,22 @@ const markReadIntoDB = (userId, notificationId) => __awaiter(void 0, void 0, voi
 const markAllReadIntoDB = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     yield notification_model_1.Notification.updateMany({ recipient: userId, readAt: null }, { readAt: new Date() });
 });
+const deleteNotificationFromDB = (userId, notificationId) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!mongoose_1.Types.ObjectId.isValid(notificationId)) {
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Notification not found");
+    }
+    const deleted = yield notification_model_1.Notification.findOneAndDelete({
+        _id: notificationId,
+        recipient: userId,
+    });
+    if (!deleted)
+        throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Notification not found");
+});
 exports.NotificationService = {
     createNotificationIntoDB,
     getMyNotificationsFromDB,
     getUnreadCountFromDB,
     markReadIntoDB,
     markAllReadIntoDB,
+    deleteNotificationFromDB,
 };

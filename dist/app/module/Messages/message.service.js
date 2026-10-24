@@ -499,7 +499,7 @@ const consumeViewOnceMediaFromDB = (messageId, requester) => __awaiter(void 0, v
  * get the same 404 used by history so ids cannot be probed).
  */
 const getReactableMessage = (messageId, requester) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b;
     if (!mongoose_1.Types.ObjectId.isValid(messageId)) {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Invalid message id");
     }
@@ -511,8 +511,8 @@ const getReactableMessage = (messageId, requester) => __awaiter(void 0, void 0, 
     if (!chat) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Message not found");
     }
-    const members = ((_a = chat.users) !== null && _a !== void 0 ? _a : []).map((u) => String((u === null || u === void 0 ? void 0 : u._id) || u));
-    const reqUserId = String(requester.id || requester._id || "");
+    const members = ((_a = chat.users) !== null && _a !== void 0 ? _a : []).map((u) => { var _a; return String((_a = u === null || u === void 0 ? void 0 : u._id) !== null && _a !== void 0 ? _a : u); });
+    const reqUserId = String((_b = requester.id) !== null && _b !== void 0 ? _b : "");
     if (!members.includes(reqUserId) && requester.role !== "ADMIN") {
         throw new AppError_1.default(http_status_1.default.FORBIDDEN, "You are not a member of this chat");
     }
@@ -579,7 +579,7 @@ const reactToMessageIntoDB = (messageId, type, requester) => __awaiter(void 0, v
 /** Remove the requester's reaction (idempotent — no reaction is a no-op). */
 const removeReactionFromMessageIntoDB = (messageId, requester) => __awaiter(void 0, void 0, void 0, function* () {
     const target = yield getReactableMessage(messageId, requester);
-    const userObjectId = new mongoose_1.Types.ObjectId(requester.id || requester._id);
+    const userObjectId = new mongoose_1.Types.ObjectId(requester.id);
     const updated = yield message_model_1.Message.findOneAndUpdate({ _id: target.messageId }, { $pull: { reactions: { user: userObjectId } } }, { new: true }).select("reactions");
     if (!updated) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Message not found");

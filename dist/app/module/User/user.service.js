@@ -18,6 +18,7 @@ exports.UserServices = void 0;
 const http_status_1 = __importDefault(require("http-status"));
 const QueryBuilder_1 = __importDefault(require("../../builder/QueryBuilder"));
 const AppError_1 = __importDefault(require("../../errors/AppError"));
+const notification_service_1 = require("../Notification/notification.service");
 const user_model_1 = require("./user.model");
 const user_utils_1 = require("./user.utils");
 const mongoose_1 = __importDefault(require("mongoose"));
@@ -115,6 +116,24 @@ const followUser = (userId, followedUserId) => __awaiter(void 0, void 0, void 0,
         // Commit the transaction
         yield session.commitTransaction();
         session.endSession();
+        // Notify the followed user (fire-and-forget after transaction committed).
+        void (() => __awaiter(void 0, void 0, void 0, function* () {
+            try {
+                yield notification_service_1.NotificationService.createNotificationIntoDB({
+                    recipient: String(followedUser._id),
+                    actor: String(user._id),
+                    type: "user.followed",
+                    title: "Someone started following you",
+                    body: `${user.name} started following you.`,
+                    link: `/users/${String(followedUser._id)}`,
+                    entityType: "user",
+                    entityId: String(followedUser._id),
+                });
+            }
+            catch (_a) {
+                /* never block */
+            }
+        }))();
         return {
             message: `You are now following ${followedUser.name}`,
         };
@@ -140,8 +159,7 @@ const unFollowUser = (userId, unFollowedUserId) => __awaiter(void 0, void 0, voi
         }
         const updateFollowingResult = yield user_model_1.User.updateOne({ _id: userObjectId }, { $pull: { following: unFollowedUserObjectId } }, { session });
         const updateFollowerResult = yield user_model_1.User.updateOne({ _id: unFollowedUserObjectId }, { $pull: { follower: userObjectId } }, { session });
-        if (updateFollowingResult.modifiedCount === 0 ||
-            updateFollowerResult.modifiedCount === 0) {
+        if (updateFollowingResult.modifiedCount === 0 || updateFollowerResult.modifiedCount === 0) {
             throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Unfollow action failed");
         }
         // Commit the transaction

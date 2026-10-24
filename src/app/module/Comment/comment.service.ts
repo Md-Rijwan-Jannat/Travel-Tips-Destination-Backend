@@ -10,6 +10,7 @@ import mongoose, { Types } from "mongoose";
 import { assertCanInteractWithPost, assertCanViewPost } from "../Post/postAccess";
 import { Short } from "../Short/short.model";
 import { ShortService } from "../Short/short.service";
+import { NotificationService } from "../Notification/notification.service";
 
 type TRequester = { id: string; role: string };
 type TCommentSortMode = "TOP" | "NEWEST" | "OLDEST";
@@ -28,11 +29,7 @@ const transactionsSupported = async (): Promise<boolean> => {
 
 // Add a comment to the DB (to a post OR a short). The target's access rules
 // (group membership, audience, moderation state) are enforced server-side.
-const addCommentIntoDB = async (
-  payload: Partial<IComment>,
-  userId: string,
-  requester?: TRequester,
-): Promise<IComment> => {
+const addCommentIntoDB = async (payload: Partial<IComment>, userId: string, requester?: TRequester): Promise<IComment> => {
   const req: TRequester = requester ?? { id: userId, role: "USER" };
 
   if (payload.short) {
@@ -71,14 +68,32 @@ const addCommentIntoDB = async (
         session,
       });
 
-      await Post.findByIdAndUpdate(
-        payload.post,
-        { $push: { comments: comment[0]._id } },
-        { session },
-      );
+      await Post.findByIdAndUpdate(payload.post, { $push: { comments: comment[0]._id } }, { session });
 
       await session.commitTransaction();
       session.endSession();
+
+      // Notify post author (fire-and-forget after transaction committed).
+      void (async () => {
+        try {
+          const postDoc = await Post.findById(payload.post).select("user title").lean();
+          if (postDoc) {
+            await NotificationService.createNotificationIntoDB({
+              recipient: String(postDoc.user),
+              actor: userId,
+              type: "post.commented",
+              title: "Someone commented on your post",
+              body: typeof payload.text === "string" ? payload.text.slice(0, 120) : undefined,
+              link: `/posts/${String(payload.post)}`,
+              entityType: "post",
+              entityId: String(payload.post),
+            });
+          }
+        } catch {
+          /* never block */
+        }
+      })();
+
       return comment[0];
     } catch (error) {
       await session.abortTransaction();
@@ -95,6 +110,28 @@ const addCommentIntoDB = async (
   }
   const comment = await Comment.create({ ...payload, user: userId, short: null });
   await Post.findByIdAndUpdate(payload.post, { $push: { comments: comment._id } });
+
+  // Notify post author (standalone path).
+  void (async () => {
+    try {
+      const postDoc = await Post.findById(payload.post).select("user title").lean();
+      if (postDoc) {
+        await NotificationService.createNotificationIntoDB({
+          recipient: String(postDoc.user),
+          actor: userId,
+          type: "post.commented",
+          title: "Someone commented on your post",
+          body: typeof payload.text === "string" ? payload.text.slice(0, 120) : undefined,
+          link: `/posts/${String(payload.post)}`,
+          entityType: "post",
+          entityId: String(payload.post),
+        });
+      }
+    } catch {
+      /* never block */
+    }
+  })();
+
   return comment;
 };
 
@@ -141,17 +178,11 @@ interface TRankable {
 const engagementScore = (entry: TRankable, now: number): number => {
   const ageMs = now - entry.createdAt.getTime();
   const ageDays = Math.max(0, ageMs / 86_400_000);
-  const recency =
-    ageDays >= RECENCY_WINDOW_DAYS
-      ? 0
-      : 3 * (1 - ageDays / RECENCY_WINDOW_DAYS);
+  const recency = ageDays >= RECENCY_WINDOW_DAYS ? 0 : 3 * (1 - ageDays / RECENCY_WINDOW_DAYS);
   return entry.reactions * 3 + entry.replies * 2 + recency;
 };
 
-const resolveSortMode = (
-  raw: unknown,
-  fallback: TCommentSortMode,
-): TCommentSortMode => {
+const resolveSortMode = (raw: unknown, fallback: TCommentSortMode): TCommentSortMode => {
   const value = typeof raw === "string" ? raw.toUpperCase() : "";
   if (value === "TOP" || value === "NEWEST" || value === "OLDEST") return value;
   // Legacy query spellings.
@@ -172,9 +203,7 @@ const fetchCommentPool = async (filter: Record<string, unknown>): Promise<IComme
     .populate({ path: "replies", populate: { path: "user" } });
 };
 
-const reactionCountsByComment = async (
-  commentIds: Types.ObjectId[],
-): Promise<Map<string, number>> => {
+const reactionCountsByComment = async (commentIds: Types.ObjectId[]): Promise<Map<string, number>> => {
   if (commentIds.length === 0) return new Map();
   const rows = await React.aggregate<{ _id: Types.ObjectId; count: number }>([
     { $match: { comment: { $in: commentIds } } },
@@ -242,9 +271,7 @@ const getCommentForPostFromDB = async (
     liveRepliesByParent.set(parentId, (liveRepliesByParent.get(parentId) ?? 0) + 1);
   }
 
-  const reactionCounts = await reactionCountsByComment(
-    topLevel.map((c) => c._id as Types.ObjectId),
-  );
+  const reactionCounts = await reactionCountsByComment(topLevel.map((c) => c._id as Types.ObjectId));
 
   const now = Date.now();
   const rankables = new Map<string, TRankable>();
@@ -276,9 +303,7 @@ const getCommentForPostFromDB = async (
     return (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
   });
 
-  const sortedReplies = [...replies].sort(
-    (a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0),
-  );
+  const sortedReplies = [...replies].sort((a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0));
 
   /* ----- featured comment resolution ----- */
   let featuredCommentId: string | null = null;
@@ -319,12 +344,7 @@ const getCommentForPostFromDB = async (
       let winnerScore = engagementScore(rankables.get(String(winner._id))!, now);
       for (const candidate of strong.slice(1)) {
         const score = engagementScore(rankables.get(String(candidate._id))!, now);
-        if (
-          score > winnerScore ||
-          (score === winnerScore &&
-            (candidate.createdAt?.getTime() ?? 0) <
-              (winner.createdAt?.getTime() ?? 0))
-        ) {
+        if (score > winnerScore || (score === winnerScore && (candidate.createdAt?.getTime() ?? 0) < (winner.createdAt?.getTime() ?? 0))) {
           winner = candidate;
           winnerScore = score;
         }
@@ -333,9 +353,7 @@ const getCommentForPostFromDB = async (
       featuredMode = "automatic";
     } else {
       // No meaningful engagement yet → the most recent eligible comment.
-      const mostRecent = eligible.reduce((best, c) =>
-        (c.createdAt?.getTime() ?? 0) > (best.createdAt?.getTime() ?? 0) ? c : best,
-      );
+      const mostRecent = eligible.reduce((best, c) => ((c.createdAt?.getTime() ?? 0) > (best.createdAt?.getTime() ?? 0) ? c : best));
       featuredCommentId = String(mostRecent._id);
       featuredMode = "automatic";
     }
@@ -372,12 +390,10 @@ const getCommentsForShortFromDB = async (
     sortMode === "OLDEST"
       ? (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0)
       : sortMode === "TOP"
-        ? ((b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
+        ? (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0)
         : (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0),
   );
-  const sortedReplies = [...replies].sort(
-    (a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0),
-  );
+  const sortedReplies = [...replies].sort((a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0));
 
   return {
     comments: [...sortedTop, ...sortedReplies],
@@ -389,16 +405,10 @@ const getCommentsForShortFromDB = async (
 
 type TRequesterShape = TRequester;
 
-const assertCanModifyComment = (
-  comment: { user: unknown },
-  requester: TRequesterShape,
-) => {
+const assertCanModifyComment = (comment: { user: unknown }, requester: TRequesterShape) => {
   const isOwner = String(comment.user) === requester.id;
   if (!isOwner && requester.role !== "ADMIN") {
-    throw new AppError(
-      httpStatus.FORBIDDEN,
-      "You are not allowed to modify this comment",
-    );
+    throw new AppError(httpStatus.FORBIDDEN, "You are not allowed to modify this comment");
   }
 };
 
@@ -440,10 +450,7 @@ const updateCommentIntoDB = async (
  * list (keeps counts accurate) and a manual featured-comment pointer at this
  * comment gracefully returns the post to automatic highlighting.
  */
-const deleteCommentFromDB = async (
-  commentId: string,
-  requester: TRequesterShape,
-): Promise<void> => {
+const deleteCommentFromDB = async (commentId: string, requester: TRequesterShape): Promise<void> => {
   const existing = await Comment.findById(commentId);
   if (!existing) {
     throw new AppError(httpStatus.NOT_FOUND, "Comment not found");
@@ -469,10 +476,7 @@ const deleteCommentFromDB = async (
 
   // Top-level comment → drop from the post's comment id list.
   if (existing.post && !existing.parentComment) {
-    await Post.updateOne(
-      { _id: existing.post },
-      { $pull: { comments: commentId } },
-    );
+    await Post.updateOne({ _id: existing.post }, { $pull: { comments: commentId } });
   }
 
   // A manual featured pointer at this comment falls back to automatic.
@@ -540,6 +544,25 @@ const replyToCommentFromDB = async (
     parentComment: comment._id,
   });
   await Comment.findByIdAndUpdate(commentId, { $push: { replies: reply._id } });
+
+  // Notify the parent comment author about the reply (fire-and-forget).
+  void (async () => {
+    try {
+      await NotificationService.createNotificationIntoDB({
+        recipient: String(comment.user),
+        actor: id,
+        type: "comment.replied",
+        title: "Someone replied to your comment",
+        body: typeof replyData.text === "string" ? replyData.text.slice(0, 120) : undefined,
+        link: comment.post ? `/posts/${String(comment.post)}` : null,
+        entityType: "comment",
+        entityId: String(comment._id),
+      });
+    } catch {
+      /* never block */
+    }
+  })();
+
   return reply;
 };
 

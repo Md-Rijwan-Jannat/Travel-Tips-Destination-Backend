@@ -27,9 +27,7 @@ const isAppRelativeLink = (link: string | null | undefined): string | null => {
   return link;
 };
 
-const createNotificationIntoDB = async (
-  input: TNotificationInput,
-): Promise<InstanceType<typeof Notification> | null> => {
+const createNotificationIntoDB = async (input: TNotificationInput): Promise<InstanceType<typeof Notification> | null> => {
   if (!Types.ObjectId.isValid(input.recipient)) return null;
   // Never notify users about their own actions.
   if (input.actor && input.actor === input.recipient) return null;
@@ -70,10 +68,7 @@ const createNotificationIntoDB = async (
   return notification;
 };
 
-const getMyNotificationsFromDB = async (
-  userId: string,
-  query: Record<string, unknown>,
-) => {
+const getMyNotificationsFromDB = async (userId: string, query: Record<string, unknown>) => {
   const page = Math.max(1, parseInt(String(query.page ?? "1"), 10) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(String(query.limit ?? "20"), 10) || 20));
   const filter: Record<string, unknown> = { recipient: userId };
@@ -94,28 +89,29 @@ const getMyNotificationsFromDB = async (
   };
 };
 
-const getUnreadCountFromDB = async (userId: string): Promise<number> =>
-  Notification.countDocuments({ recipient: userId, readAt: null });
+const getUnreadCountFromDB = async (userId: string): Promise<number> => Notification.countDocuments({ recipient: userId, readAt: null });
 
-const markReadIntoDB = async (
-  userId: string,
-  notificationId: string,
-): Promise<void> => {
+const markReadIntoDB = async (userId: string, notificationId: string): Promise<void> => {
   if (!Types.ObjectId.isValid(notificationId)) {
     throw new AppError(httpStatus.NOT_FOUND, "Notification not found");
   }
-  const updated = await Notification.findOneAndUpdate(
-    { _id: notificationId, recipient: userId },
-    { readAt: new Date() },
-  );
+  const updated = await Notification.findOneAndUpdate({ _id: notificationId, recipient: userId }, { readAt: new Date() });
   if (!updated) throw new AppError(httpStatus.NOT_FOUND, "Notification not found");
 };
 
 const markAllReadIntoDB = async (userId: string): Promise<void> => {
-  await Notification.updateMany(
-    { recipient: userId, readAt: null },
-    { readAt: new Date() },
-  );
+  await Notification.updateMany({ recipient: userId, readAt: null }, { readAt: new Date() });
+};
+
+const deleteNotificationFromDB = async (userId: string, notificationId: string): Promise<void> => {
+  if (!Types.ObjectId.isValid(notificationId)) {
+    throw new AppError(httpStatus.NOT_FOUND, "Notification not found");
+  }
+  const deleted = await Notification.findOneAndDelete({
+    _id: notificationId,
+    recipient: userId,
+  });
+  if (!deleted) throw new AppError(httpStatus.NOT_FOUND, "Notification not found");
 };
 
 export const NotificationService = {
@@ -124,4 +120,5 @@ export const NotificationService = {
   getUnreadCountFromDB,
   markReadIntoDB,
   markAllReadIntoDB,
+  deleteNotificationFromDB,
 };
